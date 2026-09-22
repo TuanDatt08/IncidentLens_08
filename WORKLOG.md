@@ -1,10 +1,11 @@
-# Worklog — Team [Tên Team]
+# Worklog — Team P-076
 
-> Ghi lại tất cả công việc đã làm theo ngày. Ai làm gì, kết quả gì.
+> Ghi lại công việc theo ngày dựa trên commit và thay đổi đã kiểm tra. Thời lượng chưa được ghi nhận được để là `—`.
 
 ---
 
 ## 2026-09-22
+<<<<<<< HEAD
 
 | Member | Task | Status | Output | Time |
 |--------|------|--------|--------|------|
@@ -15,25 +16,13 @@
 ---
 
 ## [YYYY-MM-DD]
+=======
+>>>>>>> 1988167 (docs: update work log)
 
 | Member | Task | Status | Output | Time |
 |--------|------|--------|--------|------|
-| [Tên] | [mô tả task] | ✅ Done | [link/kết quả] | 2h |
-| [Tên] | [mô tả task] | 🔄 WIP | [mô tả tiến độ] | 1.5h |
-| [Tên] | [mô tả task] | ❌ Blocked | [lý do block] | - |
+| hoang9605 | Cập nhật journal và tài liệu kiến trúc | Hoàn thành | Commit `7ca7b5c`: `JOURNAL.md`, `ARCHITECTURE.md`, `docs/architecture_diagram.md` | — |
 
-**Tổng kết ngày:** [1-2 câu về tiến độ chung]
+**Tổng kết ngày:** Đã cập nhật journal, tài liệu kiến trúc và sơ đồ kiến trúc cho dự án.
 
 ---
-
-## [YYYY-MM-DD]
-
-| Member | Task | Status | Output | Time |
-|--------|------|--------|--------|------|
-| | | | | |
-
-**Tổng kết ngày:**
-
----
-
-<!-- Format: copy block trên cho mỗi ngày làm việc -->
