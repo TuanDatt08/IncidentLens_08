@@ -181,7 +181,7 @@ def main():
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
     # Output valid JSON (required by some tools like Gemini)
-    print(json.dumps({"status": "logged"}))
+    # print(json.dumps({"status": "logged"}))
 
 
 if __name__ == "__main__":
