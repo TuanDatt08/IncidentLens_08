@@ -1,38 +1,41 @@
-# Architecture Diagram
+# Architecture Diagram — Incident Video Analysis MVP
 
-## System Overview
-
-```mermaid
-graph TB
-    User([User]) --> UI[Frontend<br/>React/Next.js]
-    UI -->|REST API| API[FastAPI Backend]
-    API --> Agent[LangGraph Agent]
-    Agent --> LLM[LLM Service<br/>GPT-4o / Gemini]
-    Agent --> Tools[Agent Tools]
-    Tools --> DB[(Database)]
-    Agent --> VS[Vector Store<br/>ChromaDB]
-```
-
-## Agent Flow
+> Bản đề xuất. Xem [ARCHITECTURE.md](../ARCHITECTURE.md) để biết phạm vi và quyết định cần chốt.
 
 ```mermaid
-graph LR
-    START((Start)) --> Input[Parse Input]
-    Input --> Analyze[Analyze Query]
-    Analyze --> Decide{Need Tool?}
-    Decide -->|Yes| CallTool[Call Tool]
-    CallTool --> Analyze
-    Decide -->|No| Generate[Generate Response]
-    Generate --> END((End))
+flowchart LR
+    U[Engineer / Reviewer] --> FE[Web UI]
+    FE -->|HTTPS| API[FastAPI]
+    API --> DB[(PostgreSQL)]
+    API --> OBJ[(Video / log object storage)]
+    W[AI worker] -->|Claim job; save draft| DB
+    W -->|Read media| OBJ
+    W --> FF[FFmpeg: frames / clips]
+    W -->|Selected media| VLM[VLM provider]
+    FE -->|Poll analysis status| API
 ```
 
-## Component Details
+```mermaid
+sequenceDiagram
+    participant E as Engineer
+    participant A as FastAPI
+    participant D as PostgreSQL
+    participant W as AI worker
+    participant R as Reviewer
+    E->>A: POST /incidents (video, optional log)
+    A->>D: Save incident
+    A-->>E: 201 incident_id
+    E->>A: POST /incidents/{id}/analyze
+    A->>D: Create PENDING job
+    A-->>E: 202 job_id
+    W->>D: Claim PROCESSING job
+    W->>W: Extract media, call VLM, validate evidence
+    W->>D: Save DRAFT + evidence; mark COMPLETED
+    E->>A: GET status, report, evidence, video
+    E->>A: PATCH report; POST submit
+    A->>D: DRAFT to IN_REVIEW
+    R->>A: POST approve or reject
+    A->>D: IN_REVIEW to APPROVED or DRAFT
+```
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| Frontend | React/Next.js | User interface |
-| Backend | FastAPI | API server |
-| Agent | LangGraph | AI agent orchestration |
-| LLM | OpenAI/Gemini | Language model |
-| Database | PostgreSQL/SQLite | Data persistence |
-| Vector Store | ChromaDB | RAG / embeddings |
+**Ranh giới:** UI hiển thị và thao tác; API giữ quyền và trạng thái; worker xử lý AI bất đồng bộ; DB lưu metadata; object storage lưu video/log. Không dùng vector store trong MVP.

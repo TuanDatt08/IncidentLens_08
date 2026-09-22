@@ -4,16 +4,16 @@
 
 ---
 
-## Week 1: [Ngày bắt đầu] - [Ngày kết thúc]
+## Week 1: [14/9] - [20/9]
 
 ### Mục tiêu tuần này
-- [ ] [Mục tiêu 1]
-- [ ] [Mục tiêu 2]
-- [ ] [Mục tiêu 3]
+- [x] [Lập nhóm]
+- [x] [Chốt đề tài]
+- [x] [Chia role thành viên]
 
 ### Đã hoàn thành
-- [thành quả 1]
-- [thành quả 2]
+- [Chọn đề tài RAV-18]
+- [chia role cho 4 người]
 
 ### Khó khăn & Giải pháp
 | Khó khăn | Giải pháp | Kết quả |
@@ -30,13 +30,15 @@
 
 ---
 
-## Week 2: [Ngày bắt đầu] - [Ngày kết thúc]
+## Week 2: [21/9] - [27/9]
 
 ### Mục tiêu tuần này
-- [ ] [Mục tiêu 1]
+- [x] [Chốt phạm vi MVP]
+- [ ] [Xây dựng pipeline MVP]
+- [ ] [Demo flow]
 
 ### Đã hoàn thành
--
+- Chốt phạm vi MVP
 
 ### Khó khăn & Giải pháp
 | Khó khăn | Giải pháp | Kết quả |
@@ -47,7 +49,7 @@
 -
 
 ### Kế hoạch tuần sau
--
+- Hoàn thiện, cải tiến MVP
 
 ---
 
