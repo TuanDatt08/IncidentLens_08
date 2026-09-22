@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-09-22
+
+| Member | Task | Status | Output | Time |
+|--------|------|--------|--------|------|
+| hoang9605 | Cập nhật journal và tài liệu kiến trúc | ✅ Done | Commit `7ca7b5c` | — |
+
+**Tổng kết ngày:** Đã cập nhật `JOURNAL.md`, `ARCHITECTURE.md` và `docs/architecture_diagram.md`.
+
+---
+
 ## [YYYY-MM-DD]
 
 | Member | Task | Status | Output | Time |
