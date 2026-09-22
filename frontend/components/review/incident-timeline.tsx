@@ -1,0 +1,16 @@
+import { formatSeconds } from "@/lib/format";
+import type { IncidentDraft } from "@/types/incident";
+
+export function IncidentTimeline({ draft, onSeek }: { draft: IncidentDraft; onSeek: (seconds: number) => void }) {
+  const max = Math.max(draft.end_sec + 8, 30);
+  const startPosition = (draft.start_sec / max) * 100;
+  const criticalPosition = (draft.critical_sec / max) * 100;
+  const endPosition = (draft.end_sec / max) * 100;
+  return <section className="section-card p-5 sm:p-6"><div className="flex items-end justify-between gap-4"><div><p className="eyebrow">Video context</p><h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-vf-navy">Incident Timeline</h2></div><span className="text-xs font-bold text-slate-400">0:00 — {formatSeconds(max)}</span></div><div className="mt-9 px-1"><div className="relative h-8"><div className="absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full bg-slate-100" /><div className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-blue-200" style={{ left: `${startPosition}%`, width: `${endPosition - startPosition}%` }} /><TimelineMarker label="START" value={draft.start_sec} position={startPosition} onSeek={onSeek} /><TimelineMarker label="CRITICAL" value={draft.critical_sec} position={criticalPosition} onSeek={onSeek} critical /><TimelineMarker label="END" value={draft.end_sec} position={endPosition} onSeek={onSeek} /></div><div className="mt-5 flex justify-between text-[10px] font-extrabold text-slate-400"><span>0s</span><span>{formatSeconds(max / 2)}</span><span>{formatSeconds(max)}</span></div></div><div className="mt-6 grid grid-cols-3 gap-3 border-t border-slate-100 pt-5"><TimelineStat label="Start" value={draft.start_sec} /><TimelineStat label="Critical" value={draft.critical_sec} critical /><TimelineStat label="End" value={draft.end_sec} /></div></section>;
+}
+
+function TimelineMarker({ label, value, position, onSeek, critical = false }: { label: string; value: number; position: number; onSeek: (seconds: number) => void; critical?: boolean }) {
+  return <button type="button" onClick={() => onSeek(value)} className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${position}%` }}><span className={`block h-4 w-4 rounded-full border-4 border-white shadow ${critical ? "bg-amber-500 ring-4 ring-amber-100" : "bg-vf-primary"}`} /><span className={`absolute bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-extrabold tracking-[0.09em] transition ${critical ? "text-amber-600" : "text-vf-primary"}`}>{label}</span><span className="absolute left-1/2 top-7 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold text-slate-400 opacity-0 transition group-hover:opacity-100">{formatSeconds(value)}</span></button>;
+}
+
+function TimelineStat({ label, value, critical = false }: { label: string; value: number; critical?: boolean }) { return <div className="text-center"><p className={`text-[10px] font-extrabold uppercase tracking-[0.1em] ${critical ? "text-amber-600" : "text-slate-400"}`}>{label}</p><p className="mt-1 text-sm font-extrabold text-vf-navy">{formatSeconds(value)}</p></div>; }
