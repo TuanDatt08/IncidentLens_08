@@ -5,24 +5,12 @@
 ---
 
 ## 2026-09-22
-<<<<<<< HEAD
 
 | Member | Task | Status | Output | Time |
 |--------|------|--------|--------|------|
-| hoang9605 | Cập nhật journal và tài liệu kiến trúc | ✅ Done | Commit `7ca7b5c` | — |
+| hoang9605 | Cập nhật journal và tài liệu kiến trúc | ✅ Done | Commit `7ca7b5c`: `JOURNAL.md`, `ARCHITECTURE.md`, `docs/architecture_diagram.md` | — |
+| hongneuk65 | Điều chỉnh hook Codex để chạy Python trực tiếp trên Windows | ✅ Done | Cập nhật `.codex/hooks.json` cho các hook `UserPromptSubmit` và `Stop` | — |
 
-**Tổng kết ngày:** Đã cập nhật `JOURNAL.md`, `ARCHITECTURE.md` và `docs/architecture_diagram.md`.
-
----
-
-## [YYYY-MM-DD]
-=======
->>>>>>> 1988167 (docs: update work log)
-
-| Member | Task | Status | Output | Time |
-|--------|------|--------|--------|------|
-| hoang9605 | Cập nhật journal và tài liệu kiến trúc | Hoàn thành | Commit `7ca7b5c`: `JOURNAL.md`, `ARCHITECTURE.md`, `docs/architecture_diagram.md` | — |
-
-**Tổng kết ngày:** Đã cập nhật journal, tài liệu kiến trúc và sơ đồ kiến trúc cho dự án.
+**Tổng kết ngày:** Đã cập nhật journal, tài liệu kiến trúc, sơ đồ kiến trúc và cấu hình hook Codex cho môi trường Windows.
 
 ---
