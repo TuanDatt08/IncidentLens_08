@@ -11,7 +11,7 @@ The FastAPI service exposes `/api/v1` for incident upload, analysis jobs, report
 
 The six tables are `incidents`, `jobs`, `evidences`, `analysis_reports`, `report_versions`, and `audit_events`. Alembic creates them. Job status (`queued/running/succeeded/failed/cancelled`), incident processing status (`UPLOADED/READY/PROCESSING/COMPLETED/FAILED`), and report review status (`DRAFT/IN_REVIEW/APPROVED/REJECTED`) have separate meanings.
 
-Evidence `time_range_s` and report `incident_window` are seconds relative to the incident, so they can be negative. The worker uses the internal `collision_offset_in_video_s` to convert to MP4 time. Evidence URIs are storage paths, not public media URLs; browser access needs the contract decision documented in the runbook.
+Evidence `time_range_s` and report `incident_window` are seconds relative to the incident, so they can be negative. The worker uses the internal `collision_offset_in_video_s` to convert to MP4 time. Evidence URIs are storage paths, not public media URLs. Local demo media routes serve the source video and incident-owned evidence with HTTP Range; they return 403 in production until real authentication is integrated.
 
 ## Runtime
 

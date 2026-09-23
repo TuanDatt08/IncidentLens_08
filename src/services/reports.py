@@ -40,12 +40,21 @@ def _report_contract(incident_id: str, report: ReportRow, version: int) -> Analy
 
 
 def complete_analysis(job_id: str, result: ProcessedResult, *, expected_attempt: int | None = None) -> dict:
-    if not result.analysis.incident_detected:
-        raise InsufficientEvidence("No-incident success semantics await contract confirmation.")
     # Validate everything before the first database write.
     evidence = [EvidenceV1.model_validate(item) for item in result.evidence]
-    if not evidence:
-        raise InsufficientEvidence("Analysis produced no evidence.")
+    if result.analysis.incident_detected and (not evidence or result.analysis.incident_window is None):
+        raise InsufficientEvidence("Detected incident requires a window and evidence.")
+    if not result.analysis.incident_detected and any((
+        evidence,
+        result.analysis.incident_window,
+        result.analysis.incident_type,
+        result.analysis.summary,
+        result.analysis.timeline,
+        result.analysis.key_factors,
+        result.analysis.observations,
+        result.analysis.unknowns,
+    )):
+        raise InsufficientEvidence("No-incident analysis must have an empty report and no evidence.")
     with session_scope() as session:
         job = session.scalar(select(Job).where(Job.job_id == job_id).with_for_update())
         if job is None:
@@ -109,12 +118,13 @@ def complete_analysis(job_id: str, result: ProcessedResult, *, expected_attempt:
         content = _report_contract(incident.incident_id, report, 1).model_dump(mode="json")
         session.add(ReportVersion(report_id=report.id, version=1, content=content, edited_by=None))
         incident.processing_status = "COMPLETED"
-        if result.collision_offset_in_video_s is not None:
+        if result.analysis.incident_detected and result.collision_offset_in_video_s is not None:
             incident.video_metadata = {**(incident.video_metadata or {}), "collision_offset_in_video_s": result.collision_offset_in_video_s}
         job.status = "succeeded"
-        job.pass_number = 2
-        job.progress_done = 2
-        job.progress_total = 2
+        completed_pass = 2 if result.analysis.incident_detected else 1
+        job.pass_number = completed_pass
+        job.progress_done = completed_pass
+        job.progress_total = completed_pass
         job.result_uri = f"/api/v1/incidents/{incident.incident_id}/report"
         job.error = None
         job.lease_until = None

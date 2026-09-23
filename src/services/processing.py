@@ -75,7 +75,10 @@ def process_incident(
     metadata = incident["video_metadata"]
     duration = float(metadata["duration"])
     video_service = VideoService(get_settings().ffprobe_bin, get_settings().ffmpeg_bin)
-    sample_times = [duration * i / 4 for i in range(4)] + [max(0.0, duration - 0.01)]
+    # Container duration can extend beyond the final frame presentation time.
+    # Leave more than one frame interval so FFmpeg can decode the last sample.
+    last_decodable_s = max(0.0, duration - 1.5 / float(metadata["fps"]))
+    sample_times = [min(duration * i / 4, last_decodable_s) for i in range(5)]
     if on_progress:
         on_progress(1, 0, 2)
     sampled_frames = [

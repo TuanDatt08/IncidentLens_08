@@ -7,7 +7,7 @@ import re
 from pathlib import PurePosixPath
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 ProcessingState = Literal["UPLOADED", "READY", "PROCESSING", "COMPLETED", "FAILED"]
@@ -61,6 +61,46 @@ class AnalysisReportV1(BaseModel):
     version: int = Field(default=1, ge=1)
     created_at: str | None = None
     updated_at: str | None = None
+
+
+class ReportPatch(BaseModel):
+    """Engineer-editable fields confirmed for the MVP demo."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    version: int = Field(ge=1)
+    summary: str | None = None
+    timeline: list[Any] = Field(default_factory=list)
+    key_factors: list[Any] = Field(default_factory=list)
+    observations: list[Any] = Field(default_factory=list)
+    unknowns: list[Any] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def has_edit(self) -> ReportPatch:
+        if self.model_fields_set <= {"version"}:
+            raise ValueError("PATCH requires at least one editable field")
+        return self
+
+
+class RejectRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("reason")
+    @classmethod
+    def nonblank_reason(cls, value: str) -> str:
+        reason = value.strip()
+        if not reason:
+            raise ValueError("reject reason is required")
+        return reason
+
+
+class ReviewActionResponse(BaseModel):
+    incident_id: str
+    status: ReviewState
+    version: int = Field(ge=1)
+    rejection_reason: str | None = None
 
 
 class EvidenceV1(BaseModel):

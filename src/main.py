@@ -10,6 +10,7 @@ from src.api.jobs import router as job_router
 from src.api.reports import router as report_router
 from src.api.evidence import router as evidence_router
 from src.api.audit import router as audit_router
+from src.api.media import router as media_router
 from src.config import get_settings
 
 
@@ -33,9 +34,12 @@ app.add_exception_handler(HTTPException, http_error_handler)
 app.add_exception_handler(Exception, internal_error_handler)
 
 settings = get_settings()
+cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+if settings.app_env != "production":
+    cors_origins = list(dict.fromkeys([*cors_origins, "http://localhost:3000", "http://127.0.0.1:3000"]))
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins.split(","),
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,6 +50,7 @@ app.include_router(job_router, prefix="/api/v1")
 app.include_router(report_router, prefix="/api/v1")
 app.include_router(evidence_router, prefix="/api/v1")
 app.include_router(audit_router, prefix="/api/v1")
+app.include_router(media_router, prefix="/api/v1")
 
 
 @app.get("/health")

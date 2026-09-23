@@ -96,6 +96,23 @@ def test_no_incident_skips_pass2(tmp_path):
     assert result.evidence == []
 
 
+def test_pass1_sampling_avoids_video_end_without_a_decodable_frame(tmp_path, monkeypatch):
+    root, incident = _incident(tmp_path, with_csv=False)
+    incident["video_metadata"] = {"duration": 4.0, "fps": 10.0, "width": 160, "height": 120}
+    sampled_at = []
+
+    def extract_frame(self, video_path, at_s, destination):
+        sampled_at.append(at_s)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(b"jpeg")
+        return destination
+
+    monkeypatch.setattr(VideoService, "extract_frame", extract_frame)
+    process_incident(incident, storage_root=root, vlm=FakeVLM(LocalizationResult(incident_detected=False)))
+    assert len(sampled_at) == 5
+    assert sampled_at[-1] <= 3.85
+
+
 def test_missing_video_collision_offset_rejects_unsafe_timestamp_mapping(tmp_path):
     root, incident = _incident(tmp_path)
     fake = FakeVLM(

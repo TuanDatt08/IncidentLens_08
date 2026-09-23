@@ -12,4 +12,4 @@ flowchart LR
     WORKER -->|report, evidence, audit| PG
 ```
 
-The frontend currently uses an older contract. The required service-layer changes are listed in [backend-contract-v1.1.md](backend-contract-v1.1.md). The storage path returned for evidence is internal; a media-access route or signed URL remains to be specified.
+The frontend currently uses an older contract. The required service-layer changes are listed in [backend-contract-v1.1.md](backend-contract-v1.1.md). Evidence storage paths are internal; local demo media routes serve video and evidence by `incident_id` and `evidence_id`.
