@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "sqlite:///./data/app.db"
 
+    # Incident ingestion
+    incident_storage_dir: str = "./data/incidents"
+    max_video_size_mb: int = Field(default=2048, ge=1)
+    max_log_size_mb: int = Field(default=100, ge=1)
+    ffprobe_bin: str = "ffprobe"
+    ffmpeg_bin: str = "ffmpeg"
+
     # Vector Store
     chroma_persist_dir: str = "./data/chroma"
 
