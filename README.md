@@ -1,11 +1,14 @@
-# RAV18 IncidentLens — backend MVP
+# IncidentLens
 
-Backend nhận video MP4 và log telemetry của một incident, tạo job phân tích hai lượt, lưu report cùng evidence, rồi hỗ trợ Engineer chỉnh sửa và Reviewer duyệt. API dùng contract [RAV18 final v1.1](docs/backend-contract-v1.1.md). Phần giao diện nằm ở nhánh `frontend` và hiện cần cập nhật service layer để gọi trọn luồng API thật.
+IncidentLens là ứng dụng phân tích sự cố giao thông bằng video và telemetry. Frontend Next.js gọi backend FastAPI để upload incident, theo dõi job phân tích, xem report/evidence và hỗ trợ quy trình Engineer chỉnh sửa, Reviewer duyệt.
+
+Backend API tuân theo [contract v1.1](docs/backend-contract-v1.1.md). Các trạng thái job được lấy qua polling; media video và evidence được phục vụ bằng các endpoint của backend.
 
 ## Backend gồm những gì?
 
 | Thành phần | Vai trò |
 | --- | --- |
+| `frontend/` | Ứng dụng Next.js cho upload, theo dõi job và review report/evidence. |
 | `src/main.py`, `src/api/` | FastAPI, Swagger, các route upload, incident, job, report, evidence, audit và media. |
 | `src/services/incident_ingestion.py`, `video.py`, `telemetry.py`, `storage.py` | Kiểm tra MP4 bằng FFprobe, nhận CSV có `sec_from_incident`, lưu file và metadata. |
 | `src/worker.py`, `src/services/jobs.py`, `processing.py`, `vlm.py` | Worker lấy job từ PostgreSQL; Pass 1 định vị sự cố, Pass 2 phân tích clip, frame và telemetry. Worker thường gọi OpenAI. |
@@ -24,7 +27,13 @@ Luồng API: **upload → `incident_id` → analyze → `job_id` → poll job �
 
 `sec_from_incident`, `incident_window` và `Evidence.time_range_s` tính bằng giây tương đối với va chạm; giá trị âm là trước va chạm. Khi tua video gốc, cộng thêm `video_metadata.collision_offset_in_video_s`. `Evidence.uri` là đường dẫn lưu trữ, **không phải URL phát media**; dùng các media route ở Swagger.
 
-## Khởi động bằng Docker
+## Yêu cầu
+
+- Docker Desktop và Docker Compose.
+- Node.js 20 trở lên để chạy frontend.
+- Python 3.11 trở lên nếu chạy backend hoặc test ngoài Docker.
+
+## Khởi động backend
 
 Yêu cầu Docker Desktop đang chạy. Trong thư mục gốc repo:
 
@@ -36,7 +45,27 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
 
 Compose khởi động PostgreSQL, chạy Alembic migration và API. Health trả `status: ok`. Mở Swagger tại <http://127.0.0.1:8000/docs>. PostgreSQL của demo ở `127.0.0.1:5432`, database/user `rav18`. Lệnh trên chưa khởi động worker OpenAI; phù hợp để thử fake report bên dưới.
 
-## Tự thử upload → report giả
+## Khởi động frontend
+
+Trong terminal khác, từ thư mục gốc repo:
+
+```powershell
+Copy-Item frontend/.env.example frontend/.env.local
+Set-Location frontend
+npm ci
+npm run dev
+```
+
+Frontend mặc định gọi API tại `http://localhost:8000/api/v1` và dùng backend thật. Mở <http://localhost:3000>. Để đổi URL API, sửa `NEXT_PUBLIC_API_BASE_URL` trong `frontend/.env.local`.
+
+Các trang chính:
+
+- `/incidents` — danh sách incidents.
+- `/incidents/new` — upload video và CSV telemetry tùy chọn.
+- `/incidents/{incident_id}/processing` — trạng thái job và tiến độ phân tích.
+- `/incidents/{incident_id}` — video, timeline, evidence, report và review workflow.
+
+## Thử luồng phân tích với DemoVLM
 
 Các lệnh sau dùng **PowerShell** và không cần `OPENAI_API_KEY`. Đứng ở thư mục gốc repo. Dừng worker thường trước khi tạo job để nó không lấy job dành cho demo:
 
@@ -82,7 +111,7 @@ Invoke-RestMethod "http://127.0.0.1:8000/api/v1/incidents/$($upload.incident_id)
 
 Kết quả mong đợi: job `succeeded`, report `review_status: DRAFT`, `version: 1`, summary bắt đầu bằng `DEMO`, và evidence có clip, frame, telemetry. Fake VLM **giả định va chạm ở giữa MP4** để kiểm tra pipeline; nó không kết luận gì về nội dung video. Có thể mở `GET /api/v1/incidents/{incident_id}/video` hoặc `GET /api/v1/incidents/{incident_id}/evidence/{evidence_id}/media` trong trình duyệt. Trong Swagger, có thể thử tiếp PATCH report với `version`, rồi submit và approve/reject.
 
-## Chạy test tự động
+## Kiểm thử
 
 Test thường dùng SQLite tạm và fake VLM, không gọi OpenAI hoặc sửa database `rav18`. Khi chạy trong Compose, phải xóa `DATABASE_URL` của service để migration test dùng SQLite riêng:
 
@@ -92,13 +121,23 @@ docker compose run --rm --no-deps -e DATABASE_URL= backend pytest -q tests/
 
 Kết quả đã kiểm tra: **56 passed**. Smoke test với PostgreSQL và FFmpeg thật dùng database `rav18_e2e` tách biệt; xem [backend runbook](docs/backend-runbook.md) để tạo, migrate, chạy test và dọn database này.
 
+Kiểm tra frontend và tạo production build:
+
+```powershell
+Set-Location frontend
+npm ci
+npm run typecheck
+npm run build
+```
+
 Muốn dùng VLM thật, đặt `OPENAI_API_KEY` trong môi trường rồi chạy `docker compose up -d --build` để khởi động cả `worker`. Xem log bằng `docker compose logs -f backend worker`. Dừng API/worker mà vẫn giữ PostgreSQL và dữ liệu bằng `docker compose stop backend worker`.
 
 ## Tài liệu và giới hạn hiện tại
 
-- [Contract API v1.1 và các khác biệt FE cần sửa](docs/backend-contract-v1.1.md)
+- [Contract API v1.1](docs/backend-contract-v1.1.md)
 - [Runbook backend](docs/backend-runbook.md)
 - [Kiến trúc](ARCHITECTURE.md)
+- [Worklog](WORKLOG.md)
 - [README template ban đầu](README_boilerplate.md) và [technical guidebook](docs/guide/) của khóa học
 
-Frontend ở `origin/frontend` còn dùng contract cũ (ví dụ `package_id`, SSE progress, `timestamp_sec`), nên build thành công chưa đồng nghĩa UI gọi được backend thật. Media/review write hiện chỉ mở cho demo local; ở `APP_ENV=production` chúng trả 403 cho đến khi chốt xác thực và phân quyền. Các mục `NEED_CONFIRMATION` khác được liệt kê trong tài liệu contract.
+DemoVLM tạo report giả để kiểm tra pipeline; kết quả này không phải phân tích thực tế video. Các route ghi report và truy cập media hiện giới hạn ở môi trường demo/local; chúng trả `403` trong `APP_ENV=production` khi chưa có xác thực và phân quyền. Những trường contract còn cần xác nhận được ghi trong tài liệu contract.
