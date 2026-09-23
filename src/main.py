@@ -39,3 +39,8 @@ app.include_router(incident_router, prefix="/api/v1")
 @app.get("/health")
 async def health():
     return {"status": "ok", "env": settings.app_env}
+
+
+@app.get("/api/v1/health")
+async def v1_health():
+    return {"status": "ok"}

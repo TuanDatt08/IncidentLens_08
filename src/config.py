@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     llm_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
 
     # Database
-    database_url: str = "sqlite:///./data/app.db"
+    database_url: str = "postgresql+psycopg2://rav18:rav18@localhost:5432/rav18"
 
     # Incident ingestion
     incident_storage_dir: str = "./data/incidents"
