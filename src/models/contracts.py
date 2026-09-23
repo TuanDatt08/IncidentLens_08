@@ -99,6 +99,20 @@ class JobProgress(BaseModel):
     total: int | None = Field(default=None, ge=0)
 
 
+class UploadResponse(BaseModel):
+    incident_id: str
+    processing_status: Literal["READY"]
+    sync_offset: float | None = None
+    frame_count: int = Field(ge=0)
+    video_metadata: dict[str, Any]
+
+
+class AnalyzeAccepted(BaseModel):
+    job_id: str
+    incident_id: str
+    status: Literal["queued"]
+
+
 class JobResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 

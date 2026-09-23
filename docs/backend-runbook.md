@@ -4,6 +4,8 @@
 
 From the repository root, set `OPENAI_API_KEY` for real analysis and run `docker compose up --build`. Compose starts PostgreSQL, applies Alembic migrations, then starts the API at `http://localhost:8000` and a separate analysis worker. Uploads and evidence persist in `data/incidents`; PostgreSQL data persists in the `postgres_data` volume. `GET /api/v1/health` checks that the API process is responding.
 
+The OpenAPI description is available at `http://localhost:8000/docs`; upload, analyze, job polling, and report reads publish response schemas there.
+
 The `DATABASE_URL` default targets a local PostgreSQL instance. Tests use a temporary SQLite database and a fake VLM. To run them, install `requirements.txt` and `requirements-dev.txt`, then run `python -m pytest tests/ -q`. To inspect PostgreSQL migration SQL without a server, use `python -m alembic upgrade head --sql`.
 
 ## API sequence

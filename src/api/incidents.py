@@ -3,13 +3,14 @@
 from fastapi import APIRouter, File, Query, UploadFile
 from starlette.concurrency import run_in_threadpool
 
+from src.models.contracts import UploadResponse
 from src.services.incidents import create_incident, get_incident, list_incidents
 
 
 router = APIRouter(tags=["incidents"])
 
 
-@router.post("/incidents/upload", status_code=201)
+@router.post("/incidents/upload", status_code=201, response_model=UploadResponse)
 async def upload_incident(video: UploadFile = File(...), log: UploadFile | None = File(default=None)):
     return await run_in_threadpool(create_incident, video, log)
 
