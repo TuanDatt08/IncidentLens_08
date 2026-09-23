@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from src.config import get_settings
 from src.db import session_scope
+from src.demo_fake_worker import DemoVLM
 from src.models.contracts import AnalysisResult, LocalizationResult
 from src.models.tables import AnalysisReport, Incident, ReportVersion
 from src.services.video import VideoProbeResult, VideoService
@@ -170,3 +171,20 @@ async def test_media_route_rejects_storage_path_escape(db_client):
     response = await db_client.get(f"/api/v1/incidents/{incident_id}/video")
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "MEDIA_NOT_FOUND"
+
+
+@pytest.mark.asyncio
+async def test_demo_fake_worker_processes_only_selected_job(db_client):
+    first_incident = await upload(db_client)
+    second_incident = await upload(db_client)
+    first_job = (await db_client.post(f"/api/v1/incidents/{first_incident}/analyze")).json()["job_id"]
+    second_job = (await db_client.post(f"/api/v1/incidents/{second_incident}/analyze")).json()["job_id"]
+
+    assert run_once(vlm=DemoVLM(), job_id=second_job)
+    assert (await db_client.get(f"/api/v1/jobs/{first_job}")).json()["status"] == "queued"
+    assert (await db_client.get(f"/api/v1/jobs/{second_job}")).json()["status"] == "succeeded"
+    report = (await db_client.get(f"/api/v1/incidents/{second_incident}/report")).json()
+    assert report["incident_detected"] is True
+    assert report["incident_window"] == {"start": -0.5, "critical": 0.0, "end": 0.5}
+    assert "DEMO" in report["summary"]
+    assert report["review_status"] == "DRAFT"

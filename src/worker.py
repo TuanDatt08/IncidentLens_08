@@ -58,8 +58,8 @@ class LeaseHeartbeat:
                 logger.exception("Heartbeat failed for %s", self.job_id)
 
 
-def run_once(*, vlm: VLMAdapter | None = None) -> bool:
-    claim = claim_job()
+def run_once(*, vlm: VLMAdapter | None = None, job_id: str | None = None) -> bool:
+    claim = claim_job(job_id)
     if claim is None:
         return False
     try:

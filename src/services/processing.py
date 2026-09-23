@@ -45,6 +45,13 @@ class VLMAdapter(Protocol):
     def pass2(self, prepared: PreparedPass2) -> AnalysisResult: ...
 
 
+def pass1_sample_times(metadata: dict) -> list[float]:
+    duration = float(metadata["duration"])
+    # Container duration can extend beyond the final frame presentation time.
+    last_decodable_s = max(0.0, duration - 1.5 / float(metadata["fps"]))
+    return [min(duration * i / 4, last_decodable_s) for i in range(5)]
+
+
 def _evidence(root: Path, path: Path, kind: str, start_s: float, end_s: float, media_type: str) -> EvidenceV1:
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     return EvidenceV1(
@@ -75,10 +82,7 @@ def process_incident(
     metadata = incident["video_metadata"]
     duration = float(metadata["duration"])
     video_service = VideoService(get_settings().ffprobe_bin, get_settings().ffmpeg_bin)
-    # Container duration can extend beyond the final frame presentation time.
-    # Leave more than one frame interval so FFmpeg can decode the last sample.
-    last_decodable_s = max(0.0, duration - 1.5 / float(metadata["fps"]))
-    sample_times = [min(duration * i / 4, last_decodable_s) for i in range(5)]
+    sample_times = pass1_sample_times(metadata)
     if on_progress:
         on_progress(1, 0, 2)
     sampled_frames = [

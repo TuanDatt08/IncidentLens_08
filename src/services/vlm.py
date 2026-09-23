@@ -8,7 +8,7 @@ from pathlib import Path
 
 from src.models.contracts import AnalysisResult, LocalizationResult
 from src.services.llm import get_llm
-from src.services.processing import PreparedPass2
+from src.services.processing import PreparedPass2, pass1_sample_times
 
 
 def _image_blocks(paths: list[Path]) -> list[dict]:
@@ -26,8 +26,7 @@ class OpenAIVLMAdapter:
         self.model = get_llm()
 
     def pass1(self, video_path: Path, sampled_frames: list[Path], metadata: dict) -> LocalizationResult:
-        duration = float(metadata["duration"])
-        times = [duration * i / 4 for i in range(4)] + [max(0.0, duration - 0.01)]
+        times = pass1_sample_times(metadata)
         prompt = (
             "Localize a traffic incident from these sampled video frames. "
             "Frame times in MP4 seconds: " + json.dumps(times[: len(sampled_frames)]) + ". "

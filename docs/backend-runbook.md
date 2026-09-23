@@ -19,6 +19,10 @@ For a PostgreSQL and FFmpeg smoke test, create a separate database with `docker 
 3. Poll `GET /api/v1/jobs/{job_id}` until `succeeded`, `failed`, or `cancelled`. On success, fetch `result_uri` and `GET /api/v1/incidents/{incident_id}/evidence`.
 4. Read `GET /api/v1/incidents/{incident_id}/audit` for the event trail.
 
+## Manual fake report without an API key
+
+Keep the normal OpenAI worker stopped (`docker compose stop worker`) and rebuild the API image with `docker compose up -d --build backend`. In Swagger at `http://127.0.0.1:8000/docs`, upload an MP4 and optional CSV log (`sec_from_incident` must be numeric and strictly increasing). Save the returned `incident_id`, then call analyze and save its `job_id`. In the repository root, run `docker compose run --rm --no-deps backend python -m src.demo_fake_worker JOB_ID`, replacing `JOB_ID` with that value. This executes exactly that queued job in the existing worker pipeline and prints its final job response. Poll `GET /api/v1/jobs/{job_id}`, then open its `result_uri`, `GET /api/v1/incidents/{incident_id}/evidence`, and the media routes. The report is marked `DEMO`; its collision is assumed at the midpoint of the uploaded MP4, so its incident window and observations are synthetic. This command is disabled when `APP_ENV=production`.
+
 The frontend branch currently expects an SSE progress route and a different payload. Its build can pass while runtime integration fails; see [backend-contract-v1.1.md](backend-contract-v1.1.md) for exact changes needed in its service layer.
 
 The review write routes are available in local development/test. PATCH requires the current report `version` and only accepts `summary`, `timeline`, `key_factors`, `observations`, and `unknowns`. Submit, approve, and reject follow `DRAFT → IN_REVIEW → APPROVED/REJECTED`; reject requires a nonblank `reason`. Review writes and media routes return 403 in production until real authentication and role checks are integrated.

@@ -5,38 +5,13 @@ Run only with RAV18_PG_E2E=1 and DATABASE_URL ending in /rav18_e2e.
 
 import os
 import subprocess
+import sys
+import json
 
 import pytest
 from fastapi.testclient import TestClient
 
 from src.main import app
-from src.models.contracts import AnalysisResult, LocalizationResult
-from src.worker import run_once
-
-
-class FakeVLM:
-    def pass1(self, video_path, sampled_frames, metadata):
-        assert all(path.is_file() and path.stat().st_size > 0 for path in sampled_frames)
-        return LocalizationResult(
-            incident_detected=True,
-            candidate_start=-0.5,
-            critical_time=0,
-            candidate_end=0.5,
-            evidence_timestamps=[0],
-            collision_offset_in_video_s=2,
-        )
-
-    def pass2(self, prepared):
-        assert prepared.clip_path.is_file() and prepared.clip_path.stat().st_size > 0
-        assert all(path.is_file() and path.stat().st_size > 0 for path in prepared.frame_paths)
-        assert [row["sec_from_incident"] for row in prepared.telemetry_rows] == [-0.5, 0.0, 0.5]
-        return AnalysisResult(
-            incident_detected=True,
-            incident_window={"start": -0.5, "critical": 0, "end": 0.5},
-            summary="Synthetic test incident",
-        )
-
-
 def test_postgres_ffmpeg_upload_to_review(tmp_path):
     if os.environ.get("RAV18_PG_E2E") != "1" or not os.environ.get("DATABASE_URL", "").endswith("/rav18_e2e"):
         pytest.skip("requires the isolated rav18_e2e PostgreSQL database")
@@ -56,11 +31,14 @@ def test_postgres_ffmpeg_upload_to_review(tmp_path):
         assert upload.status_code == 201, upload.text
         incident_id = upload.json()["incident_id"]
         job_id = client.post(f"/api/v1/incidents/{incident_id}/analyze").json()["job_id"]
-        assert run_once(vlm=FakeVLM())
+        demo = subprocess.run([sys.executable, "-m", "src.demo_fake_worker", job_id], capture_output=True, text=True)
+        assert demo.returncode == 0, demo.stderr
+        assert json.loads(demo.stdout)["status"] == "succeeded"
         job = client.get(f"/api/v1/jobs/{job_id}").json()
         assert job["status"] == "succeeded", job
         report_url = job["result_uri"]
         report = client.get(report_url).json()
+        assert "DEMO" in report["summary"]
         assert report["incident_window"] == {"start": -0.5, "critical": 0.0, "end": 0.5}
         evidence = client.get(f"/api/v1/incidents/{incident_id}/evidence").json()["items"]
         assert any(item["kind"] == "video" and item["time_range_s"] == [-0.5, 0.5] for item in evidence)

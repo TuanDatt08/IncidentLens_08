@@ -74,17 +74,14 @@ def get_job(job_id: str) -> dict:
         return _job_dict(job)
 
 
-def claim_job() -> ClaimedJob | None:
+def claim_job(job_id: str | None = None) -> ClaimedJob | None:
     """Claim one queued or expired job; SKIP LOCKED prevents duplicate PG workers."""
     with session_scope() as session:
         current = datetime.now(UTC)
-        job = session.scalar(
-            select(Job)
-            .where(or_(Job.status == "queued", and_(Job.status == "running", Job.lease_until < current)))
-            .order_by(Job.created_at, Job.id)
-            .with_for_update(skip_locked=True)
-            .limit(1)
-        )
+        query = select(Job).where(or_(Job.status == "queued", and_(Job.status == "running", Job.lease_until < current)))
+        if job_id is not None:
+            query = query.where(Job.job_id == job_id)
+        job = session.scalar(query.order_by(Job.created_at, Job.id).with_for_update(skip_locked=True).limit(1))
         if job is None:
             return None
         incident = session.get(Incident, job.incident_id)
