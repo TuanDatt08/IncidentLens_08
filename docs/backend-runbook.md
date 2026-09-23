@@ -15,6 +15,8 @@ The `DATABASE_URL` default targets a local PostgreSQL instance. Tests use a temp
 
 The frontend branch currently expects an SSE progress route and a different payload. Its build can pass while runtime integration fails; see [backend-contract-v1.1.md](backend-contract-v1.1.md) for exact changes needed in its service layer.
 
+The review write routes are pending the v1.1 decisions described below. The current API can be exercised through report/evidence reads and audit, but cannot complete an approval workflow yet.
+
 ## Open contract decisions
 
 The API final v1.1 marks review PATCH whitelist, reject-reason requirement, role enforcement, video retention, CARLA ingress, and polling ETag as `NEED_CONFIRMATION`. Browser video/evidence access (media route or signed URL), no-incident outcome, and how a rejected report resumes editing also affect the unfinished public contract. Evidence URIs are deliberately internal until access is specified. `collision_offset_in_video_s` in video metadata is the MP4 seek origin for collision-relative evidence timestamps.

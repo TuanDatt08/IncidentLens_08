@@ -16,6 +16,8 @@ Ba nhóm trạng thái độc lập:
 
 Lỗi trả `{ "error": { "code": "...", "message": "...", "details": null } }`. Job có `pass: null` khi queued; `progress.total` có thể null. Chỉ job succeeded có `result_uri`, chỉ job failed có `error`.
 
+Trong 13 route của v1.1, backend hiện phục vụ health, upload, list/detail incident, analyze, poll job, đọc report/evidence và audit. Bốn route `PATCH /incidents/{incident_id}/report`, `POST /report/submit`, `POST /report/approve`, `POST /report/reject` còn chờ chốt quy tắc chỉnh sửa, actor/role và reject reason. Nhánh `incident_detected=false` hiện kết thúc job với `INSUFFICIENT_EVIDENCE` cho đến khi xác nhận trạng thái terminal chính thức.
+
 ## Khác biệt với frontend ở `origin/frontend` (`ba1f099`)
 
 | FE hiện tại | Cần đổi ở FE |

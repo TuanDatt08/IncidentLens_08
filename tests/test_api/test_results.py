@@ -76,10 +76,14 @@ async def test_worker_persists_report_evidence_and_terminal_job(db_client):
     assert report["incident_window"]["start"] == -1.0
     assert set(report["evidence_ids"]) == {item["evidence_id"] for item in evidence}
     assert any(item["time_range_s"] == [-1.0, 1.0] for item in evidence)
+    assert any(item["kind"] == "telemetry" and item["time_range_s"] == [-1.0, 1.0] for item in evidence)
     assert all(not Path(item["uri"]).is_absolute() for item in evidence)
     detail = (await db_client.get(f"/api/v1/incidents/{incident_id}")).json()
     assert detail["processing_status"] == "COMPLETED"
+    assert detail["video_metadata"]["collision_offset_in_video_s"] == 5.0
     assert detail["incident_record"] is None
+    audit = (await db_client.get(f"/api/v1/incidents/{incident_id}/audit")).json()["items"]
+    assert [event["action"] for event in audit] == ["INCIDENT_CREATED", "ANALYSIS_STARTED", "ANALYSIS_COMPLETED"]
     assert run_once(vlm=FakeVLM()) is False
 
 
