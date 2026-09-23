@@ -1,169 +1,106 @@
-from pathlib import Path
+"""Job polling and review transitions on the PostgreSQL-ready workflow."""
 
 import pytest
 from pydantic import ValidationError
 
-from src.models.workflow import JobStatus
-from src.schemas.incident import Evidence
-from src.services.errors import IncidentIngestionError
-from src.services.incident_ingestion import IncidentIngestionService
-from src.services.logs import LogService
-from src.services.package_repository import IncidentPackageRepository
-from src.services.storage import LocalStorage
-from src.services.video import VideoProbeResult
+from src.demo_fake_worker import DemoVLM
+from src.models.contracts import EvidenceV1
+from src.services.jobs import claim_job, fail_job, get_job, heartbeat
+from src.services.video import VideoProbeResult, VideoService
+from src.worker import run_once
 
 
-class FakeVideoService:
-    def validate_upload(self, filename: str | None, content_type: str | None) -> None:
-        if not filename or not filename.lower().endswith(".mp4") or content_type != "video/mp4":
-            raise IncidentIngestionError("unsupported_format", "Unsupported video format.", field="video")
+@pytest.fixture(autouse=True)
+def fake_media(monkeypatch):
+    monkeypatch.setattr(VideoService, "probe", lambda self, path: VideoProbeResult(10, 30, 320, 240))
 
-    def probe(self, video_path: Path) -> VideoProbeResult:
-        assert video_path.exists()
-        return VideoProbeResult(duration=20.0, fps=30.0, width=1280, height=720)
+    def frame(self, video_path, at_s, destination):
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(b"jpeg")
+        return destination
+
+    def clip(self, video_path, start_s, end_s, destination):
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(b"mp4")
+        return destination
+
+    monkeypatch.setattr(VideoService, "extract_frame", frame)
+    monkeypatch.setattr(VideoService, "extract_clip", clip)
 
 
-@pytest.fixture
-def workflow_ingestion_service(tmp_path: Path) -> IncidentIngestionService:
-    storage_root = tmp_path / "incidents"
-    return IncidentIngestionService(
-        storage=LocalStorage(storage_root),
-        repository=IncidentPackageRepository(storage_root),
-        video_service=FakeVideoService(),
-        log_service=LogService(),
-        max_video_size_bytes=1024 * 1024,
-        max_log_size_bytes=1024 * 1024,
+async def upload(db_client):
+    response = await db_client.post(
+        "/api/v1/incidents/upload", files={"video": ("incident.mp4", b"video-bytes", "video/mp4")}
     )
-
-
-def video_file() -> tuple[str, bytes, str]:
-    return ("incident.mp4", b"video-bytes", "video/mp4")
-
-
-async def upload(client, monkeypatch, service, log: bytes | None = None) -> str:
-    monkeypatch.setattr("src.api.incidents.get_ingestion_service", lambda: service)
-    files = {"video": video_file()}
-    if log is not None:
-        files["log"] = ("telemetry.csv", log, "text/csv")
-    response = await client.post("/api/v1/incidents/upload", files=files)
     assert response.status_code == 201
     return response.json()["incident_id"]
 
 
 @pytest.mark.asyncio
-async def test_upload_dats_csv_prefers_incident_relative_time(client, monkeypatch, workflow_ingestion_service):
-    csv = (
-        "wall_clock_ts,sec_from_incident,sim_time_s,speed_kmh,throttle,steer,brake,"
-        "loc_x,loc_y,loc_z,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,compass_deg,"
-        "gnss_lat,gnss_lon,collision_intensity,collision_with\n"
-        "2026-01-01T00:00:00Z,0,100,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,none\n"
-        "2026-01-01T00:00:01Z,1,101,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,none\n"
-    )
-    incident_id = await upload(client, monkeypatch, workflow_ingestion_service, csv)
-    package = workflow_ingestion_service.repository.get(incident_id)
-    assert package is not None
-    assert package.log_metadata == {
-        "row_count": 2,
-        "timestamp_column": "sec_from_incident",
-        "timestamp_unit": "seconds",
-        "time_reference": "incident_relative",
+async def test_incident_analyze_job_polling_and_report_are_separate_states(db_client):
+    incident_id = await upload(db_client)
+    listing = (await db_client.get("/api/v1/incidents")).json()
+    assert any(item["incident_id"] == incident_id for item in listing["items"])
+
+    accepted = await db_client.post(f"/api/v1/incidents/{incident_id}/analyze")
+    assert accepted.status_code == 202
+    job_id = accepted.json()["job_id"]
+    assert (await db_client.get(f"/api/v1/jobs/{job_id}")).json()["status"] == "queued"
+    assert (await db_client.get(f"/api/v1/incidents/{incident_id}")).json()["processing_status"] == "PROCESSING"
+    assert (await db_client.post(f"/api/v1/incidents/{incident_id}/analyze")).status_code == 409
+
+    assert run_once(vlm=DemoVLM(), job_id=job_id)
+    job = (await db_client.get(f"/api/v1/jobs/{job_id}")).json()
+    assert job["status"] == "succeeded" and job["pass"] == 2
+    report = (await db_client.get(job["result_uri"])).json()
+    assert report["review_status"] == "DRAFT"
+    assert report["incident_id"] == incident_id
+    assert (await db_client.get(f"/api/v1/incidents/{incident_id}")).json()["processing_status"] == "COMPLETED"
+    audit = (await db_client.get(f"/api/v1/incidents/{incident_id}/audit")).json()["items"]
+    assert [item["action"] for item in audit] == ["INCIDENT_CREATED", "ANALYSIS_STARTED", "ANALYSIS_COMPLETED"]
+
+
+@pytest.mark.asyncio
+async def test_worker_can_claim_one_job_without_stealing_another(db_client):
+    first = await upload(db_client)
+    second = await upload(db_client)
+    first_job = (await db_client.post(f"/api/v1/incidents/{first}/analyze")).json()["job_id"]
+    second_job = (await db_client.post(f"/api/v1/incidents/{second}/analyze")).json()["job_id"]
+
+    claim = claim_job(second_job)
+    assert claim.job_id == second_job
+    heartbeat(second_job, pass_number=1, done=0, total=2, expected_attempt=claim.attempt)
+    assert get_job(first_job)["status"] == "queued"
+    assert get_job(second_job)["status"] == "running"
+    fail_job(second_job, "VLM_FAILED", "Demo failure", expected_attempt=claim.attempt)
+    assert get_job(second_job)["status"] == "failed"
+    assert (await db_client.get(f"/api/v1/incidents/{second}")).json()["processing_status"] == "FAILED"
+
+
+@pytest.mark.asyncio
+async def test_review_requires_report_and_valid_transition_order(db_client):
+    incident_id = await upload(db_client)
+    report_url = f"/api/v1/incidents/{incident_id}/report"
+    missing = await db_client.post(f"{report_url}/submit")
+    assert missing.status_code == 404 and missing.json()["error"]["code"] == "REPORT_NOT_FOUND"
+
+    job_id = (await db_client.post(f"/api/v1/incidents/{incident_id}/analyze")).json()["job_id"]
+    assert run_once(vlm=DemoVLM(), job_id=job_id)
+    assert (await db_client.post(f"{report_url}/approve")).status_code == 409
+    assert (await db_client.post(f"{report_url}/submit")).json()["status"] == "IN_REVIEW"
+    assert (await db_client.post(f"{report_url}/reject", json={"reason": "  "})).status_code == 422
+    assert (await db_client.post(f"{report_url}/approve")).json()["status"] == "APPROVED"
+    assert (await db_client.post(f"{report_url}/reject", json={"reason": "too late"})).status_code == 409
+
+
+def test_evidence_contract_rejects_legacy_fields():
+    payload = {
+        "evidence_id": "EVD-001",
+        "kind": "video",
+        "uri": "INC-001/clips/clip.mp4",
+        "sha256": "a" * 64,
+        "time_range_s": (-0.5, 0.5),
     }
-    assert package.sync_offset is None
-
-
-@pytest.mark.asyncio
-async def test_incident_list_detail_and_analyze_return_polling_contract(
-    client, monkeypatch, workflow_ingestion_service
-):
-    incident_id = await upload(client, monkeypatch, workflow_ingestion_service)
-
-    listed = await client.get("/api/v1/incidents")
-    assert listed.status_code == 200
-    assert any(item["id"] == incident_id for item in listed.json())
-
-    analyze = await client.post(f"/api/v1/incidents/{incident_id}/analyze")
-    assert analyze.status_code == 202
-    assert analyze.json()["status"] == "queued"
-    job_id = analyze.json()["job_id"]
-
-    queued = await client.get(f"/api/v1/jobs/{job_id}")
-    assert queued.status_code == 200
-    assert queued.json()["status"] == "queued"
-    assert queued.json()["pass"] is None
-    assert set(queued.json()["progress"]) == {"done", "total"}
-
-    workflow = __import__("src.api.incidents", fromlist=["get_workflow_repository"])
-    repository = workflow.get_workflow_repository()
-    job = repository.get_job(job_id)
-    assert job is not None
-    job.status = JobStatus.RUNNING
-    repository.save_job(job)
-    running = await client.get(f"/api/v1/jobs/{job_id}")
-    assert running.json()["status"] == "running"
-
-    job.status = JobStatus.SUCCEEDED
-    job.progress_done = 1
-    job.progress_total = 1
-    repository.save_job(job)
-    succeeded = await client.get(f"/api/v1/jobs/{job_id}")
-    assert succeeded.json()["status"] == "succeeded"
-
-
-@pytest.mark.asyncio
-async def test_invalid_review_transition_is_rejected(client, monkeypatch, workflow_ingestion_service):
-    incident_id = await upload(client, monkeypatch, workflow_ingestion_service)
-    approved = await client.post(f"/api/v1/incidents/{incident_id}/report/approve")
-    assert approved.status_code == 409
-
-    submitted = await client.post(f"/api/v1/incidents/{incident_id}/report/submit")
-    assert submitted.status_code == 200
-    approved = await client.post(f"/api/v1/incidents/{incident_id}/report/approve")
-    assert approved.status_code == 200
-    rejected = await client.post(
-        f"/api/v1/incidents/{incident_id}/report/reject", json={"reason": "too late"}
-    )
-    assert rejected.status_code == 409
-
-    audit = await client.get(f"/api/v1/incidents/{incident_id}/audit")
-    assert audit.status_code == 200
-    assert any(event["action"] == "report_approved" for event in audit.json())
-
-
-def test_evidence_contract_accepts_normalized_shape_and_rejects_invalid_values():
-    evidence = Evidence(
-        evidence_id="EV-1",
-        kind="frame",
-        uri="evidence/EV-1.jpg",
-        sha256="a" * 64,
-        time_range_s=(0, 1.5),
-        tier="core",
-        bytes=None,
-        media_type="image/jpeg",
-    )
-    assert evidence.time_range_s == (0, 1.5)
-
+    assert EvidenceV1.model_validate(payload).time_range_s == (-0.5, 0.5)
     with pytest.raises(ValidationError):
-        Evidence(
-            evidence_id="EV-2",
-            kind="frame",
-            uri="/absolute/path.jpg",
-            sha256="A" * 64,
-            time_range_s=(2, 1),
-            tier=None,
-            bytes=None,
-            media_type=None,
-        )
-
-
-def test_evidence_boundary_maps_legacy_names():
-    evidence = Evidence(
-        evidence_id="EV-legacy",
-        source_type="VIDEO",
-        clip_path="evidence/clip.mp4",
-        timestamp_start=0,
-        timestamp_end=2,
-        sha256="b" * 64,
-    )
-    assert evidence.kind == "video"
-    assert evidence.uri == "evidence/clip.mp4"
-    assert evidence.time_range_s == (0, 2)
+        EvidenceV1.model_validate({**payload, "timestamp_start": 0, "clip_path": "old.mp4"})

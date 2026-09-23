@@ -90,7 +90,7 @@ Test thường dùng SQLite tạm và fake VLM, không gọi OpenAI hoặc sửa
 docker compose run --rm --no-deps -e DATABASE_URL= backend pytest -q tests/
 ```
 
-Kết quả đã kiểm tra: **45 passed**. Smoke test với PostgreSQL và FFmpeg thật dùng database `rav18_e2e` tách biệt; xem [backend runbook](docs/backend-runbook.md) để tạo, migrate, chạy test và dọn database này.
+Kết quả đã kiểm tra: **56 passed**. Smoke test với PostgreSQL và FFmpeg thật dùng database `rav18_e2e` tách biệt; xem [backend runbook](docs/backend-runbook.md) để tạo, migrate, chạy test và dọn database này.
 
 Muốn dùng VLM thật, đặt `OPENAI_API_KEY` trong môi trường rồi chạy `docker compose up -d --build` để khởi động cả `worker`. Xem log bằng `docker compose logs -f backend worker`. Dừng API/worker mà vẫn giữ PostgreSQL và dữ liệu bằng `docker compose stop backend worker`.
 
