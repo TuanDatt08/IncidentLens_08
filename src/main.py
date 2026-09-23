@@ -1,10 +1,15 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.errors import ApiError, api_error_handler
+from src.api.errors import ApiError, api_error_handler, http_error_handler, internal_error_handler, validation_error_handler
 from src.api.incidents import router as incident_router
+from src.api.jobs import router as job_router
+from src.api.reports import router as report_router
+from src.api.evidence import router as evidence_router
+from src.api.audit import router as audit_router
 from src.api.routes import router
 from src.config import get_settings
 
@@ -24,6 +29,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.add_exception_handler(ApiError, api_error_handler)
+app.add_exception_handler(RequestValidationError, validation_error_handler)
+app.add_exception_handler(HTTPException, http_error_handler)
+app.add_exception_handler(Exception, internal_error_handler)
 
 settings = get_settings()
 app.add_middleware(
@@ -36,6 +44,10 @@ app.add_middleware(
 
 app.include_router(router, prefix="/api/v1")
 app.include_router(incident_router, prefix="/api/v1")
+app.include_router(job_router, prefix="/api/v1")
+app.include_router(report_router, prefix="/api/v1")
+app.include_router(evidence_router, prefix="/api/v1")
+app.include_router(audit_router, prefix="/api/v1")
 
 
 @app.get("/health")

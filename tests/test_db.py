@@ -37,3 +37,14 @@ def test_initial_migration_creates_six_tables_and_rolls_back(tmp_path):
 
     command.downgrade(config, "base")
     assert set(inspect(engine).get_table_names()) <= {"alembic_version"}
+
+
+def test_migration_uses_database_url_environment_in_container(tmp_path, monkeypatch):
+    target = f"sqlite:///{(tmp_path / 'target.db').as_posix()}"
+    wrong = f"sqlite:///{(tmp_path / 'wrong.db').as_posix()}"
+    monkeypatch.setenv("DATABASE_URL", target)
+    config = Config("alembic.ini")
+    config.set_main_option("sqlalchemy.url", wrong)
+    command.upgrade(config, "head")
+    assert "incidents" in inspect(create_engine(target)).get_table_names()
+    assert "incidents" not in inspect(create_engine(wrong)).get_table_names()

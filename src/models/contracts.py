@@ -128,9 +128,15 @@ class LocalizationResult(BaseModel):
     candidate_end: float | None = None
     incident_type: str | None = None
     evidence_timestamps: list[float] = Field(default_factory=list)
+    # Internal mapping from collision-relative seconds to MP4 seconds.
+    collision_offset_in_video_s: float | None = None
 
     @model_validator(mode="after")
     def valid_window(self) -> LocalizationResult:
+        if self.collision_offset_in_video_s is not None and (
+            not math.isfinite(self.collision_offset_in_video_s) or self.collision_offset_in_video_s < 0
+        ):
+            raise ValueError("collision_offset_in_video_s must be finite and nonnegative")
         if self.incident_detected:
             if None in (self.candidate_start, self.critical_time, self.candidate_end):
                 raise ValueError("detected incident requires candidate window")

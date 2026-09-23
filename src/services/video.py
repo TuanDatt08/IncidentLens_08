@@ -115,6 +115,30 @@ class VideoService:
             )
         return VideoProbeResult(duration=duration, fps=fps, width=width, height=height)
 
+    def extract_frame(self, video_path: Path, at_s: float, destination: Path) -> Path:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        self._run_ffmpeg([
+            "-y", "-ss", f"{at_s:.6f}", "-i", str(video_path),
+            "-frames:v", "1", str(destination),
+        ])
+        return destination
+
+    def extract_clip(self, video_path: Path, start_s: float, end_s: float, destination: Path) -> Path:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        self._run_ffmpeg([
+            "-y", "-ss", f"{start_s:.6f}", "-i", str(video_path),
+            "-t", f"{end_s - start_s:.6f}", "-c:v", "libx264", "-an", str(destination),
+        ])
+        return destination
+
+    def _run_ffmpeg(self, args: list[str]) -> None:
+        try:
+            completed = subprocess.run([self.ffmpeg_bin or "ffmpeg", *args], capture_output=True, text=True, timeout=180)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise IncidentIngestionError("video_tool_unavailable", "FFmpeg is unavailable or timed out.", status_code=500) from exc
+        if completed.returncode != 0:
+            raise IncidentIngestionError("video_invalid", "FFmpeg could not extract the requested media.")
+
     @staticmethod
     def _parse_fps(value: Any) -> float:
         if not value:
