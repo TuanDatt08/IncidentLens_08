@@ -1,7 +1,15 @@
-// NEED_CONFIRMATION: add log_window/frame_url when the Evidence contract is frozen.
 export type Evidence = {
   evidence_id: string;
-  timestamp_sec: number;
-  source: string;
-  description: string;
+  kind: "video" | "telemetry" | "frame" | "annotation";
+  uri: string;
+  sha256: string;
+  time_range_s: [number, number];
+  tier: "core" | "bulky" | null;
+  bytes: number | null;
+  media_type: string | null;
+};
+
+export type EvidenceListResponse = {
+  incident_id: string;
+  items: Evidence[];
 };

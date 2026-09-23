@@ -1,13 +1,14 @@
 import type { Evidence } from "@/types/evidence";
 import type {
   IncidentDraft,
+  IncidentListResponse,
   IncidentRecord,
   ProcessingStatus,
   ReviewState,
   UploadIncidentInput,
   UploadIncidentResponse,
+  VideoMetadata,
 } from "@/types/incident";
-import type { ProgressEvent } from "@/types/processing";
 import type { ReportPatch } from "@/types/report";
 
 const sampleVideo =
@@ -15,136 +16,146 @@ const sampleVideo =
 
 const initialIncidents: IncidentRecord[] = [
   {
-    id: "RAV-18-0042",
-    package_id: "RAV-18-0042",
-    file_name: "rav18_city_merge_0042.mp4",
+    incident_id: "RAV-18-0042",
     created_at: "2026-09-21T09:42:00.000Z",
+    updated_at: "2026-09-21T09:42:00.000Z",
     processing_status: "COMPLETED",
-    report_status: "DRAFT",
-    video_url: sampleVideo,
-    progress: 100,
-    frame_count: 901,
+    video_uri: "RAV-18-0042/source/video.mp4",
+    telemetry_uri: null,
+    video_metadata: { duration: 5, fps: 30, width: 1920, height: 1080, collision_offset_in_video_s: 2.5 },
+    telemetry_metadata: null,
+    incident_record: { scenario: "city_merge", template: "rear_end" },
   },
   {
-    id: "RAV-18-0041",
-    package_id: "RAV-18-0041",
-    file_name: "highway_cut_in_0041.mp4",
+    incident_id: "RAV-18-0041",
     created_at: "2026-09-20T15:08:00.000Z",
+    updated_at: "2026-09-20T15:08:00.000Z",
     processing_status: "PROCESSING",
-    report_status: "DRAFT",
-    video_url: sampleVideo,
-    progress: 50,
-    frame_count: 1240,
+    video_uri: "RAV-18-0041/source/video.mp4",
+    telemetry_uri: null,
+    video_metadata: { duration: 40, fps: 30, width: 1920, height: 1080 },
+    telemetry_metadata: null,
+    incident_record: { scenario: "highway_cut_in", template: "rear_end" },
   },
   {
-    id: "RAV-18-0039",
-    package_id: "RAV-18-0039",
-    file_name: "urban_crossing_0039.mp4",
+    incident_id: "RAV-18-0039",
     created_at: "2026-09-19T11:24:00.000Z",
+    updated_at: "2026-09-19T11:24:00.000Z",
     processing_status: "COMPLETED",
-    report_status: "APPROVED",
-    video_url: sampleVideo,
-    progress: 100,
-    frame_count: 1384,
+    video_uri: "RAV-18-0039/source/video.mp4",
+    telemetry_uri: null,
+    video_metadata: { duration: 5, fps: 30, width: 1920, height: 1080, collision_offset_in_video_s: 2.5 },
+    telemetry_metadata: null,
+    incident_record: { scenario: "urban_crossing", template: "pedestrian" },
   },
   {
-    id: "RAV-18-0038",
-    package_id: "RAV-18-0038",
-    file_name: "night_drive_0038.mp4",
+    incident_id: "RAV-18-0038",
     created_at: "2026-09-18T18:16:00.000Z",
+    updated_at: "2026-09-18T18:16:00.000Z",
     processing_status: "FAILED",
-    report_status: "DRAFT",
-    progress: 34,
-    frame_count: 0,
+    video_uri: "RAV-18-0038/source/video.mp4",
+    telemetry_uri: null,
+    video_metadata: { duration: 25, fps: 30, width: 1920, height: 1080 },
+    telemetry_metadata: null,
+    incident_record: null,
   },
 ];
 
 const incidents = [...initialIncidents];
+const mockVideoUrls = new Map(initialIncidents.map((incident) => [incident.incident_id, sampleVideo]));
 
 const draftStore: Record<string, IncidentDraft> = {
   "RAV-18-0042": {
-    id: "RAV-18-0042",
-    package_id: "RAV-18-0042",
+    incident_id: "RAV-18-0042",
+    incident_detected: true,
     incident_type: "Hard Braking",
-    confidence: 0.89,
-    start_sec: 11.5,
-    critical_sec: 14.2,
-    end_sec: 17,
-    summary_text:
+    incident_window: { start: -1, critical: 0, end: 1 },
+    summary:
       "The ego vehicle performs a hard braking manoeuvre after a lead vehicle enters the lane and slows rapidly.",
     unknowns: ["Brake pedal intent is not available in the current telemetry package."],
-    status: "DRAFT",
+    review_status: "DRAFT",
+    version: 1,
     created_at: "2026-09-21T09:42:00.000Z",
+    updated_at: "2026-09-21T09:42:00.000Z",
     timeline: [
-      { label: "Start", timestamp_sec: 11.5, description: "Lead vehicle enters the incident window." },
-      { label: "Critical", timestamp_sec: 14.2, description: "Peak deceleration is observed." },
-      { label: "End", timestamp_sec: 17, description: "Vehicle returns to stable motion." },
+      { label: "Start", timestamp_sec: -1, description: "Lead vehicle enters the incident window." },
+      { label: "Critical", timestamp_sec: 0, description: "Peak deceleration is observed." },
+      { label: "End", timestamp_sec: 1, description: "Vehicle returns to stable motion." },
     ],
     observations: ["Lead vehicle brake lights become visible."],
     key_factors: ["Short following distance", "Rapid lead-vehicle deceleration"],
     evidence_ids: ["EV-001", "EV-002"],
   },
   "RAV-18-0039": {
-    id: "RAV-18-0039",
-    package_id: "RAV-18-0039",
+    incident_id: "RAV-18-0039",
+    incident_detected: true,
     incident_type: "Pedestrian Crossing",
-    confidence: 0.94,
-    start_sec: 6.8,
-    critical_sec: 9.1,
-    end_sec: 12.4,
-    summary_text: "The perception stack detects a pedestrian crossing ahead and the vehicle yields safely.",
+    incident_window: { start: -1, critical: 0, end: 1 },
+    summary: "The perception stack detects a pedestrian crossing ahead and the vehicle yields safely.",
     unknowns: [],
-    status: "APPROVED",
+    review_status: "APPROVED",
+    version: 1,
     created_at: "2026-09-19T11:24:00.000Z",
+    updated_at: "2026-09-19T11:24:00.000Z",
     timeline: [
-      { label: "Start", timestamp_sec: 6.8 },
-      { label: "Critical", timestamp_sec: 9.1 },
-      { label: "End", timestamp_sec: 12.4 },
+      { label: "Start", timestamp_sec: -1 },
+      { label: "Critical", timestamp_sec: 0 },
+      { label: "End", timestamp_sec: 1 },
     ],
     observations: ["Pedestrian is visible near the right-side crossing."],
     key_factors: ["Clear lane boundary", "Vehicle yields before crossing"],
     evidence_ids: ["EV-014"],
   },
 };
-
 const evidenceStore: Record<string, Evidence[]> = {
   "RAV-18-0042": [
     {
       evidence_id: "EV-001",
-      timestamp_sec: 13.8,
-      source: "VIDEO",
-      description: "Lead vehicle brake lights become visible.",
+      kind: "video",
+      uri: "RAV-18-0042/evidence/lead-brake-lights.mp4",
+      sha256: "a".repeat(64),
+      time_range_s: [-0.4, -0.2],
+      tier: "core",
+      bytes: 245760,
+      media_type: "video/mp4",
     },
     {
       evidence_id: "EV-002",
-      timestamp_sec: 14.2,
-      source: "VIDEO",
-      description: "Ego vehicle reaches the critical braking moment.",
+      kind: "frame",
+      uri: "RAV-18-0042/evidence/critical-frame.jpg",
+      sha256: "b".repeat(64),
+      time_range_s: [0, 0],
+      tier: "core",
+      bytes: 53248,
+      media_type: "image/jpeg",
     },
   ],
   "RAV-18-0039": [
     {
       evidence_id: "EV-014",
-      timestamp_sec: 9.1,
-      source: "VIDEO",
-      description: "Pedestrian enters the vehicle path and is tracked continuously.",
+      kind: "video",
+      uri: "RAV-18-0039/evidence/pedestrian-crossing.mp4",
+      sha256: "c".repeat(64),
+      time_range_s: [-0.1, 0.1],
+      tier: "bulky",
+      bytes: 327680,
+      media_type: "video/mp4",
     },
   ],
 };
 
 function createFallbackDraft(incident: IncidentRecord): IncidentDraft {
   return {
-    id: incident.id,
-    package_id: incident.package_id,
-    incident_type: "Incident under analysis",
-    confidence: 0,
-    start_sec: 0,
-    critical_sec: 0,
-    end_sec: 0,
-    summary_text: "The AI-generated incident summary will appear here after analysis.",
+    incident_id: incident.incident_id,
+    incident_detected: false,
+    incident_type: null,
+    incident_window: null,
+    summary: "The AI-generated incident summary will appear here after analysis.",
     unknowns: ["Analysis has not produced additional unknowns yet."],
-    status: incident.report_status,
+    review_status: "DRAFT",
+    version: 1,
     created_at: incident.created_at,
+    updated_at: incident.updated_at,
     observations: [],
     key_factors: [],
     timeline: [],
@@ -153,17 +164,21 @@ function createFallbackDraft(incident: IncidentRecord): IncidentDraft {
 }
 
 export const mockStore = {
-  listIncidents(): IncidentRecord[] {
-    return incidents.map((incident) => ({ ...incident }));
+  listIncidents(limit = 20, offset = 0): IncidentListResponse {
+    return { items: incidents.slice(offset, offset + limit).map((incident) => ({ ...incident })), total: incidents.length, limit, offset };
   },
 
   getIncident(id: string): IncidentRecord | undefined {
-    const incident = incidents.find((item) => item.id === id);
+    const incident = incidents.find((item) => item.incident_id === id);
     return incident ? { ...incident } : undefined;
   },
 
+  getVideoPreviewUrl(id: string): string | undefined {
+    return mockVideoUrls.get(id);
+  },
+
   getDraft(id: string): IncidentDraft | undefined {
-    const incident = incidents.find((item) => item.id === id);
+    const incident = incidents.find((item) => item.incident_id === id);
     if (!incident) return undefined;
     const draft = draftStore[id] ?? createFallbackDraft(incident);
     return {
@@ -176,16 +191,15 @@ export const mockStore = {
   },
 
   getEvidence(id: string): Evidence[] {
-    return (evidenceStore[id] ?? []).map((item) => ({ ...item }));
+    return (evidenceStore[id] ?? []).map((item) => ({ ...item, time_range_s: [...item.time_range_s] as [number, number] }));
   },
 
   updateReport(id: string, patch: ReportPatch): IncidentDraft {
     const current = this.getDraft(id);
     if (!current) throw new Error("Incident report was not found.");
-    const next = { ...current, ...patch };
+    const { version: _version, ...fields } = patch;
+    const next = { ...current, ...fields, version: current.version + 1, updated_at: new Date().toISOString() };
     draftStore[id] = next;
-    const incident = incidents.find((item) => item.id === id);
-    if (incident) incident.report_status = next.status;
     return this.getDraft(id) as IncidentDraft;
   },
 
@@ -196,65 +210,54 @@ export const mockStore = {
       ...current,
       ...(rejectionReason !== undefined ? { rejection_reason: rejectionReason } : {}),
     };
-    next.status = status;
+    next.review_status = status;
+    next.updated_at = new Date().toISOString();
     draftStore[id] = next;
-    const incident = incidents.find((item) => item.id === id);
-    if (incident) incident.report_status = status;
     return this.getDraft(id) as IncidentDraft;
   },
 
   addUpload(input: UploadIncidentInput): UploadIncidentResponse {
     const numericIds = incidents
-      .map((incident) => Number(incident.id.split("-").at(-1)))
+      .map((incident) => Number(incident.incident_id.split("-").at(-1)))
       .filter((value) => Number.isFinite(value));
     const nextNumber = Math.max(...numericIds, 0) + 1;
     const id = `RAV-18-${String(nextNumber).padStart(4, "0")}`;
     const now = new Date().toISOString();
-    const videoUrl = URL.createObjectURL(input.video);
+    const videoUri = `${id}/source/video.mp4`;
+    mockVideoUrls.set(id, URL.createObjectURL(input.video));
+    const videoMetadata: VideoMetadata = { duration: 0, fps: 0, width: 0, height: 0 };
     incidents.unshift({
-      id,
-      package_id: id,
-      file_name: input.video.name,
+      incident_id: id,
       created_at: now,
-      processing_status: "UPLOADED",
-      report_status: "DRAFT",
-      video_url: videoUrl,
-      progress: 0,
-      frame_count: 0,
+      updated_at: now,
+      processing_status: "READY",
+      video_uri: videoUri,
+      telemetry_uri: null,
+      video_metadata: videoMetadata,
+      telemetry_metadata: null,
+      incident_record: null,
     });
     draftStore[id] = {
       ...createFallbackDraft(incidents[0]),
-      id,
-      package_id: id,
+      incident_id: id,
       created_at: now,
-      status: "DRAFT",
+      review_status: "DRAFT",
     };
     evidenceStore[id] = [];
     return {
-      package_id: id,
-      status: "UPLOADED",
+      incident_id: id,
+      processing_status: "READY",
       sync_offset: null,
       frame_count: 0,
-      video_metadata: null,
-      warnings: [],
+      video_metadata: videoMetadata,
     };
   },
 
-  setProcessing(id: string, status: ProcessingStatus, progress: number): void {
-    const incident = incidents.find((item) => item.id === id);
+  setProcessing(id: string, status: ProcessingStatus): void {
+    const incident = incidents.find((item) => item.incident_id === id);
     if (incident) {
       incident.processing_status = status;
-      incident.progress = progress;
+      incident.updated_at = new Date().toISOString();
     }
   },
 };
-
-export const mockProgressEvents: ProgressEvent[] = [
-  { progress: 0, stage: "UPLOADED", message: "Package received and queued for analysis." },
-  { progress: 12, stage: "VALIDATING", message: "Checking video and telemetry package." },
-  { progress: 27, stage: "EXTRACTING", message: "Extracting frames and vehicle signals." },
-  { progress: 39, stage: "SYNCHRONIZING", message: "Synchronizing video with the available log." },
-  { progress: 50, stage: "PASS_1", message: "Pass 1 — Incident window located." },
-  { progress: 78, stage: "PASS_2", message: "Pass 2 — Incident and evidence analysis in progress." },
-  { progress: 100, stage: "COMPLETED", message: "Analysis complete. Draft report is ready to review." },
-];

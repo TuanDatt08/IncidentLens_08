@@ -1,24 +1,30 @@
 import { apiRequest } from "@/lib/api-client";
-import { USE_MOCK_API } from "@/lib/config";
+import { API_BASE_URL, USE_MOCK_API } from "@/lib/config";
 import type {
   IncidentRecord,
+  IncidentListResponse,
   UploadIncidentInput,
   UploadIncidentResponse,
 } from "@/types/incident";
 import { mockStore } from "./mock-data";
 
-export async function listIncidents(): Promise<IncidentRecord[]> {
-  if (USE_MOCK_API) return mockStore.listIncidents();
-  return apiRequest<IncidentRecord[]>("/incidents");
+export function getIncidentVideoUrl(incidentId: string): string | undefined {
+  if (USE_MOCK_API) return mockStore.getVideoPreviewUrl(incidentId);
+  return `${API_BASE_URL.replace(/\/+$/, "")}/incidents/${encodeURIComponent(incidentId)}/video`;
 }
 
-export async function getIncident(id: string): Promise<IncidentRecord> {
+export async function listIncidents(limit = 20, offset = 0): Promise<IncidentListResponse> {
+  if (USE_MOCK_API) return mockStore.listIncidents(limit, offset);
+  return apiRequest<IncidentListResponse>(`/incidents?limit=${limit}&offset=${offset}`);
+}
+
+export async function getIncident(incidentId: string): Promise<IncidentRecord> {
   if (USE_MOCK_API) {
-    const incident = mockStore.getIncident(id);
+    const incident = mockStore.getIncident(incidentId);
     if (!incident) throw new Error("Incident could not be found.");
     return incident;
   }
-  return apiRequest<IncidentRecord>(`/incidents/${encodeURIComponent(id)}`);
+  return apiRequest<IncidentRecord>(`/incidents/${encodeURIComponent(incidentId)}`);
 }
 
 export async function uploadIncident(

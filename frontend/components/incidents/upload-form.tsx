@@ -55,7 +55,7 @@ export function UploadForm() {
     setError("");
     try {
       const response = await uploadIncident({ video, log });
-      router.push(`/incidents/${response.package_id}/processing`);
+      router.push(`/incidents/${response.incident_id}/processing`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Upload failed. Please try again.");
       setIsSubmitting(false);
