@@ -1,38 +1,15 @@
-# Architecture Diagram
-
-## System Overview
+# RAV18 backend MVP architecture
 
 ```mermaid
-graph TB
-    User([User]) --> UI[Frontend<br/>React/Next.js]
-    UI -->|REST API| API[FastAPI Backend]
-    API --> Agent[LangGraph Agent]
-    Agent --> LLM[LLM Service<br/>GPT-4o / Gemini]
-    Agent --> Tools[Agent Tools]
-    Tools --> DB[(Database)]
-    Agent --> VS[Vector Store<br/>ChromaDB]
+flowchart LR
+    FE[Next.js frontend] -->|REST /api/v1| API[FastAPI]
+    FE -->|poll job_id| API
+    API --> PG[(PostgreSQL: six tables)]
+    API --> FS[(Incident file storage)]
+    WORKER[Analysis worker] -->|lease and heartbeat| PG
+    WORKER --> FS
+    WORKER -->|Pass 1 and Pass 2| VLM[Vision language model]
+    WORKER -->|report, evidence, audit| PG
 ```
 
-## Agent Flow
-
-```mermaid
-graph LR
-    START((Start)) --> Input[Parse Input]
-    Input --> Analyze[Analyze Query]
-    Analyze --> Decide{Need Tool?}
-    Decide -->|Yes| CallTool[Call Tool]
-    CallTool --> Analyze
-    Decide -->|No| Generate[Generate Response]
-    Generate --> END((End))
-```
-
-## Component Details
-
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| Frontend | React/Next.js | User interface |
-| Backend | FastAPI | API server |
-| Agent | LangGraph | AI agent orchestration |
-| LLM | OpenAI/Gemini | Language model |
-| Database | PostgreSQL/SQLite | Data persistence |
-| Vector Store | ChromaDB | RAG / embeddings |
+The frontend currently uses an older contract. The required service-layer changes are listed in [backend-contract-v1.1.md](backend-contract-v1.1.md). The storage path returned for evidence is internal; a media-access route or signed URL remains to be specified.

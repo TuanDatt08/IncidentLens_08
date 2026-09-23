@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from src.models.contracts import AnalysisResult, LocalizationResult
 from src.services.jobs import claim_job, create_job, get_job
 from src.services.processing import ProcessedResult
+from src.services.processing import InsufficientEvidence
 from src.services.reports import complete_analysis
 from src.services.video import VideoProbeResult, VideoService
 from src.worker import run_once
@@ -100,3 +101,27 @@ async def test_invalid_evidence_rolls_back_report_and_job_success(db_client):
         complete_analysis(job_id, result)
     assert get_job(job_id)["status"] == "running"
     assert (await db_client.get(f"/api/v1/incidents/{incident_id}/report")).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_evidence_hash_must_match_stored_file(db_client):
+    from src.config import get_settings
+
+    upload = await db_client.post(
+        "/api/v1/incidents/upload",
+        files={"video": ("clip.mp4", b"video", "video/mp4")},
+    )
+    incident_id = upload.json()["incident_id"]
+    job_id = create_job(incident_id)["job_id"]
+    claim_job()
+    clip = Path(get_settings().incident_storage_dir) / incident_id / "clips" / "candidate.mp4"
+    clip.parent.mkdir(parents=True, exist_ok=True)
+    clip.write_bytes(b"clip")
+    result = ProcessedResult(
+        analysis=AnalysisResult(incident_detected=True, incident_window={"start": -1, "critical": 0, "end": 1}),
+        evidence=[{"evidence_id": "EVD-BAD-HASH", "kind": "video", "uri": f"{incident_id}/clips/candidate.mp4", "sha256": "a" * 64, "time_range_s": [-1, 1]}],
+        collision_offset_in_video_s=5,
+    )
+    with pytest.raises(InsufficientEvidence):
+        complete_analysis(job_id, result)
+    assert get_job(job_id)["status"] == "running"

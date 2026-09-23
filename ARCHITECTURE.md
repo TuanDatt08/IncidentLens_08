@@ -1,110 +1,20 @@
-# Architecture Document
+# RAV18 backend MVP
 
-## System Overview
+The FastAPI service exposes `/api/v1` for incident upload, analysis jobs, reports, evidence, and audit events. PostgreSQL is the metadata store. Local incident storage holds uploaded MP4 files, canonical telemetry CSV, and generated evidence assets. The API and worker share that storage. See [the v1.1 contract notes](docs/backend-contract-v1.1.md) for public fields and unresolved decisions.
 
-[Tóm tắt 2-3 câu về kiến trúc hệ thống]
+## Flow
 
-## Architecture Diagram
+1. `POST /incidents/upload` saves and validates an MP4 and optional CSV, normalizes telemetry to `sec_from_incident`, and inserts an `Incident` with `processing_status=READY`.
+2. `POST /incidents/{incident_id}/analyze` inserts a persistent `Job` and returns its `job_id`. The frontend polls `GET /jobs/{job_id}`.
+3. The worker leases a queued job from PostgreSQL. Pass 1 samples frames to decide whether an incident is visible and locate it in the MP4. Pass 2 inspects a clip, keyframes, and the aligned telemetry window. A fake VLM is injected in tests.
+4. Successful processing writes evidence files, their hashes and relative URIs, an initial `AnalysisReport`, `ReportVersion` 1, and audit events in one database transaction. The report is separate from the factual `IncidentRecord`.
 
-```mermaid
-graph TB
-    subgraph Frontend
-        UI[React/Next.js UI]
-    end
+The six tables are `incidents`, `jobs`, `evidences`, `analysis_reports`, `report_versions`, and `audit_events`. Alembic creates them. Job status (`queued/running/succeeded/failed/cancelled`), incident processing status (`UPLOADED/READY/PROCESSING/COMPLETED/FAILED`), and report review status (`DRAFT/IN_REVIEW/APPROVED/REJECTED`) have separate meanings.
 
-    subgraph Backend[FastAPI Backend]
-        API[API Routes]
-        Agent[LangGraph Agent]
-        LLM[LLM Service]
-        Tools[Agent Tools]
-    end
+Evidence `time_range_s` and report `incident_window` are seconds relative to the incident, so they can be negative. The worker uses the internal `collision_offset_in_video_s` to convert to MP4 time. Evidence URIs are storage paths, not public media URLs; browser access needs the contract decision documented in the runbook.
 
-    subgraph Data[Data Layer]
-        DB[(Database)]
-        Vector[Vector Store]
-    end
+## Runtime
 
-    UI -->|HTTP/REST| API
-    API --> Agent
-    Agent --> LLM
-    Agent --> Tools
-    Agent --> Vector
-    Tools --> DB
-    API --> DB
-```
+`docker compose up --build` starts PostgreSQL, runs the Alembic migration, then starts the API and worker. Provide `OPENAI_API_KEY` for real VLM processing. The API itself can accept and list incidents without a model key. `DATABASE_URL`, `INCIDENT_STORAGE_DIR`, and the model settings are environment variables. Do not expose the incident storage directory as an unauthenticated static mount.
 
-## Components
-
-### 1. Frontend (React/Next.js)
-- **Purpose:** [mô tả]
-- **Key Features:** [danh sách]
-- **State Management:** [approach]
-
-### 2. Backend (FastAPI)
-- **Purpose:** [mô tả]
-- **API Design:** RESTful
-- **Authentication:** [JWT/None]
-
-### 3. AI Agent (LangGraph)
-- **Agent Type:** [ReAct / Plan-and-Execute / Custom]
-- **State:** [mô tả state schema]
-- **Nodes:** [danh sách nodes]
-- **Tools:** [danh sách tools]
-- **Flow:**
-
-```mermaid
-graph LR
-    START --> A[Node A]
-    A --> B{Decision}
-    B -->|Yes| C[Node C]
-    B -->|No| D[Node D]
-    C --> E[END]
-    D --> E
-```
-
-### 4. Database
-- **Type:** [PostgreSQL / SQLite]
-- **Tables:** [danh sách]
-- **Migrations:** Alembic
-
-### 5. Vector Store
-- **Type:** [ChromaDB / FAISS / Pinecone]
-- **Embeddings:** [model]
-- **Purpose:** [RAG / similarity search]
-
-## Data Flow
-
-1. User gửi request từ Frontend
-2. API route nhận và validate input
-3. Agent xử lý qua LangGraph pipeline
-4. LLM generate response
-5. Tools thực thi actions (nếu cần)
-6. Response trả về Frontend
-
-## Deployment Architecture
-
-```mermaid
-graph LR
-    subgraph Docker
-        FE[Frontend Container]
-        BE[Backend Container]
-        DB_C[Database Container]
-    end
-    FE --> BE --> DB_C
-```
-
-## Security
-
-- API keys stored in `.env` (never commit)
-- Input validation via Pydantic
-- Rate limiting on API endpoints
-- CORS configured for frontend domain
-
-## Design Decisions
-
-| Decision | Choice | Reason |
-|----------|--------|--------|
-| Framework | FastAPI | Async, auto-docs, type-safe |
-| Agent | LangGraph | Flexible state management |
-| Database | [choice] | [reason] |
-| Frontend | Next.js | [reason] |
+See [docs/backend-runbook.md](docs/backend-runbook.md) for local commands and the current integration limits.

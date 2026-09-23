@@ -21,9 +21,11 @@ Lỗi trả `{ "error": { "code": "...", "message": "...", "details": null } }`.
 | FE hiện tại | Cần đổi ở FE |
 | --- | --- |
 | `package_id`, `status` sau upload | `incident_id`, `processing_status`; `frontend/services/incident.service.ts`, `frontend/types/incident.ts`, `frontend/components/incidents/upload-form.tsx` |
+| `listIncidents`, `getEvidence`, `getIncidentAudit` nhận mảng trực tiếp | Unwrap `{items, ...}` ở `frontend/services/incident.service.ts`, `evidence.service.ts`, `audit.service.ts`; đây là envelope backend tạm dùng cho phân trang |
 | SSE `/incidents/{id}/progress` và bỏ `job_id` | Poll `GET /jobs/{job_id}` và lưu `job_id` để reload không POST analyze lần nữa; `frontend/services/analysis.service.ts`, `frontend/components/incidents/processing-view.tsx` |
+| `VALIDATING`, `EXTRACTING`, `SYNCHRONIZING`, `PASS_1`, `PASS_2` nằm trong `ProcessingStatus` của Incident | Đọc `processing_status` của Incident riêng với job `status`, `pass`, `progress`; chuyển job sang nhãn UI trong `frontend/types/incident.ts`, `frontend/types/processing.ts`, `processing-view.tsx` |
 | Một `IncidentDraft` có `summary_text`, `start_sec` và `confidence` | Tách factual `IncidentRecord` khỏi `AnalysisReport`; dùng `summary`, `incident_window`, `review_status`; `frontend/types/incident.ts`, `frontend/services/report.service.ts`, các component review |
-| Evidence `timestamp_sec` và `video_url` trực tiếp | Dùng `time_range_s`, URI tương đối và cơ chế media được chốt; `frontend/types/evidence.ts`, `frontend/components/review/evidence-section.tsx`, `video-player.tsx` |
+| Evidence `timestamp_sec` và `video_url` trực tiếp | Dùng `time_range_s`, URI tương đối và cơ chế media được chốt; cộng `video_metadata.collision_offset_in_video_s` khi seek MP4; `frontend/types/evidence.ts`, `frontend/components/review/evidence-section.tsx`, `video-player.tsx` |
 | Lỗi `detail/message` | Đọc `error.code/message/details`; `frontend/lib/api-client.ts` |
 | Mock là mặc định | Đặt `NEXT_PUBLIC_USE_MOCK_API=false` và base URL thật trong `frontend/.env.local` khi tích hợp |
 

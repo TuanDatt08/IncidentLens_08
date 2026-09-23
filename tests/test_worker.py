@@ -11,6 +11,53 @@ from src.models.tables import Job
 
 
 @pytest.mark.asyncio
+async def test_slow_vlm_keeps_job_lease_alive(db_client, monkeypatch):
+    from io import BytesIO
+    from threading import Event, Thread
+    import time
+    from starlette.datastructures import UploadFile
+
+    import src.services.jobs as jobs
+    from src.models.contracts import LocalizationResult
+    from src.worker import run_once
+
+    monkeypatch.setattr(jobs, "LEASE_SECONDS", 0.15)
+    monkeypatch.setattr(VideoService, "probe", lambda self, path: VideoProbeResult(10, 30, 320, 240))
+
+    def frame(self, video_path, at_s, destination):
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(b"jpeg")
+        return destination
+
+    monkeypatch.setattr(VideoService, "extract_frame", frame)
+    incident_id = create_incident(UploadFile(file=BytesIO(b"video"), filename="clip.mp4"))["incident_id"]
+    job_id = create_job(incident_id)["job_id"]
+    started = Event()
+    release = Event()
+
+    class SlowVLM:
+        def pass1(self, video_path, sampled_frames, metadata):
+            started.set()
+            release.wait(2)
+            return LocalizationResult(incident_detected=False)
+
+        def pass2(self, prepared):
+            raise AssertionError("Pass 2 must not run")
+
+    thread = Thread(target=lambda: run_once(vlm=SlowVLM()))
+    thread.start()
+    try:
+        assert started.wait(2)
+        time.sleep(0.35)
+        assert claim_job() is None
+        assert get_job(job_id)["status"] == "running"
+    finally:
+        release.set()
+        thread.join(2)
+    assert not thread.is_alive()
+
+
+@pytest.mark.asyncio
 async def test_claim_is_single_and_failed_job_is_terminal(db_client, monkeypatch):
     from io import BytesIO
     from starlette.datastructures import UploadFile

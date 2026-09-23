@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import hashlib
+from pathlib import Path
 
 from sqlalchemy import func, select
 
 from src.api.errors import ApiError
 from src.db import session_scope
+from src.config import get_settings
 from src.models.contracts import AnalysisReportV1, EvidenceV1
 from src.models.tables import AnalysisReport as ReportRow
 from src.models.tables import AuditEvent, Evidence, Incident, Job, ReportVersion
@@ -52,6 +55,18 @@ def complete_analysis(job_id: str, result: ProcessedResult, *, expected_attempt:
         if expected_attempt is not None and job.attempt != expected_attempt:
             raise ApiError("JOB_LEASE_LOST", "Job lease belongs to another worker.", 409)
         incident = session.get(Incident, job.incident_id)
+        root = Path(get_settings().incident_storage_dir).expanduser().resolve()
+        for item in evidence:
+            asset = (root / item.uri).resolve()
+            if root not in asset.parents or item.uri.split("/")[0] != incident.incident_id or not asset.is_file():
+                raise InsufficientEvidence("Evidence asset is unavailable.")
+            try:
+                with asset.open("rb") as stream:
+                    digest = hashlib.file_digest(stream, "sha256").hexdigest()
+            except OSError as exc:
+                raise InsufficientEvidence("Evidence asset could not be read.") from exc
+            if digest != item.sha256 or (item.bytes is not None and asset.stat().st_size != item.bytes):
+                raise InsufficientEvidence("Evidence asset digest or size does not match.")
         existing = session.scalar(select(ReportRow).where(ReportRow.incident_id == incident.id))
         if existing is not None:
             raise ApiError("INVALID_REPORT_STATE", "Analysis report already exists.", 409)

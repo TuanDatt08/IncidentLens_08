@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     )
 
     # App
-    app_name: str = "AI20K Agent"
+    app_name: str = "RAV18 IncidentLens API"
     app_env: Literal["development", "production", "test"] = "development"
     app_port: int = Field(default=8000, ge=1, le=65535)
     app_host: str = "0.0.0.0"
@@ -34,10 +34,6 @@ class Settings(BaseSettings):
     max_log_size_mb: int = Field(default=100, ge=1)
     ffprobe_bin: str = "ffprobe"
     ffmpeg_bin: str = "ffmpeg"
-
-    # Vector Store
-    chroma_persist_dir: str = "./data/chroma"
-
 
 @lru_cache
 def get_settings() -> Settings:

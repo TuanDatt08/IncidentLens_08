@@ -10,7 +10,6 @@ from src.api.jobs import router as job_router
 from src.api.reports import router as report_router
 from src.api.evidence import router as evidence_router
 from src.api.audit import router as audit_router
-from src.api.routes import router
 from src.config import get_settings
 
 
@@ -23,8 +22,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="AI20K Agent",
-    description="AI Agent built with LangGraph",
+    title="RAV18 IncidentLens API",
+    description="Incident ingestion, analysis jobs, reports, evidence, and audit",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -42,7 +41,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/api/v1")
 app.include_router(incident_router, prefix="/api/v1")
 app.include_router(job_router, prefix="/api/v1")
 app.include_router(report_router, prefix="/api/v1")
