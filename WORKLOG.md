@@ -1,29 +1,17 @@
-# Worklog — Team [Tên Team]
+# Worklog — Team P-076
 
-> Ghi lại tất cả công việc đã làm theo ngày. Ai làm gì, kết quả gì.
+> Ghi lại công việc theo ngày dựa trên commit và thay đổi đã kiểm tra. Thời lượng chưa được ghi nhận được để là `—`.
 
 ---
 
-## [YYYY-MM-DD]
+## 2026-09-22
 
 | Member | Task | Status | Output | Time |
 |--------|------|--------|--------|------|
-| [Tên] | [mô tả task] | ✅ Done | [link/kết quả] | 2h |
-| [Tên] | [mô tả task] | 🔄 WIP | [mô tả tiến độ] | 1.5h |
-| [Tên] | [mô tả task] | ❌ Blocked | [lý do block] | - |
+| hoang9605 | Cập nhật journal và tài liệu kiến trúc | ✅ Done | Commit `7ca7b5c`: `JOURNAL.md`, `ARCHITECTURE.md`, `docs/architecture_diagram.md` | — |
+| hongneuk65 | Điều chỉnh hook Codex để chạy Python trực tiếp trên Windows | ✅ Done | Cập nhật `.codex/hooks.json` cho các hook `UserPromptSubmit` và `Stop` | — |
+| hongneuk65 | Tạo và đẩy branch làm việc `nvhdev` | ✅ Done | Commit `09abb7f` đã push lên `origin/nvhdev` | — |
 
-**Tổng kết ngày:** [1-2 câu về tiến độ chung]
-
----
-
-## [YYYY-MM-DD]
-
-| Member | Task | Status | Output | Time |
-|--------|------|--------|--------|------|
-| | | | | |
-
-**Tổng kết ngày:**
+**Tổng kết ngày:** Đã cập nhật journal, tài liệu kiến trúc, sơ đồ kiến trúc, cấu hình hook Codex cho môi trường Windows và branch làm việc `nvhdev`.
 
 ---
-
-<!-- Format: copy block trên cho mỗi ngày làm việc -->
