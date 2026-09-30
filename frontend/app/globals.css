@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --vf-primary: #1464f4;
+  --vf-primary-dark: #0d1528;
+  --vf-secondary: #accaed;
+  --vf-text: #3c3c3c;
+  --vf-text-light: #555555;
+  --vf-white: #ffffff;
+  --vf-bg-light: #f8f9fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--vf-bg-light);
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 88% 0%, rgba(172, 202, 237, 0.2), transparent 24rem),
+    var(--vf-bg-light);
+  color: var(--vf-text);
+  font-family: "Mulish", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(20, 100, 244, 0.24);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(20, 100, 244, 0.18);
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-[11px] font-extrabold uppercase tracking-[0.16em] text-vf-primary;
+  }
+
+  .section-card {
+    @apply rounded-2xl border border-slate-100 bg-white shadow-card;
+  }
+
+  .field-label {
+    @apply mb-2 block text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500;
+  }
+
+  .icon-button {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-vf-primary hover:text-vf-primary disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}

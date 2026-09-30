@@ -1,194 +1,143 @@
-# AI20K Agent Template
+# IncidentLens
 
-Template chính thức cho học viên VinUni AI20K Build Phase: cấu trúc dự án, code
-mẫu và hướng dẫn kỹ thuật để xây dựng một AI Agent hoàn chỉnh — từ kiến trúc,
-code, test cho đến deploy và nộp bài Demo Day.
+IncidentLens là ứng dụng phân tích sự cố giao thông bằng video và telemetry. Frontend Next.js gọi backend FastAPI để upload incident, theo dõi job phân tích, xem report/evidence và hỗ trợ quy trình Engineer chỉnh sửa, Reviewer duyệt.
 
-Technical Guidebook: <https://phoenix.note.transformerlabs.ai/technical-book>
+Backend API tuân theo [contract v1.1](docs/backend-contract-v1.1.md). Các trạng thái job được lấy qua polling; media video và evidence được phục vụ bằng các endpoint của backend.
 
-## Template có sẵn những gì
+## Backend gồm những gì?
 
-- **Cấu trúc thư mục tách lớp** — `agents/`, `api/`, `services/`, `models/` đã
-  chia sẵn, không phải bàn lại từ đầu.
-- **Code mẫu chạy được** — LangGraph agent (state, node, tool), FastAPI routes,
-  Pydantic settings, schema.
-- **Docker và CI** — Dockerfile multi-stage, `docker-compose.yml`, workflow
-  GitHub Actions chạy `ruff` + `pytest` khi push lên `main`/`develop` và khi mở
-  pull request vào `main`.
-- **Technical Guidebook 10 chương** trong `docs/guide/`, đồng thời đọc được
-  online.
-- **Checklist 10 deliverables** của Demo Day.
-- **AI usage logging** — hook cài sẵn cho 6 công cụ AI, log tự động gửi lên
-  grading server mỗi lần `git push`.
+| Thành phần | Vai trò |
+| --- | --- |
+| `frontend/` | Ứng dụng Next.js cho upload, theo dõi job và review report/evidence. |
+| `src/main.py`, `src/api/` | FastAPI, Swagger, các route upload, incident, job, report, evidence, audit và media. |
+| `src/services/incident_ingestion.py`, `video.py`, `telemetry.py`, `storage.py` | Kiểm tra MP4 bằng FFprobe, nhận CSV có `sec_from_incident`, lưu file và metadata. |
+| `src/worker.py`, `src/services/jobs.py`, `processing.py`, `vlm.py` | Worker lấy job từ PostgreSQL; Pass 1 định vị sự cố, Pass 2 phân tích clip, frame và telemetry. Worker thường gọi OpenAI. |
+| `src/services/reports.py`, `review.py`, `media.py` | Lưu report/evidence, edit có version, submit/approve/reject, phục vụ video và ảnh qua API. |
+| `src/demo_fake_worker.py` | Chạy **một job được chọn** với VLM giả để thử luồng mà không cần API key. Chỉ dùng cho demo local. |
+| `src/models/contracts.py`, `tables.py`, `alembic/` | Schema API, sáu bảng nghiệp vụ PostgreSQL và migration. |
+| `tests/`, `tests/postgres_smoke.py` | Test API/service với fake VLM; smoke test riêng dùng PostgreSQL và FFmpeg thật. |
+
+Sáu bảng nghiệp vụ là `incidents`, `jobs`, `analysis_reports`, `evidences`, `report_versions`, `audit_events`. MP4, ảnh và CSV được lưu trong `data/incidents/`; database chỉ giữ metadata và đường dẫn nội bộ. Docker dùng volume PostgreSQL để giữ dữ liệu sau khi container dừng.
+
+Luồng API: **upload → `incident_id` → analyze → `job_id` → poll job → report/evidence → edit/review**. Ba nhóm trạng thái độc lập:
+
+- Incident: `UPLOADED`, `READY`, `PROCESSING`, `COMPLETED`, `FAILED`.
+- Job: `queued`, `running`, `succeeded`, `failed`, `cancelled`.
+- Report review: `DRAFT`, `IN_REVIEW`, `APPROVED`, `REJECTED`.
+
+`sec_from_incident`, `incident_window` và `Evidence.time_range_s` tính bằng giây tương đối với va chạm; giá trị âm là trước va chạm. Khi tua video gốc, cộng thêm `video_metadata.collision_offset_in_video_s`. `Evidence.uri` là đường dẫn lưu trữ, **không phải URL phát media**; dùng các media route ở Swagger.
 
 ## Yêu cầu
 
-- Python 3.11 (phiên bản CI đang dùng)
-- Git
-- Docker — tuỳ chọn, chỉ cần nếu chạy `docker compose`
+- Docker Desktop và Docker Compose.
+- Node.js 20 trở lên để chạy frontend.
+- Python 3.11 trở lên nếu chạy backend hoặc test ngoài Docker.
 
-## Bắt đầu
+## Khởi động backend
 
-### 1. Clone repo của đội
+Yêu cầu Docker Desktop đang chạy. Trong thư mục gốc repo:
 
-Khi đội được chốt, hệ thống tự sinh repo cho đội từ template này, nằm trong org
-GitHub của khoá bạn đang học và đặt tên theo mã đội. Copy URL ở trang đội trên
-Phoenix rồi clone về:
-
-```bash
-git clone https://github.com/<ORG-CỦA-KHOÁ>/<MÃ-ĐỘI>.git
-cd <MÃ-ĐỘI>
+```powershell
+docker compose up -d --build backend
+docker compose ps
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
 ```
 
-Không cần `rm -rf .git`, `git init` hay `git remote add`: repo sinh từ template
-đã bắt đầu bằng lịch sử riêng của đội và remote trỏ sẵn đúng chỗ. Chưa thấy repo
-của đội thì báo BTC — repo tự tạo nằm ngoài org sẽ không được chấm.
+Compose khởi động PostgreSQL, chạy Alembic migration và API. Health trả `status: ok`. Mở Swagger tại <http://127.0.0.1:8000/docs>. PostgreSQL của demo ở `127.0.0.1:5432`, database/user `rav18`. Lệnh trên chưa khởi động worker OpenAI; phù hợp để thử fake report bên dưới.
 
-### 2. Cài môi trường
+## Khởi động frontend
 
-```bash
-python3.11 -m venv .venv
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+Trong terminal khác, từ thư mục gốc repo:
+
+```powershell
+Copy-Item frontend/.env.example frontend/.env.local
+Set-Location frontend
+npm ci
+npm run dev
 ```
 
-### 3. Cấu hình biến môi trường
+Frontend mặc định gọi API tại `http://localhost:8000/api/v1` và dùng backend thật. Mở <http://localhost:3000>. Để đổi URL API, sửa `NEXT_PUBLIC_API_BASE_URL` trong `frontend/.env.local`.
 
-```bash
-cp .env.example .env
+Các trang chính:
+
+- `/incidents` — danh sách incidents.
+- `/incidents/new` — upload video và CSV telemetry tùy chọn.
+- `/incidents/{incident_id}/processing` — trạng thái job và tiến độ phân tích.
+- `/incidents/{incident_id}` — video, timeline, evidence, report và review workflow.
+
+## Thử luồng phân tích với DemoVLM
+
+Các lệnh sau dùng **PowerShell** và không cần `OPENAI_API_KEY`. Đứng ở thư mục gốc repo. Dừng worker thường trước khi tạo job để nó không lấy job dành cho demo:
+
+```powershell
+docker compose stop worker
 ```
 
-Mở `.env` và điền `OPENAI_API_KEY`. Riêng `AI_LOG_API_KEY`, mỗi thành viên tự
-tạo key riêng tại [dashboard Phoenix](https://phoenix.note.transformerlabs.ai/api-keys)
-rồi thay vào chỗ `<get-your-api-key-from-dashboard-phoenix>` — giá trị trong
-`.env.example` chỉ là placeholder, để nguyên thì log không vào được hệ thống chấm.
+**1. Chuẩn bị MP4 và CSV.** Có thể dùng file của bạn, hoặc tạo mẫu 4 giây bằng FFmpeg trong image backend:
 
-### 4. Cài hook ghi log AI
-
-```bash
-bash scripts/setup_hooks.sh                                      # Linux / macOS / Git Bash
-powershell -ExecutionPolicy Bypass -File scripts\setup_hooks.ps1 # Windows PowerShell
+```powershell
+docker compose run --rm --no-deps backend ffmpeg -loglevel error -f lavfi -i testsrc2=size=160x120:rate=10 -t 4 -c:v libx264 -pix_fmt yuv420p -y /app/data/demo.mp4
+@'
+sec_from_incident,sim_time_s
+-0.5,1.5
+0,2
+0.5,2.5
+'@ | Set-Content -Encoding utf8 data/demo-log.csv
 ```
 
-Chạy một lần sau khi clone. Hook ghi lại prompt khi bạn dùng Claude Code, Cursor,
-Codex CLI, Gemini CLI, Antigravity hoặc GitHub Copilot, và cài pre-push hook để
-đẩy log lên server.
+CSV phải có cột `sec_from_incident` dạng số và tăng nghiêm ngặt. Log là tùy chọn; MP4 là bắt buộc. Hai file mẫu nằm trong `data/`, thư mục được Git bỏ qua.
 
-### 5. Chạy server
+**2. Upload và tạo job.** Dùng `curl.exe` vì `curl` trong Windows PowerShell có thể là alias khác:
 
-```bash
-uvicorn src.main:app --reload --port 8000
+```powershell
+$upload = curl.exe -sS -F 'video=@data/demo.mp4;type=video/mp4' -F 'log=@data/demo-log.csv;type=text/csv' http://127.0.0.1:8000/api/v1/incidents/upload | ConvertFrom-Json
+$upload
+$job = Invoke-RestMethod -Method Post "http://127.0.0.1:8000/api/v1/incidents/$($upload.incident_id)/analyze"
+$job
 ```
 
-Swagger UI ở <http://localhost:8000/docs>. Hoặc dùng `make run`, `make test`,
-`make lint` — xem `Makefile`.
+Upload tạo incident và trả `incident_id`, `processing_status: READY`. Analyze trả HTTP 202 với `job_id` và `status: queued`. Mỗi lần thử cần upload một incident mới; report đã hoàn tất không được analyze lại.
 
-## Cấu trúc thư mục
+**3. Chạy fake VLM cho đúng job vừa tạo.** Lệnh này dùng worker/persistence hiện có và chỉ thay adapter VLM trong lần chạy đó:
 
-```
-src/
-  agents/            LangGraph agent
-    graph.py         State graph (nodes + edges)
-    state.py         State schema (TypedDict)
-    nodes/           Node functions
-    tools/           Agent tools (@tool)
-  api/routes.py      FastAPI endpoints
-  models/schemas.py  Pydantic schemas
-  services/llm.py    LLM client
-  config.py          Pydantic Settings
-  main.py            App entry point
-tests/               pytest suite
-scripts/             Hook ghi log AI + installer
-docs/
-  guide/             Technical Guidebook (nguồn của bản online)
-  architecture_diagram.md
-eval/                Kết quả evaluation
-presentation/        Slide và video Demo Day
-.claude/ .codex/ .cursor/ .gemini/ .agents/ .github/hooks/
-                     Config hook cho từng công cụ
-.github/workflows/   CI
-Dockerfile           Multi-stage build
-docker-compose.yml   Chạy backend bằng Docker
-README_boilerplate.md  Khung README cho dự án của đội
+```powershell
+docker compose run --rm --no-deps backend python -m src.demo_fake_worker "$($job.job_id)"
+$jobResult = Invoke-RestMethod "http://127.0.0.1:8000/api/v1/jobs/$($job.job_id)"
+$jobResult
+$report = Invoke-RestMethod "http://127.0.0.1:8000$($jobResult.result_uri)"
+$report
+Invoke-RestMethod "http://127.0.0.1:8000/api/v1/incidents/$($upload.incident_id)/evidence"
 ```
 
-## Technical Guidebook
+Kết quả mong đợi: job `succeeded`, report `review_status: DRAFT`, `version: 1`, summary bắt đầu bằng `DEMO`, và evidence có clip, frame, telemetry. Fake VLM **giả định va chạm ở giữa MP4** để kiểm tra pipeline; nó không kết luận gì về nội dung video. Có thể mở `GET /api/v1/incidents/{incident_id}/video` hoặc `GET /api/v1/incidents/{incident_id}/evidence/{evidence_id}/media` trong trình duyệt. Trong Swagger, có thể thử tiếp PATCH report với `version`, rồi submit và approve/reject.
 
-| Chương | Nội dung | Thời gian |
-|---|---|---|
-| 1 | Lời mở đầu — mục tiêu, cách sử dụng | 15 phút |
-| 2 | Khởi tạo dự án — clone, setup, git workflow | 4 giờ |
-| 3 | Thiết kế kiến trúc — 3-tier, diagram, ADR | 6 giờ |
-| 4 | LangGraph Agent — state, node, edge, tool, RAG | 8 giờ |
-| 5 | FastAPI — routes, validation, error handling, streaming | 6 giờ |
-| 6 | Giao diện — Next.js và Streamlit | 6 giờ |
-| 7 | DevOps — Docker, CI/CD, deploy, logging | 6 giờ |
-| 8 | Kiểm thử — unit test, integration test, RAGAS | 4 giờ |
-| 9 | Demo Day — 10 deliverables, checklist | 2 giờ |
-| 10 | Tài nguyên — khoá học, tài liệu, BMAD method | tham khảo |
+## Kiểm thử
 
-Đọc online tại <https://phoenix.note.transformerlabs.ai/technical-book>: đăng
-nhập bằng GitHub (đúng account đã được BTC mời vào org của khoá), chọn tab
-**Technical Book** ở sidebar trái. Bản offline nằm trong `docs/guide/`, mở được
-bằng bất kỳ markdown viewer nào.
+Test thường dùng SQLite tạm và fake VLM, không gọi OpenAI hoặc sửa database `rav18`. Khi chạy trong Compose, phải xóa `DATABASE_URL` của service để migration test dùng SQLite riêng:
 
-## 10 deliverables cho Demo Day
-
-| # | Deliverable | Vị trí | Template lo tới đâu |
-|---|---|---|---|
-| 1 | Source code | `src/` | Khung sẵn |
-| 2 | README | copy `README_boilerplate.md` thành `README.md` | Khung sẵn |
-| 3 | Architecture diagram | `docs/architecture_diagram.md` | Khung sẵn |
-| 4 | AI logs | LangSmith (3 biến môi trường) + auto AI usage logging | Cấu hình sẵn |
-| 5 | Live URL | deploy lên Render/Vercel | CI/CD sẵn |
-| 6 | Video demo | `presentation/` | Đội tự làm |
-| 7 | Pitch deck | `presentation/` | Đội tự làm |
-| 8 | Development journal | `JOURNAL.md` | Khung sẵn |
-| 9 | Worklog | `WORKLOG.md` | Khung sẵn |
-| 10 | Evaluation evidence | `eval/` | Đội tự làm |
-
-## Tech stack
-
-| Lớp | Công nghệ |
-|---|---|
-| Agent | LangGraph + LangChain 0.3 |
-| Backend | FastAPI 0.115 + Uvicorn |
-| LLM | OpenAI, mặc định `gpt-4o-mini` (đổi trong `src/config.py`) |
-| Giao diện | Next.js hoặc Streamlit (đội tự chọn, hướng dẫn ở chương 6) |
-| Lint / test | ruff + pytest 8 |
-| DevOps | Docker + GitHub Actions |
-
-## AI usage logging
-
-Mọi prompt được ghi vào `.ai-log/session.jsonl` và tự động gửi lên grading server
-ở bước pre-push.
-
-| Công cụ | Cấu hình | Thời điểm ghi |
-|---|---|---|
-| Claude Code | `.claude/settings.json` | mỗi prompt (`UserPromptSubmit`) |
-| Cursor | `.cursor/hooks.json` | mỗi prompt và khi dừng |
-| OpenAI Codex CLI | `.codex/hooks.json` | mỗi prompt và khi dừng |
-| Gemini CLI | `.gemini/settings.json` | mỗi lượt agent chạy |
-| GitHub Copilot | `.github/hooks/hooks.json` | mỗi prompt và cuối session |
-| Antigravity IDE | `.agents/hooks.json` | mỗi prompt, kèm lần quét lại lúc `git push` |
-
-Dùng ChatGPT hay công cụ web khác thì log thủ công:
-
-```bash
-bash scripts/_pyrun.sh scripts/log_manual.py --tool chatgpt --prompt "What you asked"
+```powershell
+docker compose run --rm --no-deps -e DATABASE_URL= backend pytest -q tests/
 ```
 
-## Đóng góp
+Kết quả đã kiểm tra: **56 passed**. Smoke test với PostgreSQL và FFmpeg thật dùng database `rav18_e2e` tách biệt; xem [backend runbook](docs/backend-runbook.md) để tạo, migrate, chạy test và dọn database này.
 
-Repo này là open source. Đọc [CONTRIBUTING.md](CONTRIBUTING.md) trước khi mở PR.
+Kiểm tra frontend và tạo production build:
 
-Nội dung trong `docs/guide/` là nguồn của Technical Book và được đồng bộ lên bản
-online, nên mọi thay đổi ở đó cần review của
-[@AI20K-Build-Phase/book-maintainers](https://github.com/orgs/AI20K-Build-Phase/teams/book-maintainers)
-— xem [.github/CODEOWNERS](.github/CODEOWNERS).
+```powershell
+Set-Location frontend
+npm ci
+npm run typecheck
+npm run build
+```
 
-Báo lỗ hổng bảo mật theo [SECURITY.md](SECURITY.md), đừng mở public issue.
+Muốn dùng VLM thật, đặt `OPENAI_API_KEY` trong môi trường rồi chạy `docker compose up -d --build` để khởi động cả `worker`. Xem log bằng `docker compose logs -f backend worker`. Dừng API/worker mà vẫn giữ PostgreSQL và dữ liệu bằng `docker compose stop backend worker`.
 
-## License
+## Tài liệu và giới hạn hiện tại
 
-[MIT](LICENSE) — dùng tự do cho mục đích giáo dục.
+- [Contract API v1.1](docs/backend-contract-v1.1.md)
+- [Runbook backend](docs/backend-runbook.md)
+- [Kiến trúc](ARCHITECTURE.md)
+- [Worklog](WORKLOG.md)
+- [README template ban đầu](README_boilerplate.md) và [technical guidebook](docs/guide/) của khóa học
+
+DemoVLM tạo report giả để kiểm tra pipeline; kết quả này không phải phân tích thực tế video. Các route ghi report và truy cập media hiện giới hạn ở môi trường demo/local; chúng trả `403` trong `APP_ENV=production` khi chưa có xác thực và phân quyền. Những trường contract còn cần xác nhận được ghi trong tài liệu contract.
