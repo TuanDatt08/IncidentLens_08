@@ -18,3 +18,6 @@ Evidence `time_range_s` and report `incident_window` are seconds relative to the
 `docker compose up --build` starts PostgreSQL, runs the Alembic migration, then starts the API and worker. Provide `OPENAI_API_KEY` for real VLM processing. The API itself can accept and list incidents without a model key. `DATABASE_URL`, `INCIDENT_STORAGE_DIR`, and the model settings are environment variables. Do not expose the incident storage directory as an unauthenticated static mount.
 
 See [docs/backend-runbook.md](docs/backend-runbook.md) for local commands and the current integration limits.
+
+
+
