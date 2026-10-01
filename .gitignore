@@ -56,11 +56,13 @@ out/
 *.pyo
 
 # AI logs — tracked structure, ignored content
-.ai-log/*.jsonl
-.ai-log/archive/
+# .ai-log/*.jsonl
+# .ai-log/archive/
+.ai-log/
 
 .agents/
 .claude/
 .codex/
 .cursor/
 .gemini/
+scripts/
