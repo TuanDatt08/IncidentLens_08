@@ -59,3 +59,8 @@ out/
 .ai-log/*.jsonl
 .ai-log/archive/
 
+.agents/
+.claude/
+.codex/
+.cursor/
+.gemini/
