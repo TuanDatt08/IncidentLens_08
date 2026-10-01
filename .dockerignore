@@ -14,3 +14,9 @@ eval/
 .dockerignore
 Dockerfile
 docker-compose.yml
+
+.agents/
+.claude/
+.codex/
+.cursor/
+.gemini/
