@@ -189,6 +189,7 @@ online, nên mọi thay đổi ở đó cần review của
 
 Báo lỗ hổng bảo mật theo [SECURITY.md](SECURITY.md), đừng mở public issue.
 
+
 ## License
 
 [MIT](LICENSE) — dùng tự do cho mục đích giáo dục.
