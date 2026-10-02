@@ -17,12 +17,10 @@ from sqlalchemy import (
     String,
     Text,
     Uuid,
-    and_,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
 
 JsonValue = JSON().with_variant(JSONB, "postgresql")
 

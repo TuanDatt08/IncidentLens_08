@@ -4,7 +4,6 @@ from starlette.concurrency import run_in_threadpool
 from src.models.contracts import AnalyzeAccepted, JobResponse
 from src.services.jobs import create_job, get_job
 
-
 router = APIRouter(tags=["jobs"])
 
 

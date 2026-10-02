@@ -14,7 +14,6 @@ from src.db import session_scope
 from src.models.contracts import JobResponse
 from src.models.tables import AuditEvent, Incident, Job
 
-
 LEASE_SECONDS = 120
 MAX_ATTEMPTS = 3
 

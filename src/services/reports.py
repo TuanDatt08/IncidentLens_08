@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import hashlib
+from datetime import UTC, datetime
 from pathlib import Path
 
 from sqlalchemy import func, select
 
 from src.api.errors import ApiError
-from src.db import session_scope
 from src.config import get_settings
+from src.db import session_scope
 from src.models.contracts import AnalysisReportV1, EvidenceV1
 from src.models.tables import AnalysisReport as ReportRow
 from src.models.tables import AuditEvent, Evidence, Incident, Job, ReportVersion

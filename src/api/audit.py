@@ -3,7 +3,6 @@ from starlette.concurrency import run_in_threadpool
 
 from src.services.audit import get_audit
 
-
 router = APIRouter(tags=["audit"])
 
 

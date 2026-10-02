@@ -5,9 +5,10 @@ from __future__ import annotations
 import csv
 import hashlib
 import io
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Protocol
+from typing import Protocol
 from uuid import uuid4
 
 from src.config import get_settings
@@ -17,7 +18,7 @@ from src.services.telemetry import select_window
 from src.services.video import VideoService
 
 
-class InsufficientEvidence(ValueError):
+class InsufficientEvidence(ValueError):  # noqa: N818
     pass
 
 

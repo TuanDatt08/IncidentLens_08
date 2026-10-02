@@ -1,6 +1,6 @@
 import pytest
 
-from src.services.video import VideoProbeResult, VideoService
+from src.services.video import VideoService
 
 
 @pytest.mark.asyncio

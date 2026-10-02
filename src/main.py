@@ -4,13 +4,19 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.errors import ApiError, api_error_handler, http_error_handler, internal_error_handler, validation_error_handler
+from src.api.audit import router as audit_router
+from src.api.errors import (
+    ApiError,
+    api_error_handler,
+    http_error_handler,
+    internal_error_handler,
+    validation_error_handler,
+)
+from src.api.evidence import router as evidence_router
 from src.api.incidents import router as incident_router
 from src.api.jobs import router as job_router
-from src.api.reports import router as report_router
-from src.api.evidence import router as evidence_router
-from src.api.audit import router as audit_router
 from src.api.media import router as media_router
+from src.api.reports import router as report_router
 from src.config import get_settings
 
 

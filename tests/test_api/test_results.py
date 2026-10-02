@@ -5,8 +5,7 @@ from pydantic import ValidationError
 
 from src.models.contracts import AnalysisResult, LocalizationResult
 from src.services.jobs import claim_job, create_job, get_job
-from src.services.processing import ProcessedResult
-from src.services.processing import InsufficientEvidence
+from src.services.processing import InsufficientEvidence, ProcessedResult
 from src.services.reports import complete_analysis
 from src.services.video import VideoProbeResult, VideoService
 from src.worker import run_once

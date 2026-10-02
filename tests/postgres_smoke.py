@@ -3,15 +3,17 @@
 Run only with RAV18_PG_E2E=1 and DATABASE_URL ending in /rav18_e2e.
 """
 
+import json
 import os
 import subprocess
 import sys
-import json
 
 import pytest
 from fastapi.testclient import TestClient
 
 from src.main import app
+
+
 def test_postgres_ffmpeg_upload_to_review(tmp_path):
     if os.environ.get("RAV18_PG_E2E") != "1" or not os.environ.get("DATABASE_URL", "").endswith("/rav18_e2e"):
         pytest.skip("requires the isolated rav18_e2e PostgreSQL database")

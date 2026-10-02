@@ -6,15 +6,14 @@ import logging
 import time
 from threading import Event, Lock, Thread
 
-from src.config import get_settings
+import src.services.jobs as jobs
 from src.api.errors import ApiError
+from src.config import get_settings
 from src.services.incidents import get_incident
 from src.services.jobs import claim_job, fail_job, heartbeat
-import src.services.jobs as jobs
 from src.services.processing import InsufficientEvidence, VLMAdapter, process_incident
 from src.services.reports import complete_analysis
 from src.services.vlm import OpenAIVLMAdapter
-
 
 logger = logging.getLogger(__name__)
 

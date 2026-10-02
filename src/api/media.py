@@ -6,7 +6,6 @@ from starlette.concurrency import run_in_threadpool
 
 from src.services.media import evidence_asset, source_video
 
-
 router = APIRouter(tags=["media"])
 
 

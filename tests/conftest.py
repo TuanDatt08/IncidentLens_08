@@ -10,9 +10,9 @@ from src.main import app
 @pytest_asyncio.fixture
 async def db_client(tmp_path, monkeypatch):
     """Real HTTP routes against an Alembic-created isolated SQL database."""
-    from alembic import command
     from alembic.config import Config
 
+    from alembic import command
     from src.config import get_settings
     from src.db import get_session_factory
 

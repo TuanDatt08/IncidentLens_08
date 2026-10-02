@@ -5,7 +5,6 @@ from src.models.contracts import AnalysisReportV1, RejectRequest, ReportPatch, R
 from src.services.reports import get_report
 from src.services.review import approve_report, edit_report, reject_report, submit_report
 
-
 router = APIRouter(tags=["reports"])
 
 

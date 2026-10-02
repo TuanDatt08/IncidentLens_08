@@ -1,20 +1,22 @@
-import pytest
 from datetime import UTC, datetime, timedelta
+
+import pytest
 from sqlalchemy import select
 
-from src.services.jobs import claim_job, create_job, fail_job, get_job, heartbeat
 from src.api.errors import ApiError
-from src.services.video import VideoProbeResult, VideoService
-from src.services.incidents import create_incident
 from src.db import session_scope
 from src.models.tables import Job
+from src.services.incidents import create_incident
+from src.services.jobs import claim_job, create_job, fail_job, get_job, heartbeat
+from src.services.video import VideoProbeResult, VideoService
 
 
 @pytest.mark.asyncio
 async def test_slow_vlm_keeps_job_lease_alive(db_client, monkeypatch):
+    import time
     from io import BytesIO
     from threading import Event, Thread
-    import time
+
     from starlette.datastructures import UploadFile
 
     import src.services.jobs as jobs
@@ -60,6 +62,7 @@ async def test_slow_vlm_keeps_job_lease_alive(db_client, monkeypatch):
 @pytest.mark.asyncio
 async def test_claim_is_single_and_failed_job_is_terminal(db_client, monkeypatch):
     from io import BytesIO
+
     from starlette.datastructures import UploadFile
 
     monkeypatch.setattr(VideoService, "probe", lambda self, path: VideoProbeResult(10, 30, 320, 240))
@@ -79,6 +82,7 @@ async def test_claim_is_single_and_failed_job_is_terminal(db_client, monkeypatch
 @pytest.mark.asyncio
 async def test_reclaimed_job_rejects_stale_worker_updates(db_client, monkeypatch):
     from io import BytesIO
+
     from starlette.datastructures import UploadFile
 
     monkeypatch.setattr(VideoService, "probe", lambda self, path: VideoProbeResult(10, 30, 320, 240))
@@ -102,6 +106,7 @@ async def test_reclaimed_job_rejects_stale_worker_updates(db_client, monkeypatch
 @pytest.mark.asyncio
 async def test_expired_lease_retries_then_fails_after_limit(db_client, monkeypatch):
     from io import BytesIO
+
     from starlette.datastructures import UploadFile
 
     monkeypatch.setattr(VideoService, "probe", lambda self, path: VideoProbeResult(10, 30, 320, 240))

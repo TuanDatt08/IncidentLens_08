@@ -1,8 +1,7 @@
 """Stable public error envelope."""
 
-from typing import Any
-
 import logging
+from typing import Any
 
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError

@@ -6,7 +6,6 @@ from starlette.concurrency import run_in_threadpool
 from src.models.contracts import UploadResponse
 from src.services.incidents import create_incident, get_incident, list_incidents
 
-
 router = APIRouter(tags=["incidents"])
 
 

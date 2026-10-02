@@ -13,7 +13,6 @@ from src.models.tables import AnalysisReport, AuditEvent, Incident, ReportVersio
 from src.services.access import require_demo_access
 from src.services.reports import _report_contract
 
-
 EDITABLE_FIELDS = {"summary", "timeline", "key_factors", "observations", "unknowns"}
 
 

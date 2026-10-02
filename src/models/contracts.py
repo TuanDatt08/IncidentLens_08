@@ -9,7 +9,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-
 ProcessingState = Literal["UPLOADED", "READY", "PROCESSING", "COMPLETED", "FAILED"]
 JobState = Literal["queued", "running", "succeeded", "failed", "cancelled"]
 ReviewState = Literal["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED"]
