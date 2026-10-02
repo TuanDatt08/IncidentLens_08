@@ -1,8 +1,8 @@
 # RAV-017 — Frontend V2 integration
 
-Status: **PARTIAL**
+Status: **DONE (local AC)**
 
-Delivery Status: **Todo**
+Delivery Status: **Local verified; remote CI/merge pending**
 
 Technical lead: Frontend; phối hợp: API, Backend.
 
@@ -40,38 +40,40 @@ Test: `tests/frontend/v2-workflow (test harness chọn trong task)`.
 
 ## Acceptance criteria
 
-- [ ] Loading/empty/error/cancel/partial/UNANALYZED.
-- [ ] reload không reanalyze.
-- [ ] seek time đúng.
-- [ ] keyboard/accessibility/responsive.
-- [ ] 401/403/409 có UX.
-- [ ] typecheck/build và E2E với API thật.
-- [ ] UI không thay server auth.
+- [x] Loading/empty/error/cancel/partial/UNANALYZED.
+- [x] reload không reanalyze.
+- [x] seek time đúng.
+- [x] keyboard/accessibility/responsive.
+- [x] 401/403/409 có UX.
+- [x] typecheck/build và E2E với API thật.
+- [x] UI không thay server auth.
 
-- [ ] Audit v1/v2 client unwrap đúng envelope và type event fields theo contract; AuditSection được mount, kiểm empty/loading/error bằng API fixture.
-- [ ] Editor giữ typed claim/source/time/evidence khi sửa, không serialize object rồi lưu lại string.
-- [ ] Confirmation dialog có accessible title, focus trap/restore và Escape; overlay video play có accessible name.
-- [ ] Tab/device mới recover active job hoặc hiển thị 409 rõ, không tự tạo analysis trùng.
+- [x] Audit v1/v2 client unwrap đúng envelope và type event fields theo contract; AuditSection được mount, kiểm empty/loading/error bằng API fixture.
+- [x] Editor giữ typed claim/source/time/evidence khi sửa, không serialize object rồi lưu lại string.
+- [x] Confirmation dialog có accessible title, focus trap/restore và Escape; overlay video play có accessible name.
+- [x] Tab/device mới recover active job hoặc hiển thị 409 rõ, không tự tạo analysis trùng.
 
 ## Execution and verification
 
-- [ ] Đọc linked SPEC/ADR; xác nhận dependencies và quyết định cần thiết.
+- [x] Đọc linked SPEC/ADR; xác nhận dependencies và quyết định cần thiết.
 - [ ] Viết regression/contract test cho từng acceptance, thêm negative case tương ứng trước implementation.
 - [ ] Chạy test mới, xác nhận failure vì behavior chưa có; giữ v1 regression.
-- [ ] Implement tối thiểu theo interface trên, ưu tiên stdlib/framework và adapter hiện có.
-- [ ] Chạy targeted tests; Python: `python -m pytest tests/frontend/v2-workflow (test harness chọn trong task) -q` (tạo test file trước). Frontend RAV-017 dùng `npm --prefix frontend run typecheck` và `npm --prefix frontend run build`, cộng E2E theo acceptance.
-- [ ] Chạy gates cần thiết: `python -m ruff check backend/ api/` và `python -m pytest tests/ -q`; PG/media/provider thực chỉ ghi PASS khi có bằng chứng chạy thật.
+- [x] Implement tối thiểu theo interface trên, ưu tiên stdlib/framework và adapter hiện có.
+- [x] Chạy targeted tests; Python: `python -m pytest tests/frontend/v2-workflow (test harness chọn trong task) -q` (tạo test file trước). Frontend RAV-017 dùng `npm --prefix frontend run typecheck` và `npm --prefix frontend run build`, cộng E2E theo acceptance.
+- [x] Chạy gates cần thiết: `python -m ruff check backend/ api/` và `python -m pytest tests/ -q`; PG/media/provider thực chỉ ghi PASS khi có bằng chứng chạy thật.
 
 ## Definition of Done
 
 - [ ] Implementation đạt mọi acceptance và dependency; tests + docs cập nhật.
-- [ ] Diff có scope, migration/backward compatibility được review.
+- [x] Diff có scope, migration/backward compatibility được review.
 - [ ] Required CI passes; chưa CI thì ghi pending, không tự khẳng định pass.
-- [ ] Evidence ghi ngày, command, kết quả, artifact và limitations; cập nhật backlog/status.
+- [x] Evidence ghi ngày, command, kết quả, artifact và limitations; cập nhật backlog/status.
 
 ## Completion evidence
 
-Chưa hoàn thành acceptance V2. Điền tại đây khi thực hiện; không dùng bản kế hoạch này làm bằng chứng DONE.
+2026-10-03: Real API+production Next E2E: upload, durable job reload/cancel, typed edit, clip-relative seek1.5s từ video2.5s, dialog Escape/focus, two-actor approve, audit,401; desktop1440/mobile390 screenshot inspection không overflow. Node typed-editor/client checks kiểm fields,401/403/409 và expired-upload recovery; audit envelopes/types/mount và loading/empty/error states đã sửa. UI dùng server auth, không role header. Không là exhaustive accessibility audit hoặc production IdP/storage proof.
+
+Evidence: [v2-workflow.py](../../tests/frontend/v2-workflow.py), [execution ledger](../docs/task-execution-2026-10-03.md), [V2 operating limits](../../backend/docs/v2-implementation.md). Targeted + final local gates ghi trong ledger. Remote CI/merge pending. Execution RED checklist chỉ tick khi có record đủ từng acceptance; không suy RED từ test GREEN. Repo audit bên dưới là baseline trước implementation này.
 
 ## Repo audit evidence — 2026-10-03
 

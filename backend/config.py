@@ -35,6 +35,14 @@ class Settings(BaseSettings):
     ffprobe_bin: str = "ffprobe"
     ffmpeg_bin: str = "ffmpeg"
 
+    # Local/test signed identities. Production requires a reviewed identity integration.
+    v2_identity_secret: str = ""
+    v2_provider_endpoint: str = ""
+    v2_provider_model: str = ""
+    v2_provider_revision: str = ""
+    v2_external_egress_approved: bool = False
+    v2_external_allowed_hosts: str = ""
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()

@@ -1,6 +1,6 @@
 # Sprint 04 — review-workflow
 
-Status: **Planned**
+Status: **Active — local verification; production/CI gates pending**
 
 Owner/capacity/dates: chưa giao/chốt.
 
@@ -22,11 +22,13 @@ Crash/replay/stale lease (RAV-015); timestamp drift/thiếu anchors (RAV-012); p
 
 ## Work items
 
-- [ ] [RAV-010](../../tasks/RAV-010-review-workflow.md) — Engineer → Reviewer workflow; prerequisite: [RAV-009](../../tasks/RAV-009-evidence-validation.md), [RAV-013](../../tasks/RAV-013-report-versioning-audit.md), [RAV-014](../../tasks/RAV-014-authentication-rbac.md), [RAV-016](../../tasks/RAV-016-api-v2-migration.md).
-- [ ] [RAV-013](../../tasks/RAV-013-report-versioning-audit.md) — Immutable report versions and audit; prerequisite: [RAV-001](../../tasks/RAV-001-analysis-schema-v2.md), [RAV-014](../../tasks/RAV-014-authentication-rbac.md).
+- [x] [RAV-010](../../tasks/RAV-010-review-workflow.md) — Engineer → Reviewer workflow; prerequisite: [RAV-009](../../tasks/RAV-009-evidence-validation.md), [RAV-013](../../tasks/RAV-013-report-versioning-audit.md), [RAV-014](../../tasks/RAV-014-authentication-rbac.md), [RAV-016](../../tasks/RAV-016-api-v2-migration.md).
+- [x] [RAV-013](../../tasks/RAV-013-report-versioning-audit.md) — Immutable report versions and audit; prerequisite: [RAV-001](../../tasks/RAV-001-analysis-schema-v2.md), [RAV-014](../../tasks/RAV-014-authentication-rbac.md).
 - [ ] [RAV-014](../../tasks/RAV-014-authentication-rbac.md) — Authentication and RBAC; prerequisite: decision gates trong task.
-- [ ] [RAV-017](../../tasks/RAV-017-frontend-v2-integration.md) — Frontend V2 integration; prerequisite: [RAV-010](../../tasks/RAV-010-review-workflow.md), [RAV-011](../../tasks/RAV-011-large-media-upload.md), [RAV-016](../../tasks/RAV-016-api-v2-migration.md).
+- [x] [RAV-017](../../tasks/RAV-017-frontend-v2-integration.md) — Frontend V2 integration; prerequisite: [RAV-010](../../tasks/RAV-010-review-workflow.md), [RAV-011](../../tasks/RAV-011-large-media-upload.md), [RAV-016](../../tasks/RAV-016-api-v2-migration.md).
 
 ## Exit gate
 
 Các work item đạt acceptance/DoD hoặc blocker được giữ và công bố; không đánh dấu sprint complete khi P0 chưa đạt. Test/CI evidence được ghi theo task. Mỗi task là một đơn vị có thể review riêng; thứ tự trong sprint tuân dependency, không chỉ thứ tự số ID. Không chạy external/GPU benchmark nếu chưa có policy/resource.
+
+Checkbox work items = local AC verified, chưa production/remote CI/merge. Xem [current execution evidence](../../docs/task-execution-2026-10-03.md).

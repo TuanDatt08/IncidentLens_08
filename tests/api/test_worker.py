@@ -13,17 +13,31 @@ from backend.services.video import VideoProbeResult, VideoService
 
 @pytest.mark.asyncio
 async def test_slow_vlm_keeps_job_lease_alive(db_client, monkeypatch):
-    import time
     from io import BytesIO
     from threading import Event, Thread
 
     from starlette.datastructures import UploadFile
 
     import backend.services.jobs as jobs
+    import backend.worker as worker
     from backend.models.contracts import LocalizationResult
     from backend.worker import run_once
 
     monkeypatch.setattr(jobs, "LEASE_SECONDS", 0.15)
+    # Advance job time only after a real renewal is observed; Windows scheduling
+    # cannot reliably guarantee a database heartbeat every 50 milliseconds.
+    current = [datetime.now(UTC)]
+    class Clock:
+        @staticmethod
+        def now(tz):
+            return current[0]
+    monkeypatch.setattr(jobs, "datetime", Clock)
+    renewed = Event()
+    actual_heartbeat = worker.heartbeat
+    def observed_heartbeat(*args, **kwargs):
+        actual_heartbeat(*args, **kwargs)
+        renewed.set()
+    monkeypatch.setattr(worker, "heartbeat", observed_heartbeat)
     monkeypatch.setattr(VideoService, "probe", lambda self, path: VideoProbeResult(10, 30, 320, 240))
 
     def frame(self, video_path, at_s, destination):
@@ -40,7 +54,7 @@ async def test_slow_vlm_keeps_job_lease_alive(db_client, monkeypatch):
     class SlowVLM:
         def pass1(self, video_path, sampled_frames, metadata):
             started.set()
-            release.wait(2)
+            release.wait(10)
             return LocalizationResult(incident_detected=False)
 
         def pass2(self, prepared):
@@ -49,13 +63,16 @@ async def test_slow_vlm_keeps_job_lease_alive(db_client, monkeypatch):
     thread = Thread(target=lambda: run_once(vlm=SlowVLM()))
     thread.start()
     try:
-        assert started.wait(2)
-        time.sleep(0.35)
-        assert claim_job() is None
+        assert started.wait(5)
+        for _ in range(4):
+            renewed.clear()
+            current[0] += timedelta(seconds=0.1)
+            assert renewed.wait(3), "No real heartbeat observed while VLM is blocked"
+            assert claim_job() is None
         assert get_job(job_id)["status"] == "running"
     finally:
         release.set()
-        thread.join(2)
+        thread.join(5)
     assert not thread.is_alive()
 
 

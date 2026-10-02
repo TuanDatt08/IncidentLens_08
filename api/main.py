@@ -17,6 +17,8 @@ from api.incidents import router as incident_router
 from api.jobs import router as job_router
 from api.media import router as media_router
 from api.reports import router as report_router
+from api.uploads_v2 import router as uploads_v2_router
+from api.v2 import router as v2_router
 from backend.config import get_settings
 
 
@@ -57,6 +59,8 @@ app.include_router(report_router, prefix="/api/v1")
 app.include_router(evidence_router, prefix="/api/v1")
 app.include_router(audit_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
+app.include_router(v2_router)
+app.include_router(uploads_v2_router)
 
 
 @app.get("/health")

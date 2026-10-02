@@ -1,5 +1,7 @@
 # Baseline evidence — 2026-10-03
 
+> Historical baseline before recording V2 implementation. Current status/evidence: [execution ledger](task-execution-2026-10-03.md) and canonical tasks.
+
 Workspace: C:/Su/T076/P-076; branch develop; commit 1387662c3a79cbc43d340377ee78218669a51dd9. Git trước thao tác không có thay đổi hiển thị. Không tái dùng đường dẫn checkout cũ C:/Su/P-076/P-076.
 
 Source inspected: backend/services/processing.py (5 frames), telemetry.py (CSV sec_from_incident), vlm.py (image inputs), jobs.py/worker.py (lease/heartbeat/retry), review.py/access.py (demo actors, production deny, edit versions), config.py (video 2048 MiB), docker-compose.yml, frontend/lib/config.ts (mock default), contract v1.1, CI, eval/results/report.md (placeholder metrics).

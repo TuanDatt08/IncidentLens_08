@@ -1,6 +1,6 @@
 # Sprint 05 — evaluation-hardening
 
-Status: **Planned**
+Status: **Active — local verification; production/CI gates pending**
 
 Owner/capacity/dates: chưa giao/chốt.
 
@@ -29,3 +29,5 @@ Crash/replay/stale lease (RAV-015); timestamp drift/thiếu anchors (RAV-012); p
 ## Exit gate
 
 Các work item đạt acceptance/DoD hoặc blocker được giữ và công bố; không đánh dấu sprint complete khi P0 chưa đạt. Test/CI evidence được ghi theo task. Mỗi task là một đơn vị có thể review riêng; thứ tự trong sprint tuân dependency, không chỉ thứ tự số ID. Không chạy external/GPU benchmark nếu chưa có policy/resource.
+
+Checkbox work items = local AC verified, chưa production/remote CI/merge. Xem [current execution evidence](../../docs/task-execution-2026-10-03.md).

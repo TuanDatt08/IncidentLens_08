@@ -17,6 +17,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
           </Link>
 
           <nav className="flex items-center gap-2 sm:gap-5">
+            <Link href="/recordings" className="text-sm font-bold text-slate-600 transition hover:text-vf-primary">Recordings</Link>
             <Link href="/incidents" className="hidden text-sm font-bold text-slate-600 transition hover:text-vf-primary sm:block">Incidents</Link>
             <Link href="/incidents/new" className="inline-flex items-center gap-2 rounded-xl bg-vf-primary px-4 py-2.5 text-sm font-extrabold text-white shadow-[0_7px_15px_rgba(20,100,244,0.18)] transition hover:bg-blue-700">
               <Plus className="h-4 w-4" />

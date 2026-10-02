@@ -1,5 +1,7 @@
 # Đối chiếu implementation với tools — 2026-10-03
 
+> Historical baseline before recording V2 implementation. Current status/evidence: [execution ledger](task-execution-2026-10-03.md) and canonical tasks.
+
 Checkout `C:/Su/T076/P-076`, branch `develop`, code HEAD `1387662c3a79cbc43d340377ee78218669a51dd9`. Tài liệu tools còn untracked trước audit; không suy đã merge từ delivery status. Audit dùng active callers, models/routes/frontend services và tests; không dùng memory checkout cũ để xác nhận hiện trạng.
 
 ## Kết luận

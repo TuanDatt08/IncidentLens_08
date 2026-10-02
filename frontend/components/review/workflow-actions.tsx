@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, CircleAlert, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { approveReport, rejectReport, submitReport } from "@/services/report.service";
@@ -44,8 +44,15 @@ export function WorkflowActions({ id, draft, onUpdated }: { id: string; draft: I
 }
 
 function ConfirmationDialog({ action, reason, setReason, isWorking, error, onClose, onConfirm }: { action: Action; reason: string; setReason: (value: string) => void; isWorking: boolean; error: string; onClose: () => void; onConfirm: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const trigger = document.activeElement as HTMLElement | null;
+    const element = dialogRef.current;
+    element?.showModal();
+    return () => { element?.close(); trigger?.focus(); };
+  }, []);
   const isReject = action === "reject";
   const title = action === "submit" ? "Submit report for review?" : action === "approve" ? "Approve this report?" : "Reject this report?";
   const description = action === "submit" ? "The report will become read-only while it is in review." : action === "approve" ? "The report will be marked approved and become read-only." : "The report will be marked rejected and become read-only.";
-  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-vf-navy/35 p-5 backdrop-blur-[2px]"><div role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"><div className="flex items-start justify-between gap-4"><div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isReject ? "bg-red-50 text-red-600" : "bg-blue-50 text-vf-primary"}`}>{isReject ? <CircleAlert className="h-5 w-5" /> : <Check className="h-5 w-5" />}</div><button type="button" onClick={onClose} aria-label="Close dialog" className="icon-button h-8 w-8"><X className="h-4 w-4" /></button></div><h2 className="mt-5 text-lg font-extrabold text-vf-navy">{title}</h2><p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{description}</p>{isReject && <div className="mt-5"><label htmlFor="rejection-reason" className="field-label">Reason for rejection</label><textarea id="rejection-reason" value={reason} onChange={(event) => setReason(event.target.value)} rows={4} placeholder="Add feedback for the engineer" className="w-full resize-y rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-semibold text-vf-navy outline-none transition placeholder:text-slate-400 focus:border-vf-primary" /></div>}{error && <p className="mt-4 text-xs font-bold text-red-600">{error}</p>}<div className="mt-6 flex justify-end gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant={isReject ? "danger" : "primary"} onClick={onConfirm} disabled={isWorking || (isReject && !reason.trim())}>{isWorking ? "Working…" : action === "submit" ? "Submit" : action === "approve" ? "Approve" : "Reject"}</Button></div></div></div>;
+  return <dialog ref={dialogRef} aria-labelledby="workflow-dialog-title" aria-describedby="workflow-dialog-description" onCancel={(event) => { event.preventDefault(); if (!isWorking) onClose(); }} className="w-[calc(100%-2rem)] max-w-md rounded-2xl bg-white p-6 shadow-2xl backdrop:bg-vf-navy/35"><div className="flex items-start justify-between gap-4"><div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isReject ? "bg-red-50 text-red-600" : "bg-blue-50 text-vf-primary"}`}>{isReject ? <CircleAlert className="h-5 w-5" /> : <Check className="h-5 w-5" />}</div><button type="button" onClick={onClose} aria-label="Close dialog" className="icon-button h-8 w-8"><X className="h-4 w-4" /></button></div><h2 id="workflow-dialog-title" className="mt-5 text-lg font-extrabold text-vf-navy">{title}</h2><p id="workflow-dialog-description" className="mt-2 text-sm font-semibold leading-6 text-slate-500">{description}</p>{isReject && <div className="mt-5"><label htmlFor="rejection-reason" className="field-label">Reason for rejection</label><textarea id="rejection-reason" value={reason} onChange={(event) => setReason(event.target.value)} rows={4} placeholder="Add feedback for the engineer" className="w-full resize-y rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-semibold text-vf-navy outline-none transition placeholder:text-slate-400 focus:border-vf-primary" /></div>}{error && <p className="mt-4 text-xs font-bold text-red-600">{error}</p>}<div className="mt-6 flex justify-end gap-2"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant={isReject ? "danger" : "primary"} onClick={onConfirm} disabled={isWorking || (isReject && !reason.trim())}>{isWorking ? "Working…" : action === "submit" ? "Submit" : action === "approve" ? "Approve" : "Reject"}</Button></div></dialog>;
 }

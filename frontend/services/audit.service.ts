@@ -14,5 +14,6 @@ export async function getIncidentAudit(id: string): Promise<AuditEvent[]> {
       metadata: {},
     }];
   }
-  return apiRequest<AuditEvent[]>(`/incidents/${encodeURIComponent(id)}/audit`);
+  const response = await apiRequest<{ incident_id: string; items: Omit<AuditEvent, "event_id" | "incident_id" | "role">[] }>(`/incidents/${encodeURIComponent(id)}/audit`);
+  return response.items.map((event, index) => ({ ...event, event_id: `${id}:${index}:${event.created_at}`, incident_id: response.incident_id }));
 }

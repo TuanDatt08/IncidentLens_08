@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from collections.abc import Callable
 from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
@@ -29,11 +30,28 @@ class VideoProbeResult:
 class VideoService:
     """ffprobe adapter for upload metadata validation."""
 
-    def __init__(self, ffprobe_bin: str = "ffprobe", ffmpeg_bin: str | None = None) -> None:
+    def __init__(self, ffprobe_bin: str = "ffprobe", ffmpeg_bin: str | None = None, *, max_output_bytes: int | None = None, output_guard: Callable[[], int] | None = None) -> None:
         self.ffprobe_bin = ffprobe_bin
         # Retained for constructor compatibility with the later processing
         # workflow. Upload ingestion intentionally does not invoke FFmpeg.
         self.ffmpeg_bin = ffmpeg_bin
+        if max_output_bytes is not None and (isinstance(max_output_bytes, bool) or not isinstance(max_output_bytes, int) or max_output_bytes <= 0):
+            raise ValueError("output budget must be positive integer bytes")
+        self.max_output_bytes = max_output_bytes
+        self.output_guard = output_guard
+
+    def prepare_output(self) -> None:
+        if self.output_guard is not None:
+            self.max_output_bytes = self.output_guard()
+            if self.max_output_bytes <= 0:
+                raise ValueError("output budget exhausted")
+
+    def write_json(self, destination: Path, payload: Any) -> None:
+        self.prepare_output()
+        data = json.dumps(payload, default=str, sort_keys=True, indent=2).encode("utf-8")
+        if self.max_output_bytes is not None and len(data) >= self.max_output_bytes:
+            raise ValueError("metadata output budget exhausted")
+        destination.write_bytes(data)
 
     def validate_upload(self, filename: str | None, content_type: str | None) -> None:
         suffix = Path(filename or "").suffix.lower()
@@ -116,6 +134,7 @@ class VideoService:
         return VideoProbeResult(duration=duration, fps=fps, width=width, height=height)
 
     def extract_frame(self, video_path: Path, at_s: float, destination: Path) -> Path:
+        self.prepare_output()
         destination.parent.mkdir(parents=True, exist_ok=True)
         self._run_ffmpeg([
             "-y", "-ss", f"{at_s:.6f}", "-i", str(video_path),
@@ -124,6 +143,7 @@ class VideoService:
         return destination
 
     def extract_clip(self, video_path: Path, start_s: float, end_s: float, destination: Path) -> Path:
+        self.prepare_output()
         destination.parent.mkdir(parents=True, exist_ok=True)
         self._run_ffmpeg([
             "-y", "-ss", f"{start_s:.6f}", "-i", str(video_path),
@@ -132,12 +152,18 @@ class VideoService:
         return destination
 
     def _run_ffmpeg(self, args: list[str]) -> None:
+        self.prepare_output()
+        if self.max_output_bytes is not None:
+            args = [*args[:-1], "-fs", str(self.max_output_bytes), args[-1]]
         try:
             completed = subprocess.run([self.ffmpeg_bin or "ffmpeg", *args], capture_output=True, text=True, timeout=180)
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise IncidentIngestionError("video_tool_unavailable", "FFmpeg is unavailable or timed out.", status_code=500) from exc
         if completed.returncode != 0:
             raise IncidentIngestionError("video_invalid", "FFmpeg could not extract the requested media.")
+        if self.max_output_bytes is not None and Path(args[-1]).stat().st_size >= self.max_output_bytes:
+            Path(args[-1]).unlink(missing_ok=True)
+            raise ValueError("FFmpeg output budget exhausted; truncated evidence cannot be used")
 
     @staticmethod
     def _parse_fps(value: Any) -> float:

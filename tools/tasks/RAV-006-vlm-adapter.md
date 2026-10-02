@@ -1,8 +1,8 @@
 # RAV-006 — VLM provider contract
 
-Status: **PARTIAL**
+Status: **DONE (local AC)**
 
-Delivery Status: **Todo**
+Delivery Status: **Local verified; remote CI/merge pending**
 
 Technical lead: Backend; phối hợp: không cần role khác cho scope chính.
 
@@ -40,32 +40,34 @@ Test: `tests/backend/test_services/test_vlm_provider.py`.
 
 ## Acceptance criteria
 
-- [ ] Hai adapter dùng cùng context/schema.
-- [ ] frame timestamp theo thứ tự.
-- [ ] chỉ factory chọn provider.
-- [ ] timeout/retry bounded.
-- [ ] provenance/config hash lưu.
-- [ ] fake test không gọi network.
+- [x] Hai adapter dùng cùng context/schema.
+- [x] frame timestamp theo thứ tự.
+- [x] chỉ factory chọn provider.
+- [x] timeout/retry bounded.
+- [x] provenance/config hash lưu.
+- [x] fake test không gọi network.
 
 ## Execution and verification
 
-- [ ] Đọc linked SPEC/ADR; xác nhận dependencies và quyết định cần thiết.
+- [x] Đọc linked SPEC/ADR; xác nhận dependencies và quyết định cần thiết.
 - [ ] Viết regression/contract test cho từng acceptance, thêm negative case tương ứng trước implementation.
 - [ ] Chạy test mới, xác nhận failure vì behavior chưa có; giữ v1 regression.
-- [ ] Implement tối thiểu theo interface trên, ưu tiên stdlib/framework và adapter hiện có.
-- [ ] Chạy targeted tests; Python: `python -m pytest tests/backend/test_services/test_vlm_provider.py -q` (tạo test file trước). Frontend RAV-017 dùng `npm --prefix frontend run typecheck` và `npm --prefix frontend run build`, cộng E2E theo acceptance.
-- [ ] Chạy gates cần thiết: `python -m ruff check backend/ api/` và `python -m pytest tests/ -q`; PG/media/provider thực chỉ ghi PASS khi có bằng chứng chạy thật.
+- [x] Implement tối thiểu theo interface trên, ưu tiên stdlib/framework và adapter hiện có.
+- [x] Chạy targeted tests; Python: `python -m pytest tests/backend/test_services/test_vlm_provider.py -q` (tạo test file trước). Frontend RAV-017 dùng `npm --prefix frontend run typecheck` và `npm --prefix frontend run build`, cộng E2E theo acceptance.
+- [x] Chạy gates cần thiết: `python -m ruff check backend/ api/` và `python -m pytest tests/ -q`; PG/media/provider thực chỉ ghi PASS khi có bằng chứng chạy thật.
 
 ## Definition of Done
 
-- [ ] Implementation đạt mọi acceptance và dependency; tests + docs cập nhật.
-- [ ] Diff có scope, migration/backward compatibility được review.
+- [x] Implementation đạt mọi acceptance và dependency; tests + docs cập nhật.
+- [x] Diff có scope, migration/backward compatibility được review.
 - [ ] Required CI passes; chưa CI thì ghi pending, không tự khẳng định pass.
-- [ ] Evidence ghi ngày, command, kết quả, artifact và limitations; cập nhật backlog/status.
+- [x] Evidence ghi ngày, command, kết quả, artifact và limitations; cập nhật backlog/status.
 
 ## Completion evidence
 
-Chưa hoàn thành acceptance V2. Điền tại đây khi thực hiện; không dùng bản kế hoạch này làm bằng chứng DONE.
+2026-10-03: Một provider context/schema/factory, hai transport profiles, ordered/hash-verified frames, bounded timeout/retry/context/output, provenance; mock HTTP không dùng live service.
+
+Evidence: [test_vlm_provider.py](../../tests/backend/test_services/test_vlm_provider.py), [execution ledger](../docs/task-execution-2026-10-03.md), [V2 operating limits](../../backend/docs/v2-implementation.md). Targeted + final local gates ghi trong ledger. Remote CI/merge pending. Execution RED checklist chỉ tick khi có record đủ từng acceptance; không suy RED từ test GREEN. Repo audit bên dưới là baseline trước implementation này.
 
 ## Repo audit evidence — 2026-10-03
 

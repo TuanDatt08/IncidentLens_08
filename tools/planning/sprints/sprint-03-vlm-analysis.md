@@ -1,6 +1,6 @@
 # Sprint 03 — vlm-analysis
 
-Status: **Planned**
+Status: **Active — local verification; production/CI gates pending**
 
 Owner/capacity/dates: chưa giao/chốt.
 
@@ -22,12 +22,14 @@ Crash/replay/stale lease (RAV-015); timestamp drift/thiếu anchors (RAV-012); p
 
 ## Work items
 
-- [ ] [RAV-006](../../tasks/RAV-006-vlm-adapter.md) — VLM provider contract; prerequisite: [RAV-001](../../tasks/RAV-001-analysis-schema-v2.md), [RAV-004](../../tasks/RAV-004-clip-extraction.md).
+- [x] [RAV-006](../../tasks/RAV-006-vlm-adapter.md) — VLM provider contract; prerequisite: [RAV-001](../../tasks/RAV-001-analysis-schema-v2.md), [RAV-004](../../tasks/RAV-004-clip-extraction.md).
 - [ ] [RAV-007](../../tasks/RAV-007-external-vlm.md) — External VLM baseline; prerequisite: [RAV-005](../../tasks/RAV-005-anonymization.md), [RAV-006](../../tasks/RAV-006-vlm-adapter.md), [RAV-009](../../tasks/RAV-009-evidence-validation.md).
-- [ ] [RAV-008](../../tasks/RAV-008-self-hosted-vlm.md) — Self-hosted VLM baseline; prerequisite: [RAV-006](../../tasks/RAV-006-vlm-adapter.md), [RAV-009](../../tasks/RAV-009-evidence-validation.md).
-- [ ] [RAV-009](../../tasks/RAV-009-evidence-validation.md) — Evidence validation; prerequisite: [RAV-001](../../tasks/RAV-001-analysis-schema-v2.md), [RAV-004](../../tasks/RAV-004-clip-extraction.md).
-- [ ] [RAV-016](../../tasks/RAV-016-api-v2-migration.md) — API V2 and compatibility; prerequisite: [RAV-001](../../tasks/RAV-001-analysis-schema-v2.md).
+- [x] [RAV-008](../../tasks/RAV-008-self-hosted-vlm.md) — Self-hosted VLM baseline; prerequisite: [RAV-006](../../tasks/RAV-006-vlm-adapter.md), [RAV-009](../../tasks/RAV-009-evidence-validation.md).
+- [x] [RAV-009](../../tasks/RAV-009-evidence-validation.md) — Evidence validation; prerequisite: [RAV-001](../../tasks/RAV-001-analysis-schema-v2.md), [RAV-004](../../tasks/RAV-004-clip-extraction.md).
+- [x] [RAV-016](../../tasks/RAV-016-api-v2-migration.md) — API V2 and compatibility; prerequisite: [RAV-001](../../tasks/RAV-001-analysis-schema-v2.md).
 
 ## Exit gate
 
 Các work item đạt acceptance/DoD hoặc blocker được giữ và công bố; không đánh dấu sprint complete khi P0 chưa đạt. Test/CI evidence được ghi theo task. Mỗi task là một đơn vị có thể review riêng; thứ tự trong sprint tuân dependency, không chỉ thứ tự số ID. Không chạy external/GPU benchmark nếu chưa có policy/resource.
+
+Checkbox work items = local AC verified, chưa production/remote CI/merge. Xem [current execution evidence](../../docs/task-execution-2026-10-03.md).

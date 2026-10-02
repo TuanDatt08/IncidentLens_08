@@ -1,8 +1,8 @@
 # RAV-001 — Analysis schema V2
 
-Status: **DONE** (implementation và acceptance đã kiểm tra local)
+Status: **DONE (local AC)** (implementation và acceptance đã kiểm tra local)
 
-Delivery Status: **In Progress** (chờ PR/remote CI và merge; không tự ghi Done)
+Delivery Status: **Local verified; remote CI/merge pending** (chờ PR/remote CI và merge; không tự ghi Done)
 
 Technical lead: Backend; phối hợp: API.
 
@@ -62,6 +62,12 @@ Test: `tests/backend/test_services/test_analysis_v2.py`.
 - [x] Evidence ghi command, kết quả, artifact và limitations; cập nhật backlog/status.
 
 ## Completion evidence
+
+2026-10-03: Schema đã có được giữ; full regression kiểm enum/extra/NaN, ordered window, false detection và AI không APPROVED.
+
+Evidence: [test_analysis_v2.py](../../tests/backend/test_services/test_analysis_v2.py), [execution ledger](../docs/task-execution-2026-10-03.md), [V2 operating limits](../../backend/docs/v2-implementation.md). Targeted + final local gates ghi trong ledger. Remote CI/merge pending. Schema RED record có sẵn được giữ; không suy RED từ test GREEN. Repo audit bên dưới là baseline trước implementation này.
+
+## Repo audit evidence
 
 2026-10-03: 55 V2 contract regressions + 58 baseline tests = 113 passed. Ruff toàn repo pass sau khi sửa hai import-order lỗi cũ trong test fixture/migration tests. JSON Schema checked-in được đối chiếu với runtime schema để tránh drift.
 

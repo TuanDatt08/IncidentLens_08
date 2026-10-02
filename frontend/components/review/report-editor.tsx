@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Info, Lock, Save } from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import { parseEditorItems } from "@/lib/report-editor-values";
 import { getIncidentReport, isEditableReviewState, ReportConflictError, updateReport } from "@/services/report.service";
 import type { IncidentDraft } from "@/types/incident";
 import type { ReportPatch } from "@/types/report";
@@ -59,8 +60,13 @@ export function ReportEditor({ id, draft, onSaved }: { id: string; draft: Incide
     const current = toEditorValues(draft);
     const patch: ReportPatch = { version: draft.version };
     if (values.summary !== current.summary) patch.summary = values.summary;
-    if (values.observations !== current.observations) patch.observations = toList(values.observations);
-    if (values.key_factors !== current.key_factors) patch.key_factors = toList(values.key_factors);
+    try {
+      if (values.observations !== current.observations) patch.observations = parseEditorItems(values.observations, draft.observations);
+      if (values.key_factors !== current.key_factors) patch.key_factors = parseEditorItems(values.key_factors, draft.key_factors);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Evidence items are invalid.");
+      return;
+    }
     if (values.unknowns !== current.unknowns) patch.unknowns = toList(values.unknowns);
     if (Object.keys(patch).length === 1) {
       setMessage("No changes to save.");

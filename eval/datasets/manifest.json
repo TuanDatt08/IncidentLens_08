@@ -1,0 +1,11 @@
+{
+  "version": "1.0-draft",
+  "target_cases": 50,
+  "cases": [],
+  "min_iou": 0.5,
+  "tolerance_s": 0.1,
+  "test_locked_at": null,
+  "threshold_signoff": null,
+  "hardware_profile": null,
+  "api_policy_ref": null
+}

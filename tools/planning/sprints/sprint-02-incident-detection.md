@@ -1,6 +1,6 @@
 # Sprint 02 — incident-detection
 
-Status: **Planned**
+Status: **Active — local verification; production/CI gates pending**
 
 Owner/capacity/dates: chưa giao/chốt.
 
@@ -22,11 +22,13 @@ Crash/replay/stale lease (RAV-015); timestamp drift/thiếu anchors (RAV-012); p
 
 ## Work items
 
-- [ ] [RAV-003](../../tasks/RAV-003-candidate-detection.md) — Candidate detection; prerequisite: [RAV-002](../../tasks/RAV-002-log-normalization.md), [RAV-012](../../tasks/RAV-012-timestamp-synchronization.md).
-- [ ] [RAV-004](../../tasks/RAV-004-clip-extraction.md) — Clip and ordered frame extraction; prerequisite: [RAV-003](../../tasks/RAV-003-candidate-detection.md).
+- [x] [RAV-003](../../tasks/RAV-003-candidate-detection.md) — Candidate detection; prerequisite: [RAV-002](../../tasks/RAV-002-log-normalization.md), [RAV-012](../../tasks/RAV-012-timestamp-synchronization.md).
+- [x] [RAV-004](../../tasks/RAV-004-clip-extraction.md) — Clip and ordered frame extraction; prerequisite: [RAV-003](../../tasks/RAV-003-candidate-detection.md).
 - [ ] [RAV-005](../../tasks/RAV-005-anonymization.md) — Anonymization and privacy gate; prerequisite: [RAV-004](../../tasks/RAV-004-clip-extraction.md).
 - [ ] [RAV-015](../../tasks/RAV-015-job-resume-budget.md) — Job checkpoints, resume and budgets; prerequisite: [RAV-003](../../tasks/RAV-003-candidate-detection.md), [RAV-004](../../tasks/RAV-004-clip-extraction.md).
 
 ## Exit gate
 
 Các work item đạt acceptance/DoD hoặc blocker được giữ và công bố; không đánh dấu sprint complete khi P0 chưa đạt. Test/CI evidence được ghi theo task. Mỗi task là một đơn vị có thể review riêng; thứ tự trong sprint tuân dependency, không chỉ thứ tự số ID. Không chạy external/GPU benchmark nếu chưa có policy/resource.
+
+Checkbox work items = local AC verified, chưa production/remote CI/merge. Xem [current execution evidence](../../docs/task-execution-2026-10-03.md).

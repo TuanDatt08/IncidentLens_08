@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
   lint-and-test:
@@ -23,10 +23,33 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Lint with ruff
-        run: ruff check backend/ api/
+        run: ruff check .
+
+      - name: Check media tools
+        run: |
+          ffmpeg -version
+          ffprobe -version
 
       - name: Run tests
-        run: python -m pytest tests/ -v --tb=short
+        run: python -m pytest tests/ -v --tb=short -p pytest_asyncio.plugin
         env:
           APP_ENV: test
-          OPENAI_API_KEY: test-key
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+          PYTHONUTF8: "1"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm --prefix frontend ci
+
+      - name: Check frontend
+        run: |
+          npm --prefix frontend run typecheck
+          npm --prefix frontend run lint
+          node tests/frontend/report-editor-check.mjs
+          node tests/frontend/v2-client-check.mjs
+          npm --prefix frontend run build

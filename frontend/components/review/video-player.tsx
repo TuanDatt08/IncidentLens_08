@@ -83,7 +83,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(funct
     <div className="relative aspect-video bg-[#080e1d]">
       <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full bg-black/35 px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.1em] text-white backdrop-blur"><span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Incident video</div>
       {src ? <video ref={videoRef} src={src} className="h-full w-full object-contain" playsInline preload="metadata" /> : <div className="flex h-full w-full items-center justify-center text-sm font-bold text-slate-500">Video preview unavailable</div>}
-      {!isPlaying && src && <button type="button" onClick={togglePlay} className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-vf-primary shadow-lg transition hover:scale-105"><Play className="ml-0.5 h-6 w-6" /></button>}
+      {!isPlaying && src && <button type="button" aria-label="Play incident video" onClick={togglePlay} className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-vf-primary shadow-lg transition hover:scale-105"><Play className="ml-0.5 h-6 w-6" /></button>}
     </div>
     <div className="px-4 pb-3 pt-3 sm:px-5">
       <div className="relative mb-3 h-2">
