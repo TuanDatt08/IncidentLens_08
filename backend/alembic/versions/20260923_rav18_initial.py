@@ -5,9 +5,10 @@ Revises:
 """
 
 import sqlalchemy as sa
+from alembic import op
+
 from sqlalchemy.dialects.postgresql import JSONB
 
-from alembic import op
 
 revision = "20260923_rav18"
 down_revision = None
