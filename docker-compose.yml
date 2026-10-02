@@ -17,16 +17,16 @@ services:
 
   backend:
     build: .
-    command: ["sh", "-c", "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000"]
+    command: ["sh", "-c", "alembic upgrade head && uvicorn api.main:app --host 0.0.0.0 --port 8000"]
     environment:
       DATABASE_URL: postgresql+psycopg2://rav18:rav18@postgres:5432/rav18
-      INCIDENT_STORAGE_DIR: /app/data/incidents
+      INCIDENT_STORAGE_DIR: /app/backend/data/incidents
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       MODEL_NAME: ${MODEL_NAME:-gpt-4o-mini}
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
-      - ./data:/app/data
+      - ./backend/data:/app/backend/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -38,14 +38,14 @@ services:
 
   worker:
     build: .
-    command: ["python", "-m", "src.worker"]
+    command: ["python", "-m", "backend.worker"]
     environment:
       DATABASE_URL: postgresql+psycopg2://rav18:rav18@postgres:5432/rav18
-      INCIDENT_STORAGE_DIR: /app/data/incidents
+      INCIDENT_STORAGE_DIR: /app/backend/data/incidents
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       MODEL_NAME: ${MODEL_NAME:-gpt-4o-mini}
     volumes:
-      - ./data:/app/data
+      - ./backend/data:/app/backend/data
     depends_on:
       backend:
         condition: service_healthy

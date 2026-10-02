@@ -77,7 +77,7 @@ Codex CLI, Gemini CLI, Antigravity hoặc GitHub Copilot, và cài pre-push hook
 ### 5. Chạy server
 
 ```bash
-uvicorn src.main:app --reload --port 8000
+uvicorn api.main:app --reload --port 8000
 ```
 
 Swagger UI ở <http://localhost:8000/docs>. Hoặc dùng `make run`, `make test`,
@@ -86,18 +86,19 @@ Swagger UI ở <http://localhost:8000/docs>. Hoặc dùng `make run`, `make test
 ## Cấu trúc thư mục
 
 ```
-src/
+backend/
   agents/            LangGraph agent
     graph.py         State graph (nodes + edges)
     state.py         State schema (TypedDict)
     nodes/           Node functions
     tools/           Agent tools (@tool)
-  api/routes.py      FastAPI endpoints
   models/schemas.py  Pydantic schemas
   services/llm.py    LLM client
   config.py          Pydantic Settings
-  main.py            App entry point
-tests/               pytest suite
+  worker.py          Analysis worker
+  tests/             Backend test suite
+api/                 FastAPI routes, app entry point and API tests
+frontend/            Next.js frontend
 scripts/             Hook ghi log AI + installer
 docs/
   guide/             Technical Guidebook (nguồn của bản online)
@@ -136,7 +137,7 @@ bằng bất kỳ markdown viewer nào.
 
 | # | Deliverable | Vị trí | Template lo tới đâu |
 |---|---|---|---|
-| 1 | Source code | `src/` | Khung sẵn |
+| 1 | Source code | `frontend/`, `backend/`, `api/` | Khung sẵn |
 | 2 | README | copy `README_boilerplate.md` thành `README.md` | Khung sẵn |
 | 3 | Architecture diagram | `docs/architecture_diagram.md` | Khung sẵn |
 | 4 | AI logs | LangSmith (3 biến môi trường) + auto AI usage logging | Cấu hình sẵn |
@@ -153,7 +154,7 @@ bằng bất kỳ markdown viewer nào.
 |---|---|
 | Agent | LangGraph + LangChain 0.3 |
 | Backend | FastAPI 0.115 + Uvicorn |
-| LLM | OpenAI, mặc định `gpt-4o-mini` (đổi trong `src/config.py`) |
+| LLM | OpenAI, mặc định `gpt-4o-mini` (đổi trong `backend/config.py`) |
 | Giao diện | Next.js hoặc Streamlit (đội tự chọn, hướng dẫn ở chương 6) |
 | Lint / test | ruff + pytest 8 |
 | DevOps | Docker + GitHub Actions |

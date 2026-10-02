@@ -46,24 +46,25 @@ cp .env.example .env
 pip install -r requirements.txt
 
 # 4. Run development server
-uvicorn src.main:app --reload
+uvicorn api.main:app --reload
 ```
 
 ## Project Structure
 
 ```
-├── src/
+├── backend/
 │   ├── agents/          # LangGraph agent definitions
 │   │   ├── graph.py     # Main graph (nodes + edges)
 │   │   ├── state.py     # State schema
 │   │   ├── nodes/       # Individual nodes
 │   │   └── tools/       # Agent tools
-│   ├── api/             # FastAPI routes
 │   ├── models/          # Pydantic schemas
 │   ├── services/        # Business logic
 │   ├── config.py        # Settings
-│   └── main.py          # App entry point
-├── tests/               # Test suite
+│   ├── worker.py        # Analysis worker
+│   └── tests/           # Backend test suite
+├── api/                 # FastAPI routes, app and API tests
+├── frontend/            # Next.js frontend
 ├── docs/                # Documentation
 ├── eval/                # Evaluation results
 ├── presentation/        # Demo materials

@@ -1,8 +1,7 @@
 # IncidentLens frontend
 
-Next.js MVP for RAV-18 IncidentLens. The existing FastAPI backend remains in the
-repository root `src/` directory; this app is intentionally isolated in
-`frontend/`.
+Next.js MVP for RAV-18 IncidentLens. Backend logic lives in `backend/`; the local
+FastAPI layer lives in the `api/` directory.
 
 ## Run locally
 

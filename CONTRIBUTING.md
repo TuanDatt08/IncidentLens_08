@@ -4,7 +4,7 @@ Cảm ơn bạn đã quan tâm. Repo này gồm hai phần với quy trình revi
 
 | Phần | Đường dẫn | Ai duyệt |
 |------|-----------|----------|
-| Code template | `src/`, `tests/`, `scripts/`, Dockerfile… | Maintainer bất kỳ |
+| Code template | `frontend/`, `backend/`, `api/`, `scripts/`, Dockerfile… | Maintainer bất kỳ |
 | **Technical Book** | `docs/guide/**` | **Bắt buộc** @AI20K-Build-Phase/book-maintainers |
 
 ## Technical Book — lưu ý quan trọng
