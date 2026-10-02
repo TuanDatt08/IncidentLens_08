@@ -9,6 +9,7 @@ Cảm ơn bạn đã quan tâm. Repo này gồm hai phần với quy trình revi
 
 ## Technical Book — lưu ý quan trọng
 
+
 Thư mục `docs/guide/` là **nguồn** của Technical Book đăng tại
 [phoenix.note.transformerlabs.ai/technical-book](https://phoenix.note.transformerlabs.ai/technical-book).
 Nội dung được merge vào `main` sẽ đồng bộ lên trang đó.
