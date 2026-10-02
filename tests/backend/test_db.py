@@ -1,13 +1,13 @@
 from uuid import uuid4
 
 import pytest
+from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from alembic import command
 from backend.models.tables import Incident, Job
 
 

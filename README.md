@@ -1,5 +1,14 @@
 # AI20K Agent Template
 
+## IncidentLens — tài liệu và role hiện tại
+
+- [tools](tools/README.md): SPEC, ADR, planning, tasks và [implementation audit](tools/docs/implementation-audit.md).
+- [backend](backend/README.md): domain logic, database, worker và docs Backend.
+- [api](api/README.md): routes, public contract và docs API.
+- [frontend](frontend/README.md): Next.js UI, client services và docs Frontend.
+
+Phần guide/template bên dưới được giữ để tham khảo. Trạng thái IncidentLens cụ thể xem audit và role docs ở trên.
+
 Template chính thức cho học viên VinUni AI20K Build Phase: cấu trúc dự án, code
 mẫu và hướng dẫn kỹ thuật để xây dựng một AI Agent hoàn chỉnh — từ kiến trúc,
 code, test cho đến deploy và nộp bài Demo Day.

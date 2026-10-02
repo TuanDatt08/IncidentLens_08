@@ -1,0 +1,220 @@
+{
+  "$defs": {
+    "AnalysisFactorV2": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "EXTERNAL_CONDITION",
+            "VEHICLE_OR_SYSTEM",
+            "HUMAN_INTERACTION",
+            "UNKNOWN"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "label": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Label",
+          "type": "string"
+        },
+        "claim_status": {
+          "enum": [
+            "OBSERVED",
+            "SUPPORTED_INFERENCE",
+            "HYPOTHESIS",
+            "UNKNOWN"
+          ],
+          "title": "Claim Status",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "category",
+        "label",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "title": "AnalysisFactorV2",
+      "type": "object"
+    },
+    "AnalysisWindowV2": {
+      "additionalProperties": false,
+      "properties": {
+        "start_s": {
+          "minimum": 0,
+          "title": "Start S",
+          "type": "number"
+        },
+        "critical_s": {
+          "minimum": 0,
+          "title": "Critical S",
+          "type": "number"
+        },
+        "end_s": {
+          "minimum": 0,
+          "title": "End S",
+          "type": "number"
+        }
+      },
+      "required": [
+        "start_s",
+        "critical_s",
+        "end_s"
+      ],
+      "title": "AnalysisWindowV2",
+      "type": "object"
+    },
+    "TimelineObservationV2": {
+      "additionalProperties": false,
+      "properties": {
+        "time_s": {
+          "minimum": 0,
+          "title": "Time S",
+          "type": "number"
+        },
+        "observation": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Observation",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "source": {
+          "enum": [
+            "VIDEO",
+            "TELEMETRY",
+            "FUSED"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "certainty": {
+          "enum": [
+            "OBSERVED",
+            "SUPPORTED_INFERENCE",
+            "HYPOTHESIS",
+            "UNKNOWN"
+          ],
+          "title": "Certainty",
+          "type": "string"
+        }
+      },
+      "required": [
+        "time_s",
+        "observation",
+        "evidence_ids",
+        "source",
+        "certainty"
+      ],
+      "title": "TimelineObservationV2",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Provider output cannot submit, reject or approve a report.",
+  "properties": {
+    "schema_version": {
+      "const": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "incident_detected": {
+      "title": "Incident Detected",
+      "type": "boolean"
+    },
+    "event_type": {
+      "enum": [
+        "DISENGAGEMENT",
+        "HARD_BRAKING",
+        "COLLISION",
+        "CONTROL_ANOMALY",
+        "OTHER",
+        "UNKNOWN"
+      ],
+      "title": "Event Type",
+      "type": "string"
+    },
+    "time_basis": {
+      "const": "video_seconds",
+      "title": "Time Basis",
+      "type": "string"
+    },
+    "window": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AnalysisWindowV2"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "summary": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Summary",
+      "type": "string"
+    },
+    "timeline": {
+      "items": {
+        "$ref": "#/$defs/TimelineObservationV2"
+      },
+      "title": "Timeline",
+      "type": "array"
+    },
+    "factors": {
+      "items": {
+        "$ref": "#/$defs/AnalysisFactorV2"
+      },
+      "title": "Factors",
+      "type": "array"
+    },
+    "unknowns": {
+      "items": {
+        "minLength": 1,
+        "pattern": "\\S",
+        "type": "string"
+      },
+      "title": "Unknowns",
+      "type": "array"
+    },
+    "review_status": {
+      "const": "DRAFT",
+      "title": "Review Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "incident_detected",
+    "event_type",
+    "time_basis",
+    "window",
+    "summary",
+    "timeline",
+    "factors",
+    "unknowns",
+    "review_status"
+  ],
+  "title": "AIIncidentAnalysisV2",
+  "type": "object"
+}

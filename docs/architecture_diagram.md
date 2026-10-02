@@ -1,15 +1,5 @@
-# RAV18 backend MVP architecture
+# Backend architecture
 
-```mermaid
-flowchart LR
-    FE[Next.js frontend] -->|REST /api/v1| API[FastAPI]
-    FE -->|poll job_id| API
-    API --> PG[(PostgreSQL: six tables)]
-    API --> FS[(Incident file storage)]
-    WORKER[Analysis worker] -->|lease and heartbeat| PG
-    WORKER --> FS
-    WORKER -->|Pass 1 and Pass 2| VLM[Vision language model]
-    WORKER -->|report, evidence, audit| PG
-```
+Sơ đồ implementation hiện có: [backend/docs/architecture.md](../backend/docs/architecture.md).
 
-The frontend currently uses an older contract. The required service-layer changes are listed in [backend-contract-v1.1.md](backend-contract-v1.1.md). Evidence storage paths are internal; local demo media routes serve video and evidence by `incident_id` and `evidence_id`.
+Kiến trúc đích và source-of-truth toàn dự án: [tools](../tools/README.md).

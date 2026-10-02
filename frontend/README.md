@@ -23,5 +23,12 @@ available.
 - `/incidents/[id]/processing` — analysis progress
 - `/incidents/[id]` — review, evidence, editable report and workflow actions
 
-The mock layer uses the same TypeScript interfaces as the API layer. Provisional
-schemas are documented with `NEED_CONFIRMATION` in `types/`.
+The mock layer uses TypeScript v1 interfaces. Most v1.1 API integration is in
+place; audit envelope/rendering remains incomplete. See
+[integration details](docs/api-integration.md).
+
+## Role documentation
+
+- [AGENTS.md](AGENTS.md) — trách nhiệm và kiểm tra của Frontend.
+- [docs/README.md](docs/README.md) — implementation, integration, development và work items.
+- [Shared SPEC/ADR/planning/tasks](../tools/README.md) — nguồn chuẩn toàn dự án.
