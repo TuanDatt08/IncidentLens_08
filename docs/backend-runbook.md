@@ -8,9 +8,9 @@ For database-only development, run `docker compose up -d postgres`, then `docker
 
 The OpenAPI description is available at `http://localhost:8000/docs`; upload, analyze, job polling, and report reads publish response schemas there.
 
-The `DATABASE_URL` default targets a local PostgreSQL instance. Tests use a temporary SQLite database and a fake VLM. To run them, install `requirements.txt` and `requirements-dev.txt`, then run `python -m pytest backend/tests/ api/tests/ -q`. To inspect PostgreSQL migration SQL without a server, use `python -m alembic upgrade head --sql`.
+The `DATABASE_URL` default targets a local PostgreSQL instance. Tests use a temporary SQLite database and a fake VLM. To run them, install `requirements.txt`, then run `python -m pytest tests/ -q`. To inspect PostgreSQL migration SQL without a server, use `python -m alembic upgrade head --sql`.
 
-For a PostgreSQL and FFmpeg smoke test, create a separate database with `docker compose exec -T postgres psql -U rav18 -d postgres -c "CREATE DATABASE rav18_e2e;"`, migrate it with `docker compose run --rm --no-deps -e DATABASE_URL=postgresql+psycopg2://rav18:rav18@postgres:5432/rav18_e2e backend alembic upgrade head`, then run `docker compose run --rm --no-deps -e DATABASE_URL=postgresql+psycopg2://rav18:rav18@postgres:5432/rav18_e2e -e INCIDENT_STORAGE_DIR=/tmp/rav18-e2e-storage -e RAV18_PG_E2E=1 backend pytest -q api/tests/postgres_smoke.py`. The test generates an MP4 with FFmpeg and uses a fake VLM. It refuses to run against the main `rav18` database.
+For a PostgreSQL and FFmpeg smoke test, create a separate database with `docker compose exec -T postgres psql -U rav18 -d postgres -c "CREATE DATABASE rav18_e2e;"`, migrate it with `docker compose run --rm --no-deps -e DATABASE_URL=postgresql+psycopg2://rav18:rav18@postgres:5432/rav18_e2e backend alembic upgrade head`, then run `docker compose run --rm --no-deps -e DATABASE_URL=postgresql+psycopg2://rav18:rav18@postgres:5432/rav18_e2e -e INCIDENT_STORAGE_DIR=/tmp/rav18-e2e-storage -e RAV18_PG_E2E=1 backend pytest -q tests/api/postgres_smoke.py`. The test generates an MP4 with FFmpeg and uses a fake VLM. It refuses to run against the main `rav18` database.
 
 ## API sequence
 

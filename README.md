@@ -96,9 +96,9 @@ backend/
   services/llm.py    LLM client
   config.py          Pydantic Settings
   worker.py          Analysis worker
-  tests/             Backend test suite
-api/                 FastAPI routes, app entry point and API tests
+api/                 FastAPI routes and app entry point
 frontend/            Next.js frontend
+tests/               Backend and API pytest suite
 scripts/             Hook ghi log AI + installer
 docs/
   guide/             Technical Guidebook (nguồn của bản online)

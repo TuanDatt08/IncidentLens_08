@@ -4,7 +4,7 @@ run:
 	uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
 test:
-	pytest backend/tests/ api/tests/ -v
+	pytest tests/ -v
 
 lint:
 	ruff check backend/ api/

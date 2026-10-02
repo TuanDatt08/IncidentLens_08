@@ -17,7 +17,7 @@
 
 ### Unit Tests
 ```
-pytest backend/tests/ api/tests/ -v
+pytest tests/ -v
 # Paste output here
 ```
 

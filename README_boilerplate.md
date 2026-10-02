@@ -61,10 +61,10 @@ uvicorn api.main:app --reload
 │   ├── models/          # Pydantic schemas
 │   ├── services/        # Business logic
 │   ├── config.py        # Settings
-│   ├── worker.py        # Analysis worker
-│   └── tests/           # Backend test suite
-├── api/                 # FastAPI routes, app and API tests
+│   └── worker.py        # Analysis worker
+├── api/                 # FastAPI routes and app
 ├── frontend/            # Next.js frontend
+├── tests/               # Backend and API pytest suite
 ├── docs/                # Documentation
 ├── eval/                # Evaluation results
 ├── presentation/        # Demo materials
