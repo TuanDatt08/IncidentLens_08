@@ -1,0 +1,20 @@
+GHI CHÚ QWEN LOCAL — 2026-10-10
+
+Thay đổi đã thống nhất:
+- Mỗi lần gọi Qwen gửi 1 frame: QWEN_BATCH_FRAMES=1.
+- Giữ trích xuất 4 frame/giây. Đây là giới hạn frame mỗi request, không phải giảm xuống 1 FPS.
+- Giữ cửa sổ quanh flag: trước 5 giây, sau 3 giây; cắt theo giới hạn video.
+- Một cửa sổ đủ 8 giây có khoảng 32 frame, tương ứng khoảng 32 lần gọi; bước định vị sơ bộ có thể cần thêm lần gọi.
+- Giữ prompt ở backend/data/promt.txt và append lịch sử vào backend/data/outputs.txt.
+
+Lý do:
+- Job JOB-78BC4BC09A99 gửi 5 frame ở bước định vị, chạy Qwen trên CPU và gặp ReadTimeout sau khoảng 600 giây.
+- Giảm frame/request để giảm lượng ảnh phải xử lý cùng lúc. Không bảo đảm tổng thời gian phân tích giảm: số request sẽ tăng và mỗi request vẫn xử lý prompt/log.
+- Timeout mỗi request hiện vẫn là 600 giây. outputs.txt ghi phản hồi sau khi nhận được hoặc ghi lỗi khi request thất bại; chưa ghi token sinh ra liên tục.
+
+Hạn chế và hướng cải tiến riêng sau này:
+- Một frame/request hạn chế ngữ cảnh chuyển động trong từng phản hồi; chưa có bằng chứng chất lượng phân tích toàn cửa sổ hoặc tốc độ phù hợp thực tế.
+- Đo riêng thời gian xử lý ảnh/prompt và thời gian sinh phản hồi trên phần cứng thực tế.
+- Đánh giá GPU, số token ảnh, độ dài prompt/log và batch nhiều frame khi tài nguyên cho phép.
+- Đánh giá cách tổng hợp diễn biến theo thứ tự thời gian giữa các phản hồi; không kết luận nguyên nhân khi bằng chứng chưa đủ.
+- Các mục cải tiến trên chỉ là ghi chú, chưa triển khai thêm tính năng.

@@ -1,0 +1,25 @@
+name: incidentlens-qwen-local
+services:
+  app:
+    image: incidentlens:qwen-local
+    build:
+      context: .
+      dockerfile: deploy/qwen-local/Dockerfile
+    ports:
+      - "127.0.0.1:8089:8088"
+    environment:
+      CORS_ORIGINS: http://localhost:8089,http://127.0.0.1:8089
+      QWEN_BATCH_FRAMES: "1"
+      QWEN_SAMPLING_FPS: "4"
+      QWEN_TIMEOUT_S: "600"
+      QWEN_CONTEXT_SIZE: "16384"
+    volumes:
+      - data:/data
+      - ./backend/data/model:/models:ro
+      - ./backend/data:/app/backend/data
+    stop_grace_period: 90s
+    restart: unless-stopped
+volumes:
+  data:
+    external: true
+    name: incidentlens-unified_data

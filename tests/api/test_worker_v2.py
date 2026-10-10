@@ -11,6 +11,7 @@ from backend.services.video import VideoService
 
 @pytest.mark.asyncio
 async def test_v2_worker_discovers_multiple_candidates_and_resumes_without_reanalysis(db_client, tmp_path, monkeypatch):
+    monkeypatch.setenv("QWEN_BATCH_FRAMES", "32")
     from backend.config import get_settings
     root = tmp_path / "storage"
     root.mkdir(exist_ok=True)
@@ -52,6 +53,10 @@ async def test_v2_worker_discovers_multiple_candidates_and_resumes_without_reana
     status = get_job(job["job_id"], actor)
     assert status["status"] == "succeeded"
     assert len(calls) == 3
+    assert len(calls[0].frames) == 24  # Merged flags at 2/3s, window clipped to [0,6).
+    assert len(calls[1].frames) == 32
+    assert [frame.time_start_s for frame in calls[1].frames] == [27 + i / 4 for i in range(32)]
+    assert calls[0].flags[0]["time_s"] == 2.0
     assert "attempt-1" in calls[0].frames[0].path.parts
     assert "attempt-2" in calls[2].frames[0].path.parts
     assert len([item for item in status["partial_results"] if item.get("report_id")]) == 2
@@ -93,3 +98,84 @@ async def test_pending_scan_resumes_and_cancellation_stops_next_frame(db_client,
     module.run_once(provider=object(), job_id=cancelled, scanner=cancel)
     assert scanned == [0.0]
     assert get_job(cancelled, actor)["status"] == "cancelled"
+
+
+@pytest.mark.asyncio
+async def test_worker_uses_local_even_when_job_requests_external(db_client, tmp_path, monkeypatch):
+    monkeypatch.setenv("QWEN_BATCH_FRAMES", "32")
+    from backend.config import get_settings
+    from backend.models.analysis_v2 import AIIncidentAnalysisV2
+    from backend.services.vlm_provider import ProviderResult
+    root = tmp_path / "storage"
+    root.mkdir(exist_ok=True)
+    (root / "video.mp4").write_bytes(b"fixture")
+    (root / "log.csv").write_text("clock,brake\n0,0\n10,1\n11,0\n20,0\n")
+    monkeypatch.setenv("INCIDENT_STORAGE_DIR", str(root))
+    get_settings.cache_clear()
+    with session_scope() as session:
+        session.add(RecordingV2(recording_id="local", duration_s=30.0, video_uri="video.mp4", metadata_json={"duration": 30.0, "fps": 10.0, "telemetry_uri": "log.csv", "log_config": {"timestamp_column": "clock", "time_reference": "recording_relative"}, "anchors": [{"log_s": 0.0, "video_s": 0.0, "source": "fixture"}, {"log_s": 20.0, "video_s": 20.0, "source": "fixture"}]}))
+    actor = Principal("engineer", frozenset({"Engineer"}), frozenset({"local"}))
+    job = create_job("local", "external_api", "local-only", actor)
+    def output(self, source, start, *args):
+        destination = args[-1]
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(str(start).encode())
+        return destination
+    monkeypatch.setattr(VideoService, "extract_frame", output)
+    monkeypatch.setattr(VideoService, "extract_clip", output)
+    module = importlib.import_module("backend.worker_v2")
+    calls = []
+    class LocalProvider:
+        def analyze(self, context):
+            calls.append(context)
+            assert len(context.frames) == 32 and context.candidate_window == (5.0, 10.0, 13.0)
+            analysis = AIIncidentAnalysisV2.model_validate({"schema_version": "2.0", "incident_detected": False, "event_type": "UNKNOWN", "time_basis": "video_seconds", "window": None, "summary": "Checked supplied frames only", "timeline": [], "factors": [], "unknowns": ["No full-video coverage"], "review_status": "DRAFT"})
+            return ProviderResult(analysis, {"provider": "local"}, {"attempts": 1})
+    monkeypatch.setattr(module, "create_local_provider", lambda settings: LocalProvider())
+    module.run_once(job_id=job["job_id"])
+    assert get_job(job["job_id"], actor)["status"] == "succeeded"
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_resume_changed_batch_size_reanalyzes_exact_frames(db_client, tmp_path, monkeypatch):
+    from backend.config import get_settings
+    from backend.models.analysis_v2 import AIIncidentAnalysisV2
+    from backend.services.vlm_provider import ProviderResult
+    root = tmp_path / "storage"
+    root.mkdir(exist_ok=True)
+    (root / "video.mp4").write_bytes(b"fixture")
+    (root / "log.csv").write_text("clock,brake\n0,0\n10,1\n11,0\n20,0\n")
+    monkeypatch.setenv("INCIDENT_STORAGE_DIR", str(root))
+    monkeypatch.setenv("QWEN_BATCH_FRAMES", "8")
+    get_settings.cache_clear()
+    with session_scope() as session:
+        session.add(RecordingV2(recording_id="batch", duration_s=30.0, video_uri="video.mp4", metadata_json={"duration": 30.0, "fps": 10.0, "telemetry_uri": "log.csv", "log_config": {"timestamp_column": "clock", "time_reference": "recording_relative"}, "anchors": [{"log_s": 0.0, "video_s": 0.0, "source": "fixture"}, {"log_s": 20.0, "video_s": 20.0, "source": "fixture"}]}))
+    actor = Principal("engineer", frozenset({"Engineer"}), frozenset({"batch"}))
+    job = create_job("batch", "self_hosted", "batch-resume", actor)
+    def output(self, source, start, *args):
+        destination = args[-1]
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(str(start).encode())
+        return destination
+    monkeypatch.setattr(VideoService, "extract_frame", output)
+    monkeypatch.setattr(VideoService, "extract_clip", output)
+    module = importlib.import_module("backend.worker_v2")
+    calls = []
+    class Provider:
+        def analyze(self, context):
+            calls.append(context)
+            if len(calls) == 2:
+                raise RuntimeError("interrupted batch")
+            analysis = AIIncidentAnalysisV2.model_validate({"schema_version": "2.0", "incident_detected": False, "event_type": "UNKNOWN", "time_basis": "video_seconds", "window": None, "summary": "Checked supplied frames", "timeline": [], "factors": [], "unknowns": ["Limited coverage"], "review_status": "DRAFT"})
+            return ProviderResult(analysis, {}, {"attempts": 1})
+    provider = Provider()
+    module.run_once(provider=provider, job_id=job["job_id"])
+    assert get_job(job["job_id"], actor)["status"] == "failed"
+    monkeypatch.setenv("QWEN_BATCH_FRAMES", "32")
+    get_settings.cache_clear()
+    module.resume_failed(job["job_id"], actor)
+    module.run_once(provider=provider, job_id=job["job_id"])
+    assert get_job(job["job_id"], actor)["status"] == "succeeded"
+    assert [len(context.frames) for context in calls] == [8, 8, 32]
+    assert calls[-1].frames[0].time_start_s == 5.0 and calls[-1].frames[-1].time_start_s == 12.75

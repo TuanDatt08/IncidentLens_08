@@ -43,6 +43,24 @@ class Settings(BaseSettings):
     v2_external_egress_approved: bool = False
     v2_external_allowed_hosts: str = ""
 
+    # Qwen local; paths are resolved by the backend, never supplied by HTTP users.
+    qwen_endpoint: str = "http://127.0.0.1:8091/v1/chat/completions"
+    qwen_model_dir: str = "./backend/data/model"
+    qwen_model_file: str = "Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf"
+    qwen_projector_file: str = "mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf"
+    qwen_server_bin: str = "llama-server"
+    qwen_prompt_path: str = "./backend/data/promt.txt"
+    qwen_outputs_path: str = "./backend/data/outputs.txt"
+    qwen_timeout_s: float = Field(default=600, gt=0, le=3600)
+    qwen_startup_timeout_s: float = Field(default=120, gt=0, le=600)
+    qwen_context_size: int = Field(default=32768, ge=4096, le=131072)
+    qwen_batch_frames: int = Field(default=1, ge=1, le=32)
+    qwen_sampling_fps: float = Field(default=4, gt=0, le=30)
+    qwen_signal_thresholds: dict[str, float] = Field(default_factory=dict)
+    qwen_delta_thresholds: dict[str, float] = Field(default_factory=dict)
+    # V1 collision-relative CSV cannot imply where collision lies in the MP4.
+    qwen_v1_log_offset_s: float | None = None
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()

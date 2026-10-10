@@ -83,3 +83,12 @@ def test_iter_rows_stays_a_stream_instead_of_materializing_log(tmp_path):
     assert iter(rows) is rows
     assert next(rows) == {"time_s": 0.0, "speed": "12"}
     assert result.metadata.row_count == 10000
+def test_carla_aliases_keep_source_columns_and_convert_speed_units(tmp_path):
+    from backend.services.log_normalization import normalize_log
+    path = tmp_path / "carla.csv"
+    path.write_text("sec_from_incident,speed_kmh,accel_x,collision_intensity\n0,36,-2,0\n1,72,-3,5\n")
+    log = normalize_log(path)
+    rows = list(log.iter_rows())
+    assert rows[0]["speed"] == 10.0 and rows[0]["acceleration"] == -2.0
+    assert rows[0]["speed_kmh"] == "36"
+    assert "acceleration" in log.metadata.signal_columns

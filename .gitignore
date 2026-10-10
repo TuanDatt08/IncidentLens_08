@@ -30,6 +30,9 @@ Thumbs.db
 
 # Data (never commit large data)
 data/
+!backend/data/
+backend/data/*
+!backend/data/promt.txt
 *.db
 *.sqlite3
 

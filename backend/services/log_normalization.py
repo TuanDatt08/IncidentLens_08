@@ -85,7 +85,18 @@ def _normalized_rows(path: Path, config: LogNormalizationConfig) -> Iterator[tup
                     raise TelemetryError("normalized timestamp must be finite and preserve strict order")
                 previous_normalized = seconds
                 seen = True
-                yield {"time_s": seconds, **{key: value for key, value in row.items() if key != config.timestamp_column}}, str(origin) if origin is not None else None
+                normalized = {"time_s": seconds, **{key: value for key, value in row.items() if key != config.timestamp_column}}
+                # Explicit CARLA field units; retain source columns for audit.
+                for canonical, source, scale in (("speed", "speed_kmh", 1 / 3.6), ("acceleration", "accel_x", 1.0)):
+                    if canonical not in normalized and source in normalized:
+                        try:
+                            value = float(normalized[source]) * scale
+                        except (ValueError, TypeError) as exc:
+                            raise TelemetryError(f"{source} must be numeric") from exc
+                        if not math.isfinite(value):
+                            raise TelemetryError(f"{source} must be finite")
+                        normalized[canonical] = value
+                yield normalized, str(origin) if origin is not None else None
             if not seen:
                 raise TelemetryError("CSV has no telemetry rows")
     except (OSError, UnicodeError, csv.Error) as exc:

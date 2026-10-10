@@ -138,3 +138,36 @@ async def test_expired_lease_retries_then_fails_after_limit(db_client, monkeypat
             job.lease_until = datetime.now(UTC) - timedelta(seconds=1)
     assert claim_job() is None
     assert get_job(job_id)["status"] == "failed"
+
+
+@pytest.mark.asyncio
+async def test_v1_default_worker_uses_local_pipeline_without_openai(db_client, monkeypatch):
+    from io import BytesIO
+    from starlette.datastructures import UploadFile
+    import backend.worker as worker
+    from backend.config import get_settings
+    from backend.models.analysis_v2 import AIIncidentAnalysisV2
+    from backend.services.vlm_provider import ProviderResult
+    monkeypatch.setenv("QWEN_V1_LOG_OFFSET_S", "0")
+    get_settings.cache_clear()
+    monkeypatch.setattr("backend.services.vlm.get_llm", lambda: pytest.fail("external VLM used"))
+    monkeypatch.setattr(VideoService, "probe", lambda self, path: VideoProbeResult(30, 30, 320, 240))
+    def output(self, source, at_s, *args):
+        destination = args[-1]
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(str(at_s).encode())
+        return destination
+    monkeypatch.setattr(VideoService, "extract_frame", output)
+    monkeypatch.setattr(VideoService, "extract_clip", output)
+    incident = create_incident(UploadFile(file=BytesIO(b"video"), filename="video.mp4"), UploadFile(file=BytesIO(b"sec_from_incident,brake\n0,0\n10,1\n11,0\n20,0\n"), filename="log.csv"))
+    job = create_job(incident["incident_id"])
+    calls = []
+    class Local:
+        def analyze(self, context):
+            calls.append(context)
+            return ProviderResult(AIIncidentAnalysisV2.model_validate({"schema_version": "2.0", "incident_detected": False, "event_type": "UNKNOWN", "time_basis": "video_seconds", "window": None, "summary": "Supplied frames only", "timeline": [], "factors": [], "unknowns": ["Not full video coverage"], "review_status": "DRAFT"}), {}, {})
+    monkeypatch.setattr(worker, "create_local_provider", lambda settings: Local())
+    worker.run_once(job_id=job["job_id"])
+    assert get_job(job["job_id"])["status"] == "succeeded"
+    assert sum(len(context.frames) for context in calls) == 32
+    assert all(context.candidate_window == (5.0, 10.0, 13.0) for context in calls)

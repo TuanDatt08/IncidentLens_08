@@ -7,7 +7,9 @@ import hashlib
 import ipaddress
 import json
 import time
+from bisect import bisect_left
 from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from typing import Protocol
 from urllib.parse import urlparse
 
@@ -16,9 +18,10 @@ import httpx
 from backend.models.analysis_v2 import AIIncidentAnalysisV2
 from backend.services.evidence_extraction import EvidenceAsset, file_hash
 from backend.services.evidence_validation import EvidenceRegistry, validate_analysis
+from backend.services.prompt_io import append_output, read_prompt
 from backend.services.synchronization import finite
 
-TELEMETRY_ALLOWLIST = frozenset({"time_s", "speed", "brake", "acceleration", "jerk", "mode"})
+TELEMETRY_ALLOWLIST = frozenset({"time_s", "speed", "brake", "acceleration", "jerk", "collision_intensity", "mode"})
 
 
 def filtered_telemetry(rows: tuple[dict, ...]) -> list[dict]:
@@ -41,12 +44,40 @@ def filtered_telemetry(rows: tuple[dict, ...]) -> list[dict]:
     return result
 
 
+def batch_registry(context: AnalysisContext) -> EvidenceRegistry:
+    sent_ids = {frame.evidence_id for frame in context.frames}
+    assets = tuple(asset for asset in context.registry.assets if asset.evidence_id in sent_ids or (asset.source == "TELEMETRY" and context.telemetry_rows))
+    return EvidenceRegistry(context.registry.recording_id, context.registry.candidate_id, assets)
+
+
+def batch_signature(context: AnalysisContext, config: ProviderConfig | None) -> str:
+    values = {"frames": [(frame.evidence_id, frame.sha256, frame.time_start_s) for frame in context.frames], "telemetry": context.telemetry_rows, "flags": context.flags, "window": context.candidate_window, "config": asdict(config) if config is not None else None, "prompt": read_prompt(config.prompt_path) if config is not None and config.prompt_path else None}
+    return hashlib.sha256(json.dumps(values, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def sample_telemetry(rows: list[dict], times: list[float]) -> list[dict]:
+    """Keep bracketing log rows at supplied frames and every flag; raw logs stay stored."""
+    if not rows:
+        return []
+    clock = [row["time_s"] for row in rows]
+    selected = set()
+    for at_s in times:
+        index = bisect_left(clock, at_s)
+        for nearby in (index - 1, index):
+            if 0 <= nearby < len(rows):
+                selected.add(nearby)
+    return [rows[index] for index in sorted(selected)]
+
+
 @dataclass(frozen=True)
 class AnalysisContext:
     registry: EvidenceRegistry
     duration_s: float
     frames: tuple[EvidenceAsset, ...]
     telemetry_rows: tuple[dict, ...] = ()
+    job_id: str | None = None
+    flags: tuple[dict, ...] = ()
+    candidate_window: tuple[float, float, float] | None = None
 
 
 @dataclass(frozen=True)
@@ -68,6 +99,8 @@ class ProviderConfig:
     input_usd_per_million: float | None = None
     output_usd_per_million: float | None = None
     pricing_source: str | None = None
+    prompt_path: str | None = None
+    outputs_path: str | None = None
 
 
 @dataclass(frozen=True)
@@ -108,32 +141,47 @@ class HTTPVLMProvider:
             images.append({"type": "text", "text": f"{frame.evidence_id} at video_seconds={frame.time_start_s}"})
             images.append({"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + base64.b64encode(frame.path.read_bytes()).decode("ascii")}})
         telemetry = filtered_telemetry(context.telemetry_rows)
-        refs_payload = [{"evidence_id": item.evidence_id, "source": item.source, "start_s": item.time_start_s, "end_s": item.time_end_s} for item in context.registry.assets]
-        prompt = "Analyze only supplied chronological evidence. Cite valid evidence IDs/time/source. Distinguish OBSERVED, SUPPORTED_INFERENCE, HYPOTHESIS, UNKNOWN. Internal causes without logs must remain UNKNOWN/HYPOTHESIS. Conflicts and missing coverage go in unknowns. Return only schema 2.0 JSON with DRAFT; never approve. " + json.dumps({"duration_s": context.duration_s, "telemetry": telemetry, "evidence": refs_payload})
+        registry = batch_registry(context)
+        if config.prompt_path:
+            telemetry = sample_telemetry(telemetry, timestamps + [flag["time_s"] for flag in context.flags])
+        refs_payload = [{"evidence_id": item.evidence_id, "source": item.source, "start_s": item.time_start_s, "end_s": item.time_end_s} for item in registry.assets]
+        instructions = read_prompt(config.prompt_path) if config.prompt_path else "Analyze only supplied chronological evidence. Cite valid evidence IDs/time/source. Distinguish OBSERVED, SUPPORTED_INFERENCE, HYPOTHESIS, UNKNOWN. Internal causes without logs must remain UNKNOWN/HYPOTHESIS. Conflicts and missing coverage go in unknowns. Return only schema 2.0 JSON with DRAFT; never approve."
+        prompt = instructions + "\n" + json.dumps({"duration_s": context.duration_s, "candidate_window": context.candidate_window, "flags": context.flags, "telemetry": telemetry, "telemetry_sampling": "bracketing rows at supplied frames and flags" if config.prompt_path else "all supplied rows", "evidence": refs_payload, "output_schema": AIIncidentAnalysisV2.model_json_schema()}, ensure_ascii=False, separators=(",", ":"))
+        prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         payload = {"model": config.model, "temperature": 0, "max_tokens": config.max_output_tokens, "response_format": {"type": "json_schema", "json_schema": {"name": "incident_analysis_v2", "strict": True, "schema": AIIncidentAnalysisV2.model_json_schema()}}, "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, *images]}]}
         headers = {"Authorization": "Bearer " + self.api_key} if self.api_key else {}
         owned_client = self.client is None
         client = self.client or httpx.Client(trust_env=False)
         start = time.monotonic()
+        def journal(raw, attempt, status=None, error=None):
+            if config.outputs_path:
+                append_output(config.outputs_path, {"created_at": datetime.now(UTC).isoformat(), "job_id": context.job_id, "recording_id": context.registry.recording_id, "candidate_id": context.registry.candidate_id, "candidate_window": context.candidate_window, "flags": context.flags, "frame_times_s": timestamps, "model": config.model, "revision": config.revision, "attempt": attempt, "http_status": status, "error": error, "latency_s": time.monotonic() - start, "prompt": prompt, "prompt_sha256": prompt_hash, "raw_output": raw})
         try:
             for attempt in range(1, config.max_attempts + 1):
+                content = bytearray()
                 try:
                     with client.stream("POST", config.endpoint, json=payload, headers=headers, timeout=config.timeout_s, follow_redirects=False) as response:
+                        for chunk in response.iter_bytes():
+                            content.extend(chunk)
+                            if len(content) > config.max_output_bytes:
+                                journal(content[:config.max_output_bytes].decode("utf-8", errors="replace"), attempt, response.status_code, "response truncated at byte budget")
+                                raise ValueError("provider response exceeded budget")
+                    if response.status_code != 200:
+                        journal(content.decode("utf-8", errors="replace"), attempt, response.status_code, "HTTP provider error")
                         if response.status_code in {429, 500, 502, 503, 504}:
                             if attempt == config.max_attempts:
                                 raise ValueError("provider unavailable after bounded attempts")
                             continue
-                        if response.status_code != 200:
-                            raise ValueError("provider rejected request; no automatic retry")
-                        content = bytearray()
-                        for chunk in response.iter_bytes():
-                            content.extend(chunk)
-                            if len(content) > config.max_output_bytes:
-                                raise ValueError("provider response exceeded budget")
-                    decoded = json.loads(content)
-                    raw = decoded["choices"][0]["message"]["content"]
+                        raise ValueError("provider rejected request; no automatic retry")
+                    try:
+                        decoded = json.loads(content)
+                        raw = decoded["choices"][0]["message"]["content"]
+                    except (KeyError, IndexError, TypeError, ValueError):
+                        journal(content.decode("utf-8", errors="replace"), attempt, response.status_code, "invalid response envelope")
+                        raise
+                    journal(raw, attempt, response.status_code)
                     analysis = AIIncidentAnalysisV2.model_validate_json(raw, context={"video_duration_s": context.duration_s})
-                    validate_analysis(analysis, context.registry, context.duration_s)
+                    validate_analysis(analysis, registry, context.duration_s)
                     usage = decoded.get("usage", {})
                     input_tokens, output_tokens = usage.get("prompt_tokens"), usage.get("completion_tokens")
                     if any(value is not None and (isinstance(value, bool) or not isinstance(value, int) or value < 0) for value in (input_tokens, output_tokens)):
@@ -141,9 +189,10 @@ class HTTPVLMProvider:
                     cost = None
                     if attempt == 1 and input_tokens is not None and output_tokens is not None and config.input_usd_per_million is not None and config.output_usd_per_million is not None:
                         cost = (input_tokens * config.input_usd_per_million + output_tokens * config.output_usd_per_million) / 1_000_000
-                    provenance = {"provider": config.kind, "model": config.model, "revision": config.revision, "prompt_version": config.prompt_version, "schema_version": "2.0", "config_hash": hashlib.sha256(json.dumps(asdict(config), sort_keys=True).encode()).hexdigest(), "input_hashes": [frame.sha256 for frame in context.frames], "pricing_source": config.pricing_source}
+                    provenance = {"provider": config.kind, "model": config.model, "revision": config.revision, "prompt_version": config.prompt_version, "prompt_sha256": prompt_hash, "schema_version": "2.0", "config_hash": hashlib.sha256(json.dumps(asdict(config), sort_keys=True).encode()).hexdigest(), "input_hashes": [frame.sha256 for frame in context.frames], "pricing_source": config.pricing_source}
                     return ProviderResult(analysis, provenance, {"input_tokens": input_tokens, "output_tokens": output_tokens, "attempts": attempt, "latency_s": time.monotonic() - start, "cost_usd": cost, "retry_cost": "NOT_MEASURED" if attempt > 1 else "NO_RETRY"})
                 except httpx.TransportError as exc:
+                    journal(content.decode("utf-8", errors="replace") if content else None, attempt, error=type(exc).__name__)
                     if attempt == config.max_attempts:
                         raise ValueError("provider unavailable after bounded attempts") from exc
                 except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
@@ -163,7 +212,8 @@ class SelfHostedVLMProvider(HTTPVLMProvider):
 
 
 def create_provider(config: ProviderConfig, *, client: httpx.Client | None = None, api_key: str | None = None) -> VLMProvider:
-    if not config.model.strip() or not config.revision.strip() or not finite(config.timeout_s) or not 0 < config.timeout_s <= 120:
+    timeout_ceiling = 3600 if config.kind == "self_hosted" else 120
+    if not config.model.strip() or not config.revision.strip() or not finite(config.timeout_s) or not 0 < config.timeout_s <= timeout_ceiling:
         raise ValueError("model/revision and bounded timeout required")
     for value, ceiling in ((config.max_attempts, 3), (config.max_frames, 256), (config.max_image_bytes, 100 * 1024 * 1024), (config.max_telemetry_rows, 10000), (config.max_output_bytes, 10 * 1024 * 1024), (config.max_output_tokens, 32768)):
         if isinstance(value, bool) or not isinstance(value, int) or not 0 < value <= ceiling:

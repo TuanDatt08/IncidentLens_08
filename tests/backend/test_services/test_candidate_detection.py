@@ -65,6 +65,52 @@ def test_scan_proposals_are_not_recorded_as_completed_without_scanner():
     assert detected.candidates[0].reasons == ("VISUAL_CANDIDATE",)
 
 
+def test_configured_spike_flags_keep_values_and_original_times(tmp_path):
+    from backend.services.candidate_detection import DetectionConfig, detect_candidates
+    path = tmp_path / "spikes.csv"
+    path.write_text("clock,jerk\n0,0\n9,0.1\n10,8\n10.5,9\n11,0\n30,0\n")
+    log = normalize_log(path, config=LogNormalizationConfig(timestamp_column="clock", time_reference="recording_relative"))
+    mapping = align({"duration": 40.0}, log, [TimeAnchor(0, 0, "fixture"), TimeAnchor(30, 30, "fixture")])
+    result = detect_candidates(log, mapping, DetectionConfig("rec", 40.0, signal_thresholds={"jerk": 5.0}))
+    assert len(result.candidates) == 1
+    candidate = result.candidates[0]
+    assert (candidate.start_s, candidate.critical_s, candidate.end_s) == (5.0, 10.0, 13.0)
+    assert candidate.flags == ({"time_s": 10.0, "signal": "jerk", "value": 8.0, "threshold": 5.0, "reason": "SIGNAL_THRESHOLD"},)
+
+
+def test_stable_signals_and_unverified_alignment_do_not_create_flags(tmp_path):
+    from backend.services.candidate_detection import DetectionConfig, detect_candidates
+    path = tmp_path / "stable.csv"
+    path.write_text("clock,jerk\n0,1\n1,1\n2,1\n")
+    log = normalize_log(path, config=LogNormalizationConfig(timestamp_column="clock", time_reference="recording_relative"))
+    mapping = align({"duration": 20.0}, log, [TimeAnchor(0, 0, "fixture"), TimeAnchor(2, 2, "fixture")])
+    config = DetectionConfig("rec", 20.0, signal_thresholds={"jerk": 5.0})
+    assert not detect_candidates(log, mapping, config).candidates
+    assert not detect_candidates(log, align({"duration": 20.0}, log, []), config).candidates
+
+
+def test_delta_flags_and_invalid_signal_fail_explicitly(tmp_path):
+    from backend.services.candidate_detection import DetectionConfig, detect_candidates
+    path = tmp_path / "delta.csv"
+    path.write_text("clock,speed\n0,10\n10,20\n20,nan\n")
+    log = normalize_log(path, config=LogNormalizationConfig(timestamp_column="clock", time_reference="recording_relative"))
+    mapping = align({"duration": 40.0}, log, [TimeAnchor(0, 0, "fixture"), TimeAnchor(30, 30, "fixture")])
+    with pytest.raises(ValueError, match="finite"):
+        detect_candidates(log, mapping, DetectionConfig("rec", 40.0, delta_thresholds={"speed": 5.0}))
+
+
+def test_rolling_anomaly_without_hand_picked_signal_threshold(tmp_path):
+    from backend.services.candidate_detection import DetectionConfig, detect_candidates
+    path = tmp_path / "rolling.csv"
+    path.write_text("clock,acceleration\n" + "".join(f"{i},0\n" for i in range(35)) + "35,20\n36,0\n")
+    log = normalize_log(path, config=LogNormalizationConfig(timestamp_column="clock", time_reference="recording_relative"))
+    mapping = align({"duration": 50.0}, log, [TimeAnchor(0, 0, "fixture"), TimeAnchor(36, 36, "fixture")])
+    candidates = detect_candidates(log, mapping, DetectionConfig("rec", 50.0)).candidates
+    assert len(candidates) == 1 and candidates[0].critical_s == 35.0
+    assert candidates[0].flags[0]["reason"] == "SIGNAL_ANOMALY"
+    assert candidates[0].flags[0]["signal"] == "acceleration"
+
+
 @pytest.mark.parametrize("field,value", [("duration_s", float("nan")), ("pre_s", -1), ("max_candidates", 0), ("scan_interval_s", 0)])
 def test_invalid_budget_and_time_rejected(field, value):
     module = importlib.import_module("backend.services.candidate_detection")

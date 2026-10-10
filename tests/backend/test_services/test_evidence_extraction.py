@@ -49,3 +49,12 @@ def test_real_ffmpeg_seeks_blue_frame_and_clip_duration(tmp_path):
     pixels = subprocess.run(["ffmpeg", "-v", "error", "-i", str(bundle.frames[0].path), "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], check=True, capture_output=True, timeout=30).stdout
     assert pixels[2] > 200 and pixels[0] < 30
     assert VideoService().probe(bundle.clip.path).duration == pytest.approx(2.0, abs=0.1)
+def test_four_fps_sampling_clamps_to_decodable_frames():
+    from backend.services.evidence_extraction import window_sample_times
+    from backend.services.candidate_detection import Candidate
+    candidate = Candidate("cnd", 5.0, 10.0, 13.0, ("fixture",), "PENDING")
+    times = window_sample_times(candidate, {"duration": 20.0, "fps": 30.0})
+    assert len(times) == 32
+    assert times == tuple(5 + i / 4 for i in range(32))
+    edge = Candidate("edge", 0.0, 0.1, 3.1, ("fixture",), "PENDING")
+    assert window_sample_times(edge, {"duration": 3.1, "fps": 4.0})[-1] <= 2.85

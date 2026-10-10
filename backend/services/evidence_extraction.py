@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -21,6 +22,19 @@ def file_hash(path: Path) -> str:
 class SamplingConfig:
     times_s: tuple[float, ...] = ()
     max_frames: int = 32
+
+
+def window_sample_times(candidate: Candidate, metadata: dict, fps: float = 4.0) -> tuple[float, ...]:
+    duration, source_fps = metadata.get("duration"), metadata.get("fps")
+    if any(not finite(value) or value <= 0 for value in (duration, source_fps, fps)):
+        raise ValueError("sampling requires finite positive duration and FPS")
+    if not 0 <= candidate.start_s <= candidate.critical_s <= candidate.end_s <= duration or candidate.start_s >= candidate.end_s:
+        raise ValueError("candidate must fit source video")
+    count = math.ceil((candidate.end_s - candidate.start_s) * fps)
+    if count > 256:
+        raise ValueError("candidate exceeds total extraction budget of 256 frames")
+    last = max(0.0, duration - 1 / source_fps)
+    return tuple(at_s for index in range(count) if (at_s := candidate.start_s + index / fps) < candidate.end_s and at_s <= last)
 
 
 @dataclass(frozen=True)

@@ -12,8 +12,9 @@ from backend.errors import ApiError
 from backend.services.incidents import get_incident
 from backend.services.jobs import claim_job, fail_job, heartbeat
 from backend.services.processing import InsufficientEvidence, VLMAdapter, process_incident
+from backend.services.qwen_local import create_local_provider
+from backend.services.qwen_processing import process_local_incident
 from backend.services.reports import complete_analysis
-from backend.services.vlm import OpenAIVLMAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -62,16 +63,14 @@ def run_once(*, vlm: VLMAdapter | None = None, job_id: str | None = None) -> boo
     if claim is None:
         return False
     try:
-        adapter = vlm if vlm is not None else OpenAIVLMAdapter()
         with LeaseHeartbeat(claim.job_id, claim.attempt) as lease:
             lease.update(1, 0, 2)
             incident = get_incident(claim.incident_id)
-            result = process_incident(
-                incident,
-                storage_root=get_settings().incident_storage_dir,
-                vlm=adapter,
-                on_progress=lease.update,
-            )
+            settings = get_settings()
+            if vlm is None:
+                result = process_local_incident(incident, storage_root=settings.incident_storage_dir, provider=create_local_provider(settings), settings=settings, on_progress=lease.update, job_id=claim.job_id)
+            else:
+                result = process_incident(incident, storage_root=settings.incident_storage_dir, vlm=vlm, on_progress=lease.update)
         complete_analysis(claim.job_id, result, expected_attempt=claim.attempt)
     except InsufficientEvidence as exc:
         _mark_failed(claim.job_id, claim.attempt, "INSUFFICIENT_EVIDENCE", str(exc))
