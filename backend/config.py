@@ -44,12 +44,19 @@ class Settings(BaseSettings):
     v2_external_allowed_hosts: str = ""
 
     # Qwen local; paths are resolved by the backend, never supplied by HTTP users.
+    qwen_runtime: Literal["llama_cpp", "ollama"] = "llama_cpp"
+    qwen_ollama_model: str = "qwen2.5vl:7b"
+    qwen_artifact_subdir: str = ""
+    qwen_requests_dir: str | None = None
+    qwen_inference_frame_limit: int | None = Field(default=None, ge=2, le=256)
+    qwen_candidate_min_acceleration: float | None = Field(default=None, gt=0, le=50)
     qwen_endpoint: str = "http://127.0.0.1:8091/v1/chat/completions"
     qwen_model_dir: str = "./backend/data/model"
-    qwen_model_file: str = "Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf"
-    qwen_projector_file: str = "mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf"
+    qwen_model_file: str = "Qwen2.5-VL-7B-Instruct-Q8_0.gguf"
+    qwen_projector_file: str = "mmproj-Qwen2.5-VL-7B-Instruct-f16.gguf"
     qwen_server_bin: str = "llama-server"
     qwen_prompt_path: str = "./backend/data/promt.txt"
+    qwen_log_prompt_path: str = "./backend/prompts/ollama_incident.txt"
     qwen_outputs_path: str = "./backend/data/outputs.txt"
     qwen_timeout_s: float = Field(default=600, gt=0, le=3600)
     qwen_startup_timeout_s: float = Field(default=120, gt=0, le=600)

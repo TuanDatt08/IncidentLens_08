@@ -5,14 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from collections import deque
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
-from statistics import median
 
 from backend.services.log_normalization import NormalizedTelemetry
 from backend.services.synchronization import TimeAlignment, finite
-from backend.services.telemetry import TelemetryError
 
 
 @dataclass(frozen=True)
@@ -34,11 +31,14 @@ class DetectionConfig:
     anomaly_signals: tuple[str, ...] = ("speed", "brake", "acceleration", "jerk", "collision_intensity")
     baseline_rows: int = 30
     anomaly_mad_multiplier: float = 6.0
-    version: str = "rules-2-log-flags"
+    fps: float = 24.0
+    version: str = "rules-3-streaming-triggers"
 
     def __post_init__(self):
         if not self.recording_id.strip() or not finite(self.duration_s) or self.duration_s <= 0:
             raise ValueError("recording_id and finite positive duration required")
+        if not finite(self.fps) or self.fps <= 0:
+            raise ValueError('positive video FPS required')
         if any(not finite(value) or value < 0 for value in (self.pre_s, self.post_s, self.merge_gap_s, self.brake_threshold)):
             raise ValueError("rule thresholds/windows must be finite and nonnegative")
         if self.pre_s + self.post_s <= 0 or not finite(self.scan_interval_s) or self.scan_interval_s <= 0:
@@ -79,6 +79,7 @@ class CandidateSet:
     coverage: Coverage
     unknowns: tuple[str, ...]
     config_hash: str
+    log_trigger_data: dict | None = None
 
 
 def detect_candidates(telemetry: NormalizedTelemetry | None, alignment: TimeAlignment | None, config: DetectionConfig, *, scan: Callable[[float], bool] | None = None, guard: Callable[[], None] | None = None) -> CandidateSet:
@@ -108,72 +109,21 @@ def detect_candidates(telemetry: NormalizedTelemetry | None, alignment: TimeAlig
     if usable and not signal_names.intersection(telemetry.metadata.signal_columns):
         usable = False
         unknowns.append("No configured event signals in telemetry.")
+    raw = None
+    if telemetry is not None:
+        from backend.services.trigger_detection import TriggerConfig, find_log_triggers
+        raw = find_log_triggers(telemetry, config=TriggerConfig(pre_s=config.pre_s,post_s=config.post_s,merge_gap_s=config.merge_gap_s,brake_threshold=config.brake_threshold,max_triggers=max(1000,config.max_candidates)), alignment=alignment, video_metadata={'duration':config.duration_s,'fps':config.fps}, signal_thresholds=config.signal_thresholds, delta_thresholds=config.delta_thresholds, guard=guard)
+        rows = raw['rows']
+        unknowns.extend(raw['unknowns'])
     if usable:
-        previous_mode = None
-        previous_values = {}
-        active_thresholds = set()
-        histories = {key: deque(maxlen=config.baseline_rows) for key in config.anomaly_signals}
-        for row in telemetry.iter_rows():
-            if guard is not None and rows % 1000 == 0:
-                guard()
-            rows += 1
-            at_s = alignment.to_video_seconds(row["time_s"])
-            brake = row.get(config.brake_column)
-            if brake is not None:
-                try:
-                    brake = float(brake)
-                except (ValueError, TypeError) as exc:
-                    raise TelemetryError("configured brake signal must be numeric") from exc
-                if not math.isfinite(brake):
-                    raise TelemetryError("configured brake signal must be finite")
-                if brake >= config.brake_threshold and "default_brake" not in active_thresholds:
-                    propose(at_s, "HARD_BRAKING", {"time_s": at_s, "signal": config.brake_column, "value": brake, "threshold": config.brake_threshold, "reason": "HARD_BRAKING"})
-                if brake >= config.brake_threshold:
-                    active_thresholds.add("default_brake")
-                else:
-                    active_thresholds.discard("default_brake")
-            for signal in config.signal_thresholds.keys() | config.delta_thresholds.keys() | histories.keys():
-                if signal not in row:
-                    continue
-                try:
-                    value = float(row[signal])
-                except (ValueError, TypeError) as exc:
-                    raise TelemetryError("configured signal must be numeric") from exc
-                if not math.isfinite(value):
-                    raise TelemetryError("configured signal must be finite")
-                threshold = config.signal_thresholds.get(signal)
-                if threshold is not None:
-                    if abs(value) >= threshold and signal not in active_thresholds:
-                        propose(at_s, "SIGNAL_THRESHOLD", {"time_s": at_s, "signal": signal, "value": value, "threshold": threshold, "reason": "SIGNAL_THRESHOLD"})
-                    if abs(value) >= threshold:
-                        active_thresholds.add(signal)
-                    else:
-                        active_thresholds.discard(signal)
-                delta = config.delta_thresholds.get(signal)
-                if delta is not None and signal in previous_values and abs(value - previous_values[signal]) >= delta:
-                    propose(at_s, "SIGNAL_DELTA", {"time_s": at_s, "signal": signal, "value": value, "previous_value": previous_values[signal], "threshold": delta, "reason": "SIGNAL_DELTA"})
-                previous_values[signal] = value
-                if signal in histories:
-                    history = histories[signal]
-                    if len(history) == config.baseline_rows and signal not in config.signal_thresholds:
-                        baseline = median(history)
-                        mad = median(abs(item - baseline) for item in history)
-                        limit = max(config.anomaly_mad_multiplier * 1.4826 * mad, 1e-6)
-                        active_key = "anomaly:" + signal
-                        abnormal = abs(value - baseline) > limit
-                        if abnormal and active_key not in active_thresholds:
-                            propose(at_s, "SIGNAL_ANOMALY", {"time_s": at_s, "signal": signal, "value": value, "baseline": baseline, "deviation": value - baseline, "threshold": limit, "reason": "SIGNAL_ANOMALY"})
-                        if abnormal:
-                            active_thresholds.add(active_key)
-                        else:
-                            active_thresholds.discard(active_key)
-                    history.append(value)
-            mode = row.get(config.mode_column)
-            if previous_mode is not None and mode != previous_mode and mode in config.manual_modes:
-                propose(at_s, "DISENGAGEMENT", {"time_s": at_s, "signal": config.mode_column, "value": mode, "previous_value": previous_mode, "reason": "DISENGAGEMENT"})
-            previous_mode = mode
-        unknowns.append("Rules cover available configured signals only; unlogged visual events remain unknown.")
-        unknowns.append(f"Rolling anomaly rules require {config.baseline_rows} prior rows; startup spikes and threshold calibration remain uncertain.")
+        for event in raw['triggers']:
+            peak = event['video_peak_s']
+            start, end = event['clip_start_s'], event['clip_end_s']
+            if peak is None or not 0 <= peak < config.duration_s or end <= start:
+                continue
+            flags = tuple({**item,'time_s':alignment.to_video_seconds(item['log_time_s'])} for item in event['flags'])
+            windows.append([start,peak,end,set(event['reasons']),list(flags)])
+        unknowns.append('Telemetry triggers are candidate suspicion; event boundaries and causes require video evidence and engineer review.')
     else:
         count = min(config.max_scan_frames, math.ceil(config.duration_s / config.scan_interval_s))
         scan_times = tuple(i * config.scan_interval_s for i in range(count))
@@ -196,4 +146,4 @@ def detect_candidates(telemetry: NormalizedTelemetry | None, alignment: TimeAlig
         candidates.append(Candidate(candidate_id, start, critical, end, tuple(sorted(reasons)), "PENDING" if index < config.max_candidates else "UNANALYZED", tuple(flags)))
     if len(candidates) > config.max_candidates:
         unknowns.append("Candidate budget exhausted; overflow windows retained as UNANALYZED.")
-    return CandidateSet(tuple(candidates), scan_times, Coverage(rows, sampled, unscanned), tuple(unknowns), config_hash)
+    return CandidateSet(tuple(candidates), scan_times, Coverage(rows, sampled, unscanned), tuple(unknowns), config_hash, raw)

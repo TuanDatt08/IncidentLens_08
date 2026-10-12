@@ -8,10 +8,13 @@ import ipaddress
 import json
 import time
 from bisect import bisect_left
+from copy import deepcopy
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Protocol
 from urllib.parse import urlparse
+from uuid import uuid4
 
 import httpx
 
@@ -22,6 +25,17 @@ from backend.services.prompt_io import append_output, read_prompt
 from backend.services.synchronization import finite
 
 TELEMETRY_ALLOWLIST = frozenset({"time_s", "speed", "brake", "acceleration", "jerk", "collision_intensity", "mode"})
+
+
+def detection_output_schema() -> dict:
+    """Expose the model's detection invariant to Ollama's JSON grammar."""
+    schema = AIIncidentAnalysisV2.model_json_schema()
+    definitions = schema.pop("$defs")
+    detected, absent = deepcopy(schema), deepcopy(schema)
+    detected["properties"]["incident_detected"] = {"const": True}
+    detected["properties"]["window"] = {"$ref": "#/$defs/AnalysisWindowV2"}
+    absent["properties"].update({"incident_detected": {"const": False}, "event_type": {"const": "UNKNOWN"}, "window": {"type": "null"}, "timeline": {"type": "array", "maxItems": 0}, "factors": {"type": "array", "maxItems": 0}})
+    return {"$defs": definitions, "anyOf": [detected, absent]}
 
 
 def filtered_telemetry(rows: tuple[dict, ...]) -> list[dict]:
@@ -101,6 +115,8 @@ class ProviderConfig:
     pricing_source: str | None = None
     prompt_path: str | None = None
     outputs_path: str | None = None
+    requests_dir: str | None = None
+    compact_context: bool = False
 
 
 @dataclass(frozen=True)
@@ -112,6 +128,12 @@ class ProviderResult:
 
 class VLMProvider(Protocol):
     def analyze(self, context: AnalysisContext) -> ProviderResult: ...
+
+
+def compact_records(rows: list[dict] | tuple[dict, ...]) -> dict:
+    """Keep every field and row, avoiding repeated keys in CPU model context."""
+    columns = sorted({key for row in rows for key in row})
+    return {"columns": columns, "rows": [[row.get(key) for key in columns] for row in rows]}
 
 
 class HTTPVLMProvider:
@@ -146,16 +168,31 @@ class HTTPVLMProvider:
             telemetry = sample_telemetry(telemetry, timestamps + [flag["time_s"] for flag in context.flags])
         refs_payload = [{"evidence_id": item.evidence_id, "source": item.source, "start_s": item.time_start_s, "end_s": item.time_end_s} for item in registry.assets]
         instructions = read_prompt(config.prompt_path) if config.prompt_path else "Analyze only supplied chronological evidence. Cite valid evidence IDs/time/source. Distinguish OBSERVED, SUPPORTED_INFERENCE, HYPOTHESIS, UNKNOWN. Internal causes without logs must remain UNKNOWN/HYPOTHESIS. Conflicts and missing coverage go in unknowns. Return only schema 2.0 JSON with DRAFT; never approve."
-        prompt = instructions + "\n" + json.dumps({"duration_s": context.duration_s, "candidate_window": context.candidate_window, "flags": context.flags, "telemetry": telemetry, "telemetry_sampling": "bracketing rows at supplied frames and flags" if config.prompt_path else "all supplied rows", "evidence": refs_payload, "output_schema": AIIncidentAnalysisV2.model_json_schema()}, ensure_ascii=False, separators=(",", ":"))
+        if config.compact_context:
+            instructions += "\nTelemetry/flags tables have ordered columns and rows of values in that column order; null means missing."
+        prompt = instructions + "\n" + json.dumps({"duration_s": context.duration_s, "candidate_window": context.candidate_window, "flags": compact_records(context.flags) if config.compact_context else context.flags, "telemetry": compact_records(telemetry) if config.compact_context else telemetry, "telemetry_units": {"time_s": "video_seconds", "speed": "m/s", "acceleration": "m/s²", "jerk": "m/s³", "brake": "0..1"}, "telemetry_sampling": "bracketing rows at supplied frames and flags" if config.prompt_path else "all supplied rows", "evidence": refs_payload, "output_schema": AIIncidentAnalysisV2.model_json_schema()}, ensure_ascii=False, separators=(",", ":"))
         prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
-        payload = {"model": config.model, "temperature": 0, "max_tokens": config.max_output_tokens, "response_format": {"type": "json_schema", "json_schema": {"name": "incident_analysis_v2", "strict": True, "schema": AIIncidentAnalysisV2.model_json_schema()}}, "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, *images]}]}
+        output_schema = detection_output_schema() if config.compact_context else AIIncidentAnalysisV2.model_json_schema()
+        payload = {"model": config.model, "temperature": 0, "max_tokens": config.max_output_tokens, "response_format": {"type": "json_schema", "json_schema": {"name": "incident_analysis_v2", "strict": True, "schema": output_schema}}, "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, *images]}]}
+        request_id = uuid4().hex
+        if config.requests_dir:
+            directory = Path(config.requests_dir)
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / f"{request_id}.request.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        def diagnostics(stage, message, **details):
+            if config.compact_context and config.requests_dir and context.job_id:
+                from backend.services.pipeline_status import update_status
+                update_status(Path(config.requests_dir).parent, context.job_id, stage, message, **details)
+        diagnostics('qwen', 'Model Qwen 7B đang phân tích frame của nhánh log.', model=config.model, prompt_path=config.prompt_path, prompt_text=prompt, prompt_sha256=prompt_hash, request_id=request_id, frame_times_s=timestamps)
         headers = {"Authorization": "Bearer " + self.api_key} if self.api_key else {}
         owned_client = self.client is None
         client = self.client or httpx.Client(trust_env=False)
         start = time.monotonic()
-        def journal(raw, attempt, status=None, error=None):
+        def journal(raw, attempt, status=None, error=None, provider_response=None):
+            if config.requests_dir:
+                (Path(config.requests_dir) / f"{request_id}.attempt-{attempt}.response.json").write_text(json.dumps({"request_id": request_id, "http_status": status, "error": error, "raw_output": raw, "provider_response": provider_response}, ensure_ascii=False, indent=2), encoding="utf-8")
             if config.outputs_path:
-                append_output(config.outputs_path, {"created_at": datetime.now(UTC).isoformat(), "job_id": context.job_id, "recording_id": context.registry.recording_id, "candidate_id": context.registry.candidate_id, "candidate_window": context.candidate_window, "flags": context.flags, "frame_times_s": timestamps, "model": config.model, "revision": config.revision, "attempt": attempt, "http_status": status, "error": error, "latency_s": time.monotonic() - start, "prompt": prompt, "prompt_sha256": prompt_hash, "raw_output": raw})
+                append_output(config.outputs_path, {"request_id": request_id, "created_at": datetime.now(UTC).isoformat(), "job_id": context.job_id, "recording_id": context.registry.recording_id, "candidate_id": context.registry.candidate_id, "candidate_window": context.candidate_window, "flags": context.flags, "frame_times_s": timestamps, "model": config.model, "revision": config.revision, "attempt": attempt, "http_status": status, "error": error, "latency_s": time.monotonic() - start, "prompt": prompt, "prompt_sha256": prompt_hash, "raw_output": raw})
         try:
             for attempt in range(1, config.max_attempts + 1):
                 content = bytearray()
@@ -179,7 +216,8 @@ class HTTPVLMProvider:
                     except (KeyError, IndexError, TypeError, ValueError):
                         journal(content.decode("utf-8", errors="replace"), attempt, response.status_code, "invalid response envelope")
                         raise
-                    journal(raw, attempt, response.status_code)
+                    journal(raw, attempt, response.status_code, provider_response=decoded)
+                    diagnostics('validation', 'Backend kiểm tra schema V2 và evidence của nhánh log.', usage=decoded.get('usage', {}), latency_s=time.monotonic()-start)
                     analysis = AIIncidentAnalysisV2.model_validate_json(raw, context={"video_duration_s": context.duration_s})
                     validate_analysis(analysis, registry, context.duration_s)
                     usage = decoded.get("usage", {})

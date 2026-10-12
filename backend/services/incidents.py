@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import io
+import json
+import math
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
@@ -30,7 +33,7 @@ def _ingestion_error(exc: IncidentIngestionError) -> ApiError:
     return ApiError("INTERNAL_ERROR", "Incident ingestion failed.", 500)
 
 
-def create_incident(video: UploadFile, log: UploadFile | None = None) -> dict:
+def create_incident(video: UploadFile, log: UploadFile | None = None, *, sync_offset_s: float | None = None, sync_metadata: UploadFile | None = None) -> dict:
     settings = get_settings()
     storage = LocalStorage(settings.incident_storage_dir)
     video_service = VideoService(settings.ffprobe_bin, settings.ffmpeg_bin)
@@ -46,6 +49,32 @@ def create_incident(video: UploadFile, log: UploadFile | None = None) -> dict:
             max_bytes=settings.max_video_size_mb * 1024 * 1024,
         )
         video_metadata = video_service.probe(video_file.path).as_dict()
+        if sync_offset_s is not None and sync_metadata is not None:
+            raise ApiError('INVALID_SYNC', 'Choose an offset or an anchors JSON, not both.', 422)
+        if sync_offset_s is not None:
+            if not math.isfinite(sync_offset_s):
+                raise ApiError('INVALID_SYNC', 'Offset must be finite seconds.', 422)
+            video_metadata['log_offset_s'] = sync_offset_s
+        if sync_metadata is not None:
+            if Path(sync_metadata.filename or '').suffix.lower() != '.json':
+                raise ApiError('INVALID_SYNC', 'Synchronization metadata must be JSON.', 422)
+            content = sync_metadata.file.read(1024 * 1024 + 1)
+            if len(content) > 1024 * 1024:
+                raise ApiError('INVALID_SYNC', 'Synchronization JSON exceeds 1 MB.', 422)
+            try:
+                data = json.loads(content)
+                anchors = data['anchors']
+                from backend.services.synchronization import TimeAnchor, finite
+                points = [TimeAnchor(**item) for item in anchors]
+                if not 2 <= len(points) <= 32 or any(not finite(p.log_s) or not finite(p.video_s) or not 0 <= p.video_s <= video_metadata['duration'] or not isinstance(p.source, str) or not p.source.strip() for p in points):
+                    raise ValueError('two valid anchors required')
+                ordered = sorted(points, key=lambda p: p.log_s)
+                if any(a.log_s >= b.log_s or a.video_s >= b.video_s for a, b in zip(ordered, ordered[1:])):
+                    raise ValueError('anchors must increase')
+                video_metadata['anchors'] = anchors
+            except (ValueError, TypeError, KeyError) as exc:
+                raise ApiError('INVALID_SYNC', 'JSON must contain at least two increasing anchors: log_s, video_s, source.', 422) from exc
+            storage.save_stream(io.BytesIO(content), package_id=incident_id, relative_name='source/sync-metadata.json', max_bytes=1024*1024)
         telemetry_file = None
         telemetry_metadata = None
         if log is not None:
@@ -71,7 +100,7 @@ def create_incident(video: UploadFile, log: UploadFile | None = None) -> dict:
         return {
             "incident_id": incident_id,
             "processing_status": "READY",
-            "sync_offset": None,
+            "sync_offset": sync_offset_s,
             "frame_count": 0,
             "video_metadata": video_metadata,
         }

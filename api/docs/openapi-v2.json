@@ -2341,6 +2341,29 @@
               }
             ],
             "title": "Log"
+          },
+          "sync_offset_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sync Offset S"
+          },
+          "sync_metadata": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sync Metadata"
           }
         },
         "type": "object",

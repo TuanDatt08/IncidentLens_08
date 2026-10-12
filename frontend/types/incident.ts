@@ -67,4 +67,6 @@ export type UploadIncidentResponse = {
 export type UploadIncidentInput = {
   video: File;
   log?: File;
+  syncOffset?: number;
+  syncMetadata?: File;
 };

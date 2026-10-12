@@ -35,6 +35,8 @@ export async function uploadIncident(
   const formData = new FormData();
   formData.append("video", input.video);
   if (input.log) formData.append("log", input.log);
+  if (input.syncOffset !== undefined) formData.append("sync_offset_s", String(input.syncOffset));
+  if (input.syncMetadata) formData.append("sync_metadata", input.syncMetadata);
   return apiRequest<UploadIncidentResponse>("/incidents/upload", {
     method: "POST",
     body: formData,

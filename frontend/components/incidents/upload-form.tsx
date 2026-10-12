@@ -16,6 +16,8 @@ export function UploadForm() {
   const logInput = useRef<HTMLInputElement>(null);
   const [video, setVideo] = useState<File | undefined>();
   const [log, setLog] = useState<File | undefined>();
+  const [syncOffset, setSyncOffset] = useState("");
+  const [syncMetadata, setSyncMetadata] = useState<File>();
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -54,7 +56,7 @@ export function UploadForm() {
     setIsSubmitting(true);
     setError("");
     try {
-      const response = await uploadIncident({ video, log });
+      const response = await uploadIncident({ video, log, syncOffset: syncOffset.trim() ? Number(syncOffset) : undefined, syncMetadata });
       router.push(`/incidents/${response.incident_id}/processing`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Upload failed. Please try again.");
@@ -73,6 +75,15 @@ export function UploadForm() {
           <FileDropzone label="Video" hint="MP4 · required" file={video} inputRef={videoInput} onChange={handleVideo} accept="video/mp4,.mp4" required icon={<FileVideo className="h-6 w-6" />} onRemove={() => { setVideo(undefined); if (videoInput.current) videoInput.current.value = ""; }} />
           <FileDropzone label="Vehicle telemetry log" hint="CSV · optional" file={log} inputRef={logInput} onChange={handleLog} accept=".csv,text/csv" icon={<FileText className="h-6 w-6" />} onRemove={() => { setLog(undefined); if (logInput.current) logInput.current.value = ""; }} />
         </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm font-bold text-vf-navy">Đồng bộ log với video (giây)
+            <input type="number" step="any" value={syncOffset} onChange={(event) => setSyncOffset(event.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 p-3" aria-describedby="sync-help" placeholder="Offset đã xác minh, ví dụ 58.458" />
+          </label>
+          <label className="block text-sm font-bold text-vf-navy">JSON đồng bộ (tùy chọn)
+            <input type="file" accept=".json,application/json" onChange={(event) => setSyncMetadata(event.target.files?.[0])} className="mt-2 block w-full text-sm" aria-describedby="sync-help" />
+          </label>
+        </div>
+        <p id="sync-help" className="mt-2 text-xs leading-5 text-slate-600">video_seconds = log_seconds + offset. JSON cần ít nhất hai anchors: log_s, video_s, source. JSON đáp án không phải dữ liệu đồng bộ. Để trống: phân tích hình ảnh, báo log chưa đồng bộ và không ghép mốc log vào video.</p>
         {error && <div className="mt-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</div>}
         <div className="mt-8 flex flex-col-reverse justify-end gap-3 border-t border-slate-100 pt-6 sm:flex-row"><Link href="/incidents" className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-extrabold text-slate-500 transition hover:bg-slate-100 hover:text-vf-navy">Cancel</Link><Button disabled={!video || isSubmitting} onClick={handleSubmit}>{isSubmitting ? "Uploading…" : "Create Incident"}<span aria-hidden>→</span></Button></div>
       </div>

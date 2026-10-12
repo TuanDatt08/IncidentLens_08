@@ -146,6 +146,15 @@ def get_report(incident_id: str) -> dict:
         return _report_contract(incident_id, report, version).model_dump(mode="json")
 
 
+def get_model_metadata(incident_id: str) -> dict:
+    """Companion export without changing the public V1 report contract."""
+    with session_scope() as session:
+        report = session.scalar(select(ReportRow).join(Incident).where(Incident.incident_id == incident_id))
+        if report is None:
+            raise ApiError("REPORT_NOT_FOUND", "Analysis report is not available.", 404)
+        return report.model_metadata or {}
+
+
 def get_evidence(incident_id: str) -> dict:
     with session_scope() as session:
         incident = session.scalar(select(Incident).where(Incident.incident_id == incident_id))

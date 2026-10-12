@@ -102,13 +102,33 @@ class LocalQwenProvider(SelfHostedVLMProvider):
     def analyze(self, context):
         # Fail before launching a model when the user's editable prompt is unavailable.
         read_prompt(self.config.prompt_path)
-        ensure_qwen_runtime(self.settings)
+        if self.settings.qwen_runtime == "ollama":
+            ensure_ollama_runtime(self.settings)
+        else:
+            ensure_qwen_runtime(self.settings)
         return super().analyze(context)
+
+
+def ensure_ollama_runtime(settings: Settings) -> None:
+    parsed = validate_local_endpoint(settings.qwen_endpoint)
+    if settings.qwen_ollama_model != "qwen2.5vl:7b":
+        raise ValueError("Local video analysis requires qwen2.5vl:7b")
+    with httpx.Client(trust_env=False, timeout=10, follow_redirects=False) as client:
+        try:
+            response = client.post(f"{parsed.scheme}://{parsed.netloc}/api/show", json={"model": settings.qwen_ollama_model})
+            response.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise ValueError("Ollama unavailable or model missing; run ollama serve and ollama pull qwen2.5vl:7b") from exc
+        info = response.json()
+        if "vision" not in info.get("capabilities", []):
+            raise ValueError("Ollama model must support vision; text-only Qwen cannot analyze MP4 frames")
 
 
 def create_local_provider(settings: Settings | None = None) -> LocalQwenProvider:
     settings = settings or get_settings()
     validate_local_endpoint(settings.qwen_endpoint)
-    config = ProviderConfig("self_hosted", settings.qwen_endpoint, "incidentlens-qwen-local", settings.qwen_model_file, timeout_s=settings.qwen_timeout_s, max_attempts=1, max_frames=settings.qwen_batch_frames, prompt_version="qwen-local-1", prompt_path=settings.qwen_prompt_path, outputs_path=settings.qwen_outputs_path)
+    model = settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else "incidentlens-qwen-local"
+    revision = model if settings.qwen_runtime == "ollama" else settings.qwen_model_file
+    config = ProviderConfig("self_hosted", settings.qwen_endpoint, model, revision, timeout_s=settings.qwen_timeout_s, max_attempts=1, max_frames=settings.qwen_batch_frames, prompt_version="qwen-local-1", prompt_path=settings.qwen_prompt_path, outputs_path=settings.qwen_outputs_path, requests_dir=settings.qwen_requests_dir, compact_context=settings.qwen_runtime == "ollama")
     create_provider(config)  # Reuse existing config validation without creating a client.
     return LocalQwenProvider(config, settings)

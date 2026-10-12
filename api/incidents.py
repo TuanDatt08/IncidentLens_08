@@ -1,6 +1,6 @@
 """Incident upload and factual metadata routes."""
 
-from fastapi import APIRouter, File, Query, UploadFile
+from fastapi import APIRouter, File, Form, Query, UploadFile
 from starlette.concurrency import run_in_threadpool
 
 from backend.models.contracts import UploadResponse
@@ -10,8 +10,8 @@ router = APIRouter(tags=["incidents"])
 
 
 @router.post("/incidents/upload", status_code=201, response_model=UploadResponse)
-async def upload_incident(video: UploadFile = File(...), log: UploadFile | None = File(default=None)):
-    return await run_in_threadpool(create_incident, video, log)
+async def upload_incident(video: UploadFile = File(...), log: UploadFile | None = File(default=None), sync_offset_s: float | None = Form(default=None), sync_metadata: UploadFile | None = File(default=None)):
+    return await run_in_threadpool(create_incident, video, log, sync_offset_s=sync_offset_s, sync_metadata=sync_metadata)
 
 
 @router.get("/incidents")

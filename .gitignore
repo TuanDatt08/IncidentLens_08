@@ -62,6 +62,8 @@ out/
 # .ai-log/*.jsonl
 # .ai-log/archive/
 .ai-log/
+.githooks/
+/backend/ai_session_log.py
 
 .agents/
 .claude/

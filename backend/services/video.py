@@ -30,7 +30,7 @@ class VideoProbeResult:
 class VideoService:
     """ffprobe adapter for upload metadata validation."""
 
-    def __init__(self, ffprobe_bin: str = "ffprobe", ffmpeg_bin: str | None = None, *, max_output_bytes: int | None = None, output_guard: Callable[[], int] | None = None) -> None:
+    def __init__(self, ffprobe_bin: str = "ffprobe", ffmpeg_bin: str | None = None, *, max_output_bytes: int | None = None, output_guard: Callable[[], int] | None = None, frame_max_width: int | None = None) -> None:
         self.ffprobe_bin = ffprobe_bin
         # Retained for constructor compatibility with the later processing
         # workflow. Upload ingestion intentionally does not invoke FFmpeg.
@@ -39,6 +39,7 @@ class VideoService:
             raise ValueError("output budget must be positive integer bytes")
         self.max_output_bytes = max_output_bytes
         self.output_guard = output_guard
+        self.frame_max_width = frame_max_width
 
     def prepare_output(self) -> None:
         if self.output_guard is not None:
@@ -136,9 +137,10 @@ class VideoService:
     def extract_frame(self, video_path: Path, at_s: float, destination: Path) -> Path:
         self.prepare_output()
         destination.parent.mkdir(parents=True, exist_ok=True)
+        scale = ["-vf", f"scale='min({self.frame_max_width},iw)':-2"] if self.frame_max_width else []
         self._run_ffmpeg([
             "-y", "-ss", f"{at_s:.6f}", "-i", str(video_path),
-            "-frames:v", "1", str(destination),
+            "-frames:v", "1", *scale, str(destination),
         ])
         return destination
 
