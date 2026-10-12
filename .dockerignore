@@ -6,7 +6,8 @@ __pycache__
 *.pyc
 .pytest_cache
 .ruff_cache
-backend/data/
+backend/data/*
+!backend/data/promt.txt
 docs/
 presentation/
 eval/
@@ -22,3 +23,12 @@ docker-compose.yml
 .cursor/
 .gemini/
 scripts/
+
+logs/
+.ai-log/
+deploy/vast/ssh/
+tests/
+**/node_modules
+**/.next
+**/.env*
+**/tsconfig.tsbuildinfo

@@ -101,10 +101,11 @@ Có thể chạy Ollama ẩn với log để dễ kiểm tra:
 $env:OLLAMA_HOST = '127.0.0.1:11434'
 $env:OLLAMA_CONTEXT_LENGTH = '32768'
 $env:OLLAMA_NO_CLOUD = '1'
+New-Item -ItemType Directory -Path .\logs\runtime -Force | Out-Null
 Start-Process -FilePath (Resolve-Path .\backend\data\runtime\ollama\ollama.exe) `
   -ArgumentList 'serve' -WindowStyle Hidden `
-  -RedirectStandardOutput .\backend\data\runtime\ollama\serve.stdout.log `
-  -RedirectStandardError .\backend\data\runtime\ollama\serve.stderr.log
+  -RedirectStandardOutput .\logs\runtime\ollama.stdout.log `
+  -RedirectStandardError .\logs\runtime\ollama.stderr.log
 ```
 
 ## 5. Cấu hình backend và database native
@@ -167,11 +168,12 @@ filesystem; database giữ URI, hash, metadata, report, version, evidence và au
 ## 6. Chạy phân tích bộ dữ liệu hiện tại
 
 ```powershell
+New-Item -ItemType Directory -Path logs/runtime -Force | Out-Null
 python -m backend.analyze_local_dataset `
   --input vlm/data `
   --log-offset-s 58.458 `
   --offset-source 'vlm/data/README.md frame mapping t(n)=-58.458+n/24; CARLA dataset' `
-  *> backend/data/ollama-dataset-run.log
+  *> logs/runtime/ollama-dataset-run.log
 ```
 
 Offset được truyền rõ ràng, không suy từ tên file. Với CSV này:
@@ -194,12 +196,13 @@ Lệnh chỉ dừng khi worker hoàn thành hoặc trả trạng thái lỗi; kh
 ```text
 vlm/data/                                  # Nguồn ban đầu, không sửa
 backend/data/incidentlens-ollama.db         # SQL database native
-backend/data/ollama-dataset-run.log         # Log chạy import/worker
+logs/runtime/ollama-dataset-run.log         # Log chạy import/worker
 backend/data/runtime/ollama/
   ollama.exe
-  serve.stdout.log
-  serve.stderr.log
-  pull.log
+logs/runtime/                             # stdout/stderr/PID dịch vụ
+  ollama.stdout.log
+  ollama.stderr.log
+logs/qwen/outputs.txt                      # journal toàn cục giữ lịch sử
 backend/data/incidents/INC-<id>/
   input/
     <tên-gốc>.mp4
@@ -238,7 +241,7 @@ backend/data/incidents/INC-<id>/
 `draft.json`, `evidence.json`, `review.json` chỉ được xuất sau khi SQL transaction
 hoàn thành thành công. Khi lỗi, xem `job.json`, raw response và log worker.
 `input/manifest.json` phân biệt video, telemetry và reference_only.
-`outputs.txt` theo từng run không ghi đè lịch sử file `backend/data/outputs.txt` cũ.
+`outputs.txt` theo từng run không ghi đè lịch sử file `logs/qwen/outputs.txt` cũ.
 `model_frame_count` đếm ảnh đã gửi; `validated_model_frame_count` đếm ảnh thuộc
 lô có output hợp lệ. Lô vi phạm schema được lưu với `INVALID_MODEL_OUTPUT`, để
 `unknowns` và tiếp tục lô độc lập. Nếu mọi lô đều lỗi, job thất bại; không tạo báo
@@ -416,8 +419,8 @@ ghi sửa đổi bằng PATCH rồi submit. Không đánh dấu approved chỉ v
 ## 12. Debug và kiểm tra code
 
 ```powershell
-Get-Content backend/data/ollama-dataset-run.log -Tail 30
-Get-Content backend/data/runtime/ollama/serve.stderr.log -Tail 30
+Get-Content logs/runtime/ollama-dataset-run.log -Tail 30
+Get-Content logs/runtime/ollama.stderr.log -Tail 30
 python -m ruff check backend/ api/
 $env:PYTHONUTF8 = '1'
 python -c "from backend.config import Settings; Settings.model_config['env_file']=None; import pytest; raise SystemExit(pytest.main(['tests/','-q','--ignore=tests/deploy','--tb=short']))"
@@ -481,11 +484,9 @@ gian, không tự chứng minh va chạm. SQL giữ ReportVersion v1/v2/v3 và a
 `ollama:qwen2.5vl:7b`; không có kỹ sư duyệt. Không diễn giải sự rỗng của report
 V1 thành "video không có sự cố".
 
-Log thực tế: `backend/data/ollama-dataset-final-v3.log`,
-`backend/data/ollama-recheck.log`, `backend/data/ollama-verification.log`,
-`backend/data/ollama-tests-final.log`, và log server Ollama ở thư mục runtime.
-Lượt một ảnh/recheck claim: `backend/data/ollama-focused-review.log`,
-`backend/data/ollama-claim-recheck.log`. Cấu hình chạy tương lai dùng batch 1,
+Log tạm của các lượt kiểm tra cũ đã được xoá trong cleanup; request/response và
+report theo incident vẫn được giữ. Log dịch vụ mới nằm trong logs/runtime/.
+Cấu hình chạy tương lai dùng batch 1,
 ảnh gần critical và đơn vị SI rõ ràng; runtime.json của lượt đầu vẫn ghi batch 4
 vì đó là cấu hình đã thực sự sử dụng. Với dataset khác phải xác minh đơn vị log
 trước khi áp hợp đồng speed m/s, acceleration m/s².
@@ -602,6 +603,9 @@ anchors/offset vẫn tạo log-triggers.json nhưng dừng trước Qwen; cần 
 có provenance. Mặc định FPS=24, ưu tiên FPS thực tế từ ffprobe.
 
 Xem [hợp đồng và kết quả kiểm tra](../backend/docs/streaming_trigger_detection.md).
-Chạy kiểm tra local: `python -m backend.verify_local_triggers --input vlm/data`.
+Script kiểm tra ba video dùng một lần đã được gỡ; regression suite nằm trong tests/.
 Cài hook gửi Phoenix: `powershell -ExecutionPolicy Bypass -File scripts/setup_hooks.ps1`.
 Cấu hình AI_LOG_SERVER và AI_LOG_API_KEY trong .env local. Không commit .ai-log lên GitHub.
+
+Khởi động các dịch vụ và gom log: `powershell -ExecutionPolicy Bypass -File .\start-local.ps1`.
+Xem [quy ước file runtime](../backend/docs/runtime_files.md).

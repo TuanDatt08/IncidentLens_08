@@ -1,0 +1,5 @@
+services:
+  app:
+    environment:
+      DATABASE_CLOUD: "true"
+      DATABASE_URL: "${P076_DATABASE_URL:?Set P076_DATABASE_URL in .env}"

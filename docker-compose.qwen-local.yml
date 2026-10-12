@@ -1,25 +1,43 @@
 name: incidentlens-qwen-local
 services:
   app:
-    image: incidentlens:qwen-local
+    image: incidentlens:qwen-ollama-7b
     build:
       context: .
       dockerfile: deploy/qwen-local/Dockerfile
     ports:
-      - "127.0.0.1:8089:8088"
+      - "127.0.0.1:${P076_PORT:-8089}:8088"
     environment:
-      CORS_ORIGINS: http://localhost:8089,http://127.0.0.1:8089
-      QWEN_BATCH_FRAMES: "1"
-      QWEN_SAMPLING_FPS: "4"
-      QWEN_TIMEOUT_S: "600"
-      QWEN_CONTEXT_SIZE: "16384"
+      APP_ENV: development
+      DATABASE_URL: sqlite:////data/incidentlens.db
+      INCIDENT_STORAGE_DIR: /data/incidents
+      RUNTIME_LOG_DIR: /data/logs/runtime
+      QWEN_RUNTIME: ollama
+      QWEN_ENDPOINT: http://127.0.0.1:11434/v1/chat/completions
+      QWEN_OLLAMA_MODEL: qwen2.5vl:7b
+      QWEN_ARTIFACT_SUBDIR: output
+      QWEN_PROMPT_PATH: /app/backend/data/promt.txt
+      QWEN_LOG_PROMPT_PATH: /app/backend/prompts/ollama_incident.txt
+      QWEN_OUTPUTS_PATH: /data/logs/qwen/outputs.txt
+      QWEN_BATCH_FRAMES: "${QWEN_BATCH_FRAMES:-1}"
+      QWEN_SAMPLING_FPS: "${QWEN_SAMPLING_FPS:-4}"
+      QWEN_TIMEOUT_S: "${QWEN_TIMEOUT_S:-600}"
+      OLLAMA_CONTEXT_LENGTH: "${OLLAMA_CONTEXT_LENGTH:-32768}"
+      OLLAMA_NUM_PARALLEL: "${OLLAMA_NUM_PARALLEL:-1}"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_KEEP_ALIVE: "${OLLAMA_KEEP_ALIVE:-5m}"
+      OLLAMA_AUTO_PULL: "${OLLAMA_AUTO_PULL:-true}"
+      CORS_ORIGINS: http://localhost:${P076_PORT:-8089},http://127.0.0.1:${P076_PORT:-8089}
     volumes:
       - data:/data
-      - ./backend/data/model:/models:ro
-      - ./backend/data:/app/backend/data
+      - models:/models
     stop_grace_period: 90s
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 volumes:
   data:
-    external: true
-    name: incidentlens-unified_data
+  models:

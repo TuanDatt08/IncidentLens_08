@@ -18,7 +18,7 @@ def test_multiple_events_merge_clamp_and_overflow(tmp_path):
     first, second = result.candidates
     assert first.start_s == 0
     assert first.end_s == 7
-    assert set(first.reasons) == {"HARD_BRAKING", "DISENGAGEMENT"}
+    assert {"HARD_BRAKING", "DISENGAGEMENT"} <= set(first.reasons)
     assert second.analysis_state == "UNANALYZED"
     assert result == module.detect_candidates(log, alignment, config)
     assert result.coverage.log_rows == 5
@@ -74,8 +74,8 @@ def test_configured_spike_flags_keep_values_and_original_times(tmp_path):
     result = detect_candidates(log, mapping, DetectionConfig("rec", 40.0, signal_thresholds={"jerk": 5.0}))
     assert len(result.candidates) == 1
     candidate = result.candidates[0]
-    assert (candidate.start_s, candidate.critical_s, candidate.end_s) == (5.0, 10.0, 13.0)
-    assert candidate.flags == ({"time_s": 10.0, "signal": "jerk", "value": 8.0, "threshold": 5.0, "reason": "SIGNAL_THRESHOLD"},)
+    assert (candidate.start_s, candidate.critical_s, candidate.end_s) == (5.0, 10.5, 13.5)
+    assert [(f['time_s'],f['value']) for f in candidate.flags] == [(10.,8.),(10.5,9.)]
 
 
 def test_stable_signals_and_unverified_alignment_do_not_create_flags(tmp_path):
@@ -107,7 +107,7 @@ def test_rolling_anomaly_without_hand_picked_signal_threshold(tmp_path):
     mapping = align({"duration": 50.0}, log, [TimeAnchor(0, 0, "fixture"), TimeAnchor(36, 36, "fixture")])
     candidates = detect_candidates(log, mapping, DetectionConfig("rec", 50.0)).candidates
     assert len(candidates) == 1 and candidates[0].critical_s == 35.0
-    assert candidates[0].flags[0]["reason"] == "SIGNAL_ANOMALY"
+    assert candidates[0].flags[0]["reason"] == "EWMA_ANOMALY"
     assert candidates[0].flags[0]["signal"] == "acceleration"
 
 

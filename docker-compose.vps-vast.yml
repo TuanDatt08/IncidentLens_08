@@ -1,0 +1,90 @@
+name: incidentlens-vps-vast
+services:
+  app:
+    image: incidentlens:vps-vast
+    build:
+      context: .
+      dockerfile: deploy/qwen-local/Dockerfile
+    ports:
+      - "127.0.0.1:8089:8088"
+    environment:
+      APP_ENV: production
+      DATABASE_CLOUD: "true"
+      DATABASE_URL: "${P076_DATABASE_URL:?Set Neon connection string}"
+      CORS_ORIGINS: "https://${P076_DOMAIN:?Set domain}"
+      QWEN_REMOTE_OLLAMA: "true"
+      QWEN_RUNTIME: ollama
+      QWEN_OLLAMA_MODEL: qwen2.5vl:7b
+      QWEN_ENDPOINT: http://127.0.0.1:11434/v1/chat/completions
+      QWEN_ARTIFACT_SUBDIR: output
+      QWEN_BATCH_FRAMES: "${QWEN_BATCH_FRAMES:-1}"
+      QWEN_SAMPLING_FPS: "${QWEN_SAMPLING_FPS:-4}"
+      QWEN_TIMEOUT_S: "${QWEN_TIMEOUT_S:-600}"
+      WORKER_POLL_S: "${WORKER_POLL_S:-30}"
+      INCIDENT_STORAGE_DIR: /data/incidents
+      MAX_VIDEO_SIZE_MB: "${MAX_VIDEO_SIZE_MB:-256}"
+      MAX_LOG_SIZE_MB: "${MAX_LOG_SIZE_MB:-25}"
+    volumes:
+      - data:/data
+    healthcheck:
+      interval: 60s
+      timeout: 20s
+      start_period: 2m
+      retries: 3
+    restart: unless-stopped
+    stop_grace_period: 90s
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+  gpu-tunnel:
+    build:
+      context: .
+      dockerfile: deploy/vast/tunnel.Dockerfile
+    network_mode: service:app
+    depends_on:
+      app:
+        condition: service_started
+    volumes:
+      - ./deploy/vast/ssh:/ssh:ro
+    command:
+      - -NT
+      - -o
+      - BatchMode=yes
+      - -o
+      - StrictHostKeyChecking=yes
+      - -o
+      - UserKnownHostsFile=/ssh/known_hosts
+      - -o
+      - ExitOnForwardFailure=yes
+      - -o
+      - ServerAliveInterval=15
+      - -o
+      - ServerAliveCountMax=3
+      - -i
+      - /ssh/id_ed25519
+      - -L
+      - 127.0.0.1:11434:127.0.0.1:11434
+      - -p
+      - "${VAST_SSH_PORT:?Set Vast SSH port}"
+      - "${VAST_SSH_USER:-root}@${VAST_SSH_HOST:?Set Vast SSH host}"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+  edge:
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    environment:
+      P076_DOMAIN: "${P076_DOMAIN:?Set domain}"
+      P076_ACCESS_USER: "${P076_ACCESS_USER:?Set demo access user}"
+      P076_ACCESS_HASH: "${P076_ACCESS_HASH:?Set bcrypt password hash}"
+    volumes:
+      - ./deploy/vast/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [app]
+    restart: unless-stopped
+volumes:
+  data:
+  caddy-data:
+  caddy-config:

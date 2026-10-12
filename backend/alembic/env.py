@@ -3,7 +3,7 @@ import os
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from backend.config import get_settings
+from backend.config import cloud_database_url, get_settings
 from backend.models import tables_v2  # noqa: F401 - register additive V2 metadata
 from backend.models.tables import Base
 
@@ -12,7 +12,9 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    return os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url") or get_settings().database_url
+    settings = get_settings()
+    url = os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url") or settings.database_url
+    return cloud_database_url(url) if settings.database_cloud else url
 
 
 def run_migrations_offline():

@@ -1,0 +1,6 @@
+{$P076_DOMAIN} {
+    basic_auth {
+        {env.P076_ACCESS_USER} {env.P076_ACCESS_HASH}
+    }
+    reverse_proxy app:8088
+}

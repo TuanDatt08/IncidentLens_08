@@ -63,9 +63,9 @@ pipeline; chỉ output hợp lệ mới lưu AnalysisReport DRAFT/ReportVersion/
 
 ## Kiểm tra ba video thật
 
-Chạy từ root: `python -m backend.verify_local_triggers --input vlm/data`.
-Artifacts local: `backend/data/trigger-verification/<video-stem>/` gồm trigger JSON,
-verification JSON, frame review và clip/peak frame nếu mapping được xác nhận.
+Các số dưới đây ghi lại lượt kiểm tra đã thực hiện. Script dùng một lần và
+artifacts kiểm tra đã được xoá khi cleanup; không nằm trong pipeline ứng dụng.
+Regression hiện hành: `python -m pytest tests/backend/test_services/test_streaming_triggers.py -q`.
 
 | Video | CSV rows | FPS | Trigger | Alignment | Normalize + detector |
 |---|---:|---:|---:|---|---:|

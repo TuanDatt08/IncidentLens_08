@@ -58,7 +58,8 @@ def ensure_qwen_runtime(settings: Settings) -> None:
         with path.open("rb") as stream:
             if stream.read(4) != b"GGUF":
                 raise ValueError(f"Invalid GGUF model/projector: {path}")
-    runtime_data = Path(settings.qwen_outputs_path).resolve().parent
+    runtime_data = Path(settings.runtime_log_dir).resolve()
+    runtime_data.mkdir(parents=True, exist_ok=True)
     with _startup_lock, locked_file(runtime_data / "qwen-runtime.lock", settings.qwen_startup_timeout_s + 5), httpx.Client(trust_env=False, timeout=2, follow_redirects=False) as client:
         def ready():
             try:
@@ -86,7 +87,7 @@ def ensure_qwen_runtime(settings: Settings) -> None:
         deadline = time.monotonic() + settings.qwen_startup_timeout_s
         while time.monotonic() < deadline:
             if process.poll() is not None:
-                raise ValueError("Qwen runtime exited; inspect backend/data/qwen-runtime.log")
+                raise ValueError(f"Qwen runtime exited; inspect {runtime_data / 'qwen-runtime.log'}")
             if ready():
                 return
             time.sleep(0.25)

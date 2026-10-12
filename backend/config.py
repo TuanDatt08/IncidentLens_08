@@ -1,8 +1,27 @@
 from functools import lru_cache
 from typing import Literal
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def cloud_database_url(value: str) -> str:
+    """Normalize PostgreSQL cloud URLs without changing encoded credentials."""
+    parts = urlsplit(value)
+    if parts.scheme not in {"postgres", "postgresql", "postgresql+psycopg2"}:
+        raise ValueError("Cloud database requires PostgreSQL")
+    if not parts.hostname or not parts.username or not parts.path.strip("/"):
+        raise ValueError("Cloud PostgreSQL requires host, user and database")
+    query = parse_qsl(parts.query, keep_blank_values=True)
+    modes = [item for key, item in query if key == "sslmode"]
+    if any(mode not in {"require", "verify-ca", "verify-full"} for mode in modes):
+        raise ValueError("Cloud PostgreSQL requires SSL")
+    if not modes:
+        query.append(("sslmode", "require"))
+    if not any(key == "connect_timeout" for key, _ in query):
+        query.append(("connect_timeout", "10"))
+    return urlunsplit(("postgresql+psycopg2", parts.netloc, parts.path, urlencode(query), ""))
 
 
 class Settings(BaseSettings):
@@ -10,6 +29,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        hide_input_in_errors=True,
     )
 
     # App
@@ -18,6 +38,7 @@ class Settings(BaseSettings):
     app_port: int = Field(default=8000, ge=1, le=65535)
     app_host: str = "0.0.0.0"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    runtime_log_dir: str = "./logs/runtime"
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     # LLM
@@ -26,7 +47,13 @@ class Settings(BaseSettings):
     llm_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
 
     # Database
+    database_cloud: bool = False
     database_url: str = "postgresql+psycopg2://rav18:rav18@localhost:5432/rav18"
+
+    @field_validator("database_url")
+    @classmethod
+    def validate_database_url(cls, value, info):
+        return cloud_database_url(value) if info.data.get("database_cloud") else value
 
     # Incident ingestion
     incident_storage_dir: str = "./backend/data/incidents"
@@ -45,6 +72,8 @@ class Settings(BaseSettings):
 
     # Qwen local; paths are resolved by the backend, never supplied by HTTP users.
     qwen_runtime: Literal["llama_cpp", "ollama"] = "llama_cpp"
+    qwen_remote_ollama: bool = False
+    worker_poll_s: float = Field(default=2, ge=1, le=300)
     qwen_ollama_model: str = "qwen2.5vl:7b"
     qwen_artifact_subdir: str = ""
     qwen_requests_dir: str | None = None
@@ -57,7 +86,7 @@ class Settings(BaseSettings):
     qwen_server_bin: str = "llama-server"
     qwen_prompt_path: str = "./backend/data/promt.txt"
     qwen_log_prompt_path: str = "./backend/prompts/ollama_incident.txt"
-    qwen_outputs_path: str = "./backend/data/outputs.txt"
+    qwen_outputs_path: str = "./logs/qwen/outputs.txt"
     qwen_timeout_s: float = Field(default=600, gt=0, le=3600)
     qwen_startup_timeout_s: float = Field(default=120, gt=0, le=600)
     qwen_context_size: int = Field(default=32768, ge=4096, le=131072)

@@ -1,4 +1,4 @@
-# RAV18 backend MVP architecture
+# Backend MVP architecture
 
 ```mermaid
 flowchart LR

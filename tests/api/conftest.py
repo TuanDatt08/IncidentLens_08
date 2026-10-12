@@ -18,6 +18,7 @@ async def db_client(tmp_path, monkeypatch):
 
     url = f"sqlite:///{(tmp_path / 'api.db').as_posix()}"
     monkeypatch.setenv("DATABASE_URL", url)
+    monkeypatch.setenv("DATABASE_CLOUD", "false")
     monkeypatch.setenv("INCIDENT_STORAGE_DIR", str(tmp_path / "storage"))
     get_settings.cache_clear()
     get_session_factory.cache_clear()

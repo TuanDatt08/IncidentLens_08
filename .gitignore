@@ -16,6 +16,8 @@ env/
 .env
 .env.local
 .env.production
+.env.vps
+deploy/vast/ssh/
 
 # IDE
 .vscode/
@@ -62,8 +64,6 @@ out/
 # .ai-log/*.jsonl
 # .ai-log/archive/
 .ai-log/
-.githooks/
-/backend/ai_session_log.py
 
 .agents/
 .claude/

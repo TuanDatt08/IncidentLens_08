@@ -4,7 +4,6 @@ from dataclasses import replace
 
 import httpx
 import pytest
-
 from test_vlm_provider import context_and_config, provider_response
 
 
@@ -14,7 +13,7 @@ def test_local_prompt_reload_and_append_invalid_raw_output(tmp_path):
     outputs = tmp_path / "outputs.txt"
     prompt.write_text("Phân tích bằng chứng", encoding="utf-8")
     outputs.write_text("old history\n", encoding="utf-8")
-    config = replace(config, prompt_path=str(prompt), outputs_path=str(outputs))
+    config = replace(config, prompt_path=str(prompt), outputs_path=str(outputs), requests_dir=str(tmp_path / "requests"))
     requests = []
     def handler(request):
         requests.append(json.loads(request.content))
@@ -28,12 +27,18 @@ def test_local_prompt_reload_and_append_invalid_raw_output(tmp_path):
             provider.analyze(context)
     assert "Phân tích" in requests[0]["messages"][0]["content"][0]["text"]
     assert "đã tối ưu" in requests[1]["messages"][0]["content"][0]["text"]
+    assert json.loads(requests[0]["messages"][0]["content"][0]["text"].splitlines()[-1])["telemetry_units"]["speed"] == "m/s"
     history = outputs.read_text(encoding="utf-8")
     assert history.startswith("old history\n")
     records = [json.loads(line) for line in history.splitlines()[1:]]
     assert len(records) == 2 and records[1]["raw_output"] == "invalid JSON"
     assert records[0]["frame_times_s"] == [2.0]
     assert "base64" not in history and "gps" not in history
+    saved_requests = list((tmp_path / "requests").glob("*.request.json"))
+    saved_responses = list((tmp_path / "requests").glob("*.response.json"))
+    assert len(saved_requests) == len(saved_responses) == 2
+    assert all(json.loads(path.read_text(encoding="utf-8"))["messages"][0]["content"][2]["type"] == "image_url" for path in saved_requests)
+    assert any(json.loads(path.read_text(encoding="utf-8"))["raw_output"] == "invalid JSON" for path in saved_responses)
 
 
 def test_missing_or_empty_prompt_blocks_request(tmp_path):
@@ -147,7 +152,7 @@ class Process:
     def terminate(self): self.state=0
     def kill(self): self.state=0
     def wait(self,**kw): return 0
-s=Settings(_env_file=None,qwen_model_dir=str(root/'model'),qwen_model_file='weights.gguf',qwen_projector_file='projector.gguf',qwen_startup_timeout_s=5,qwen_outputs_path=str(root/'outputs.txt'))
+s=Settings(_env_file=None,qwen_model_dir=str(root/'model'),qwen_model_file='weights.gguf',qwen_projector_file='projector.gguf',qwen_startup_timeout_s=5,qwen_outputs_path=str(root/'outputs.txt'),runtime_log_dir=str(root/'runtime'))
 with patch('backend.services.qwen_local.httpx.Client',Client),patch('backend.services.qwen_local.subprocess.Popen',Process),patch('backend.services.qwen_local.shutil.which',return_value='fake-server'):
     ensure_qwen_runtime(s)
 '''
@@ -156,8 +161,9 @@ with patch('backend.services.qwen_local.httpx.Client',Client),patch('backend.ser
     assert (tmp_path / "launches").read_text().splitlines() == ["launch"]
 
 
-def test_runtime_lock_uses_writable_output_directory(tmp_path, monkeypatch):
+def test_runtime_lock_uses_configured_log_directory(tmp_path, monkeypatch):
     from contextlib import contextmanager
+
     from backend.config import Settings
     from backend.services import qwen_local
     model = tmp_path / "model"
@@ -182,6 +188,6 @@ def test_runtime_lock_uses_writable_output_directory(tmp_path, monkeypatch):
         def __exit__(self, *args): pass
         def get(self, url): return Response()
     monkeypatch.setattr(qwen_local.httpx, "Client", Client)
-    settings = Settings(_env_file=None, qwen_model_dir=str(model), qwen_model_file="model.gguf", qwen_projector_file="projector.gguf", qwen_outputs_path=str(journal / "outputs.txt"))
+    settings = Settings(_env_file=None, qwen_model_dir=str(model), qwen_model_file="model.gguf", qwen_projector_file="projector.gguf", qwen_outputs_path=str(journal / "outputs.txt"), runtime_log_dir=str(tmp_path / "runtime"))
     qwen_local.ensure_qwen_runtime(settings)
-    assert paths == [journal / "qwen-runtime.lock"]
+    assert paths == [tmp_path / "runtime" / "qwen-runtime.lock"]

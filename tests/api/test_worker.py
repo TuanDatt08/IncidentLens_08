@@ -142,8 +142,11 @@ async def test_expired_lease_retries_then_fails_after_limit(db_client, monkeypat
 
 @pytest.mark.asyncio
 async def test_v1_default_worker_uses_local_pipeline_without_openai(db_client, monkeypatch):
+    monkeypatch.setenv('QWEN_RUNTIME', 'llama_cpp')
     from io import BytesIO
+
     from starlette.datastructures import UploadFile
+
     import backend.worker as worker
     from backend.config import get_settings
     from backend.models.analysis_v2 import AIIncidentAnalysisV2
@@ -167,6 +170,8 @@ async def test_v1_default_worker_uses_local_pipeline_without_openai(db_client, m
             calls.append(context)
             return ProviderResult(AIIncidentAnalysisV2.model_validate({"schema_version": "2.0", "incident_detected": False, "event_type": "UNKNOWN", "time_basis": "video_seconds", "window": None, "summary": "Supplied frames only", "timeline": [], "factors": [], "unknowns": ["Not full video coverage"], "review_status": "DRAFT"}), {}, {})
     monkeypatch.setattr(worker, "create_local_provider", lambda settings: Local())
+    legacy_settings = get_settings().model_copy(update={'qwen_candidate_min_acceleration': None, 'qwen_inference_frame_limit': None})
+    monkeypatch.setattr(worker, 'get_settings', lambda: legacy_settings)
     worker.run_once(job_id=job["job_id"])
     assert get_job(job["job_id"])["status"] == "succeeded"
     assert sum(len(context.frames) for context in calls) == 32

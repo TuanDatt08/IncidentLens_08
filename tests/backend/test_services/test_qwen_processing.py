@@ -71,7 +71,7 @@ def test_wholly_unanalyzed_candidates_fail_instead_of_no_detection(tmp_path):
     source = root / "INC-1" / "source"
     source.mkdir(parents=True)
     (source / "video.mp4").write_bytes(b"video")
-    (source / "log.csv").write_text("sec_from_incident,brake\n" + "".join(f"{i},{1 if i % 6 == 0 else 0}\n" for i in range(100)))
+    (source / "log.csv").write_text("sec_from_incident,brake\n" + "".join(f"{i},1\n" for i in range(100)))
     incident = {"incident_id": "INC-1", "video_uri": "INC-1/source/video.mp4", "telemetry_uri": "INC-1/source/log.csv", "video_metadata": {"duration": 110.0, "fps": 30.0}}
     with pytest.raises(InsufficientEvidence, match="No candidate was analyzed"):
         process_local_incident(incident, storage_root=root, provider=object(), settings=Settings(_env_file=None, qwen_v1_log_offset_s=0))

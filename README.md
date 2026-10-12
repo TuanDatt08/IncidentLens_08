@@ -15,6 +15,9 @@ code, test cho đến deploy và nộp bài Demo Day.
 
 Technical Guidebook: <https://phoenix.note.transformerlabs.ai/technical-book>
 
+Chạy Qwen local sau setup: `powershell -ExecutionPolicy Bypass -File .\start-local.ps1`.
+Log dịch vụ nằm tại `logs/runtime/`; xem [quy ước file runtime](backend/docs/runtime_files.md).
+
 ## Template có sẵn những gì
 
 - **Cấu trúc thư mục tách lớp** — `agents/`, `api/`, `services/`, `models/` đã
@@ -118,7 +121,7 @@ presentation/        Slide và video Demo Day
                      Config hook cho từng công cụ
 .github/workflows/   CI
 Dockerfile           Multi-stage build
-docker-compose.yml   Chạy backend bằng Docker
+docker-compose.yml   Frontend/API/worker/Ollama, SQLite và volumes
 README_boilerplate.md  Khung README cho dự án của đội
 ```
 
@@ -202,3 +205,5 @@ Báo lỗ hổng bảo mật theo [SECURITY.md](SECURITY.md), đừng mở publi
 ## License
 
 [MIT](LICENSE) — dùng tự do cho mục đích giáo dục.
+
+Docker Ollama + Qwen 7B: chạy `docker compose up -d --build`, mở `http://127.0.0.1:8089/incidents`. Xem [hướng dẫn](docs/docker_qwen7b.md).

@@ -12,7 +12,7 @@ Ngày: 2026-10-09. Trạng thái: đã triển khai backend và kiểm thử; ki
 - Không gọi dịch vụ VLM bên ngoài trong luồng phân tích này, kể cả khi local lỗi.
 - Người dùng cung cấp Qwen có khả năng xử lý ảnh/video, khoảng 3B tham số, tại `backend/data/model/`.
 - Đọc hướng dẫn phân tích từ `backend/data/promt.txt`, giữ đúng tên `promt.txt`.
-- Append phản hồi vào `backend/data/outputs.txt`; không xoá, truncate hay ghi đè output cũ.
+- Append phản hồi vào `logs/qwen/outputs.txt`; không xoá, truncate hay ghi đè output cũ.
 
 Tài liệu này nằm tại `docs/qwen_local.md` theo yêu cầu trực tiếp của người dùng. Các SPEC/ADR/task hiện có vẫn là nguồn tham chiếu; không tạo bản sao của chúng.
 
@@ -164,23 +164,27 @@ Không xóa dữ liệu, model, outputs.txt hoặc các thay đổi có trước
 | QWEN_SERVER_BIN | `llama-server`, fallback native `backend/data/runtime/llama-server.exe` trên Windows |
 | QWEN_ENDPOINT | `http://127.0.0.1:8091/v1/chat/completions`, chỉ loopback |
 | QWEN_PROMPT_PATH | `./backend/data/promt.txt` |
-| QWEN_OUTPUTS_PATH | `./backend/data/outputs.txt` |
+| QWEN_OUTPUTS_PATH | `./logs/qwen/outputs.txt` |
 | QWEN_SAMPLING_FPS | 4 |
 | QWEN_BATCH_FRAMES | 1, cấu hình 1–32 |
-| QWEN_CONTEXT_SIZE | 32768, deployment CPU đặt 16384 để giảm RAM |
+| QWEN_CONTEXT_SIZE | 32768 cho llama.cpp; Ollama dùng OLLAMA_CONTEXT_LENGTH |
 | QWEN_TIMEOUT_S | 600 giây, tối đa 3600 |
 | QWEN_STARTUP_TIMEOUT_S | 120 giây |
 | QWEN_SIGNAL_THRESHOLDS / QWEN_DELTA_THRESHOLDS | JSON mapping tín hiệu và ngưỡng đã chọn theo đơn vị nguồn/canonical |
 | QWEN_V1_LOG_OFFSET_S | Trống mặc định; chỉ đặt khi biết đồng bộ log → video, không tự suy từ tên CSV |
 
-### Khởi chạy tại cổng 8089
+### Docker hiện hành (2026-10-12)
+
+Xem [Docker Ollama Qwen 7B](docker_qwen7b.md). Profile hiện hành dùng image nền Ollama public, SQLite và volume tự tạo; các ghi chép triển khai dưới đây là lịch sử, đã được thay thế. Không cần image `incidentlens:unified-baseline` hoặc volume PostgreSQL cũ.
+
+### Lịch sử khởi chạy tại cổng 8089
 
 Việc đổi cổng/cache được người dùng yêu cầu sau kế hoạch Qwen; không mở rộng tính năng sản phẩm:
 
 - `docker-compose.qwen-local.yml` giữ stack một container, cổng host `127.0.0.1:8089`; volume dữ liệu `incidentlens-unified_data` được giữ.
 - `deploy/qwen-local/Dockerfile` dùng image `incidentlens:unified-baseline` **chỉ để tái sử dụng binary/runtime**. Source cũ ở backend/API/frontend/deploy bị loại khỏi image mới. FE/API/backend được đóng gói từ checkout; không tái sử dụng route login hoặc bundle FE cũ.
 - Build frontend đặt `NEXT_PUBLIC_USE_MOCK_API=false`, API cùng origin `/api/v1` và `/api/v2`; không sửa code giao diện. Gateway phục vụ cả API V1/V2 theo contract có sẵn.
-- Model được mount read-only vào `/models`; backend/data mount writable để prompt và outputs giữ trên host. Lock và log runtime nằm cạnh outputs.txt, không ghi vào mount model.
+- Model được mount read-only vào `/models`; backend/data mount writable để prompt và outputs giữ trên host. Lock và log runtime nằm tại RUNTIME_LOG_DIR (mặc định logs/runtime), không ghi vào mount model.
 - Database hiện có không downgrade/drop bảng hoặc đổi migration marker vì QL tasks không thay schema. Chỉ database tạo mới mới chạy migrations của checkout. Bảng/lịch sử cũ trong volume được giữ, không đồng nghĩa xuất bản các tính năng ngoài task.
 - Qwen chỉ nghe nội bộ `127.0.0.1:8081`, context 16384, CPU 6 thread, runtime batch 512/microbatch 128, image token 1024. Worker trích 4 FPS và chia request 1 frame theo yêu cầu ngày 2026-10-10; ghi chú cải tiến riêng tại `../notes.txt`.
 - Backup trước cutover: `backend/data/deployment-backups/before-qwen-8089-20261009-235332.tar.gz`, 270345067 bytes.
