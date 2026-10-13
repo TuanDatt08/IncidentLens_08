@@ -27,6 +27,7 @@ class TriggerConfig:
     warmup_s: float = 1.
     max_triggers: int = 100
     max_flags: int = 32
+    min_priority: int = 1
 
     def __post_init__(self):
         for key, value in vars(self).items():
@@ -153,6 +154,7 @@ def find_log_triggers(log, *, config=None, alignment=None, video_metadata=None, 
             if at-started >= cfg.warmup_s and abs(error) >= limit and (key == 'accel_z' or abs(value) >= floor):
                 flag('EWMA_ANOMALY',key,error,limit)
             ewma[key] = (mean+alpha*error,(1.-alpha)*(variance+alpha*error*error))
+        flags = [item for item in flags if item['priority'] >= cfg.min_priority]
         if flags:
             if current and at > current['log_end_s']+cfg.merge_gap_s:
                 finish()

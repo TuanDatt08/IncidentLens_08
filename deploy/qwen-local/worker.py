@@ -19,7 +19,7 @@ def main():
     from backend.worker import run_once as v1
     from backend.worker_v2 import run_once as v2
     settings = get_settings()
-    provider = create_local_provider(settings.model_copy(update={"qwen_prompt_path": settings.qwen_log_prompt_path}))
+    provider = create_local_provider(settings.model_copy(update={"qwen_prompt_path": settings.qwen_log_prompt_path, "qwen_two_stage": False}))
     logging.basicConfig(level=logging.INFO)
     if settings.qwen_remote_ollama and settings.qwen_runtime != "ollama":
         raise ValueError("Remote inference mode requires Ollama")

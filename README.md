@@ -6,6 +6,7 @@
 - [backend](backend/README.md): domain logic, database, worker và docs Backend.
 - [api](api/README.md): routes, public contract và docs API.
 - [frontend](frontend/README.md): Next.js UI, client services và docs Frontend.
+- [Docker APP + AI + Neon](docs/docker_app_ai_neon.md): chạy và di chuyển hai gói độc lập, dùng PostgreSQL cloud từ `.env`.
 
 Phần guide/template bên dưới được giữ để tham khảo. Trạng thái IncidentLens cụ thể xem audit và role docs ở trên.
 

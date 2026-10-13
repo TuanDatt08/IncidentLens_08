@@ -4,8 +4,14 @@ from starlette.concurrency import run_in_threadpool
 from backend.models.contracts import AnalysisReportV1, RejectRequest, ReportPatch, ReviewActionResponse
 from backend.services.reports import get_report
 from backend.services.review import approve_report, edit_report, reject_report, submit_report
+from backend.services.review_context import get_review_context
 
 router = APIRouter(tags=["reports"])
+
+
+@router.get('/incidents/{incident_id}/review-context')
+async def review_context_route(incident_id: str):
+    return await run_in_threadpool(get_review_context, incident_id)
 
 
 @router.get("/incidents/{incident_id}/report", response_model=AnalysisReportV1)

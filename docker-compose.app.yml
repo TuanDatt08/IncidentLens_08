@@ -1,0 +1,44 @@
+name: incidentlens-app
+services:
+  app:
+    image: incidentlens:app
+    build:
+      context: .
+      dockerfile: deploy/app/Dockerfile
+    ports:
+      - "127.0.0.1:${P076_PORT:-8089}:8088"
+    environment:
+      APP_ENV: development
+      DATABASE_CLOUD: "true"
+      DATABASE_URL: "${P076_DATABASE_URL:?Set P076_DATABASE_URL in .env to the Neon PostgreSQL URL}"
+      QWEN_RUNTIME: ollama
+      QWEN_REMOTE_OLLAMA: "true"
+      QWEN_ENDPOINT: http://127.0.0.1:11434/v1/chat/completions
+      QWEN_OLLAMA_MODEL: qwen2.5vl:7b
+      QWEN_ARTIFACT_SUBDIR: output
+      QWEN_BATCH_FRAMES: "${QWEN_BATCH_FRAMES:-16}"
+      QWEN_SAMPLING_FPS: "${QWEN_SAMPLING_FPS:-4}"
+      QWEN_TRIGGER_MIN_PRIORITY: "4"
+      QWEN_TRIGGER_DECELERATION: "22"
+      QWEN_FLAG_ONLY: "true"
+      QWEN_TWO_STAGE: "true"
+      QWEN_TIMEOUT_S: "${QWEN_TIMEOUT_S:-1800}"
+      WORKER_POLL_S: "${WORKER_POLL_S:-30}"
+      INCIDENT_STORAGE_DIR: /data/incidents
+      RUNTIME_LOG_DIR: /data/logs/runtime
+      QWEN_OUTPUTS_PATH: /data/logs/qwen/outputs.txt
+      CORS_ORIGINS: "http://localhost:${P076_PORT:-8089},http://127.0.0.1:${P076_PORT:-8089}"
+    volumes:
+      - data:/data
+    networks: [ai]
+    restart: unless-stopped
+    stop_grace_period: 90s
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+volumes:
+  data:
+networks:
+  ai:
+    name: incidentlens-ai
+    external: true

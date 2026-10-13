@@ -20,6 +20,8 @@ class DetectionConfig:
     post_s: float = 3.0
     merge_gap_s: float = 1.0
     brake_threshold: float = 0.8
+    trigger_min_priority: int = 1
+    trigger_deceleration: float = 6.0
     max_candidates: int = 100
     scan_interval_s: float = 60.0
     max_scan_frames: int = 1000
@@ -112,7 +114,7 @@ def detect_candidates(telemetry: NormalizedTelemetry | None, alignment: TimeAlig
     raw = None
     if telemetry is not None:
         from backend.services.trigger_detection import TriggerConfig, find_log_triggers
-        raw = find_log_triggers(telemetry, config=TriggerConfig(pre_s=config.pre_s,post_s=config.post_s,merge_gap_s=config.merge_gap_s,brake_threshold=config.brake_threshold,max_triggers=max(1000,config.max_candidates)), alignment=alignment, video_metadata={'duration':config.duration_s,'fps':config.fps}, signal_thresholds=config.signal_thresholds, delta_thresholds=config.delta_thresholds, guard=guard)
+        raw = find_log_triggers(telemetry, config=TriggerConfig(pre_s=config.pre_s,post_s=config.post_s,merge_gap_s=config.merge_gap_s,brake_threshold=config.brake_threshold,min_priority=config.trigger_min_priority,deceleration=config.trigger_deceleration,max_triggers=max(1000,config.max_candidates)), alignment=alignment, video_metadata={'duration':config.duration_s,'fps':config.fps}, signal_thresholds=config.signal_thresholds, delta_thresholds=config.delta_thresholds, guard=guard)
         rows = raw['rows']
         unknowns.extend(raw['unknowns'])
     if usable:

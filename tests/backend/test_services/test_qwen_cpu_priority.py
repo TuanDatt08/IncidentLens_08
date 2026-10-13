@@ -13,7 +13,7 @@ def test_priority_keeps_unreviewed_windows_unknown_and_analyzes_strong_braking(t
     source = tmp_path / "INC-1" / "input"
     source.mkdir(parents=True)
     (source / "video.mp4").write_bytes(b"video")
-    (source / "log.csv").write_text("sec_from_incident,brake,accel_x\n0,0,0\n10,1,-1\n11,0,0\n20,0,0\n30,1,-8\n31,0,0\n39,0,0\n")
+    (source / "log.csv").write_text("sec_from_incident,brake,accel_x,speed_kmh\n0,0,0,36\n10,1,-1,36\n11,0,0,35\n20,0,0,36\n30,1,-8,36\n31,0,0,0\n39,0,0,0\n")
 
     def extract(self, source, at_s, *args):
         path = args[-1]

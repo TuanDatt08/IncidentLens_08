@@ -92,6 +92,10 @@ class Settings(BaseSettings):
     qwen_context_size: int = Field(default=32768, ge=4096, le=131072)
     qwen_batch_frames: int = Field(default=1, ge=1, le=32)
     qwen_sampling_fps: float = Field(default=4, gt=0, le=30)
+    qwen_trigger_min_priority: int = Field(default=1, ge=1, le=5)
+    qwen_trigger_deceleration: float = Field(default=6, gt=0)
+    qwen_flag_only: bool = False
+    qwen_two_stage: bool = False
     qwen_signal_thresholds: dict[str, float] = Field(default_factory=dict)
     qwen_delta_thresholds: dict[str, float] = Field(default_factory=dict)
     # V1 collision-relative CSV cannot imply where collision lies in the MP4.

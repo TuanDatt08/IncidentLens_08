@@ -47,6 +47,10 @@ def align(video_metadata: dict, telemetry: NormalizedTelemetry, anchors: list[Ti
     duration = video_metadata.get("duration")
     if not finite(duration) or duration <= 0 or not finite(tolerance_s) or tolerance_s <= 0:
         raise ValueError("duration and tolerance must be finite positive seconds")
+    if not anchors and telemetry.config.timestamp_column == 't_video_s' and telemetry.config.time_reference == 'recording_relative':
+        if telemetry.metadata.start_s < 0 or telemetry.metadata.start_s >= duration:
+            raise ValueError('t_video_s must start within the video duration')
+        anchors = [TimeAnchor(0.0, 0.0, 'explicit_t_video_s'), TimeAnchor(duration, duration, 'explicit_t_video_s')]
     points = tuple(sorted(anchors, key=lambda anchor: anchor.log_s))
     for i, anchor in enumerate(points):
         if not finite(anchor.log_s) or not finite(anchor.video_s) or not 0 <= anchor.video_s <= duration or not anchor.source.strip():

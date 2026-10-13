@@ -22,6 +22,7 @@ from backend.services.evidence_validation import EvidenceRegistry, validate_anal
 from backend.services.log_normalization import normalize_log
 from backend.services.processing import InsufficientEvidence, ProcessedResult, pass1_sample_times
 from backend.services.synchronization import TimeAnchor, align
+from backend.services.telemetry_consistency import negative_telemetry_conflict
 from backend.services.video import VideoService
 from backend.services.vlm_provider import AnalysisContext, batch_registry, filtered_telemetry
 
@@ -66,7 +67,7 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
     signal_thresholds = dict(settings.qwen_signal_thresholds)
     if settings.qwen_candidate_min_acceleration is not None:
         signal_thresholds.setdefault("acceleration", settings.qwen_candidate_min_acceleration)
-    detection = detect_candidates(log, alignment, DetectionConfig(identity, duration, signal_thresholds=signal_thresholds, delta_thresholds=settings.qwen_delta_thresholds, fps=metadata.get('fps',24.)))
+    detection = detect_candidates(log, alignment, DetectionConfig(identity, duration, signal_thresholds=signal_thresholds, delta_thresholds=settings.qwen_delta_thresholds, fps=metadata.get('fps',24.), trigger_min_priority=settings.qwen_trigger_min_priority, trigger_deceleration=settings.qwen_trigger_deceleration))
     candidates = list(detection.candidates)
     unknowns = list(detection.unknowns)
     if detection.log_trigger_data is not None:
@@ -83,6 +84,7 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
     inspected_times = []
     submitted_times = []
     model_summaries = []
+    consistency_checks = []
     def analyze(context):
         nonlocal calls
         if calls >= 200:
@@ -97,7 +99,7 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
         inspected_times.extend(frame.time_start_s for frame in context.frames)
         model_summaries.append(result.analysis.summary)
         return result
-    if detection.scan_times_s or not candidates:
+    if not settings.qwen_flag_only and (detection.scan_times_s or not candidates):
         # Preserve V1's bounded visual localization when log alignment is unavailable.
         sampled = []
         for index, at_s in enumerate(pass1_sample_times(metadata)):
@@ -166,8 +168,9 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
                 indices = sorted([*indices, critical_index])
             inference_frames = tuple(inference_frames[index] for index in indices)
             unknowns.append(f"{candidate.candidate_id}: extracted {len(bundle.frames)} frames at {settings.qwen_sampling_fps} FPS; model inspected {len(inference_frames)} selected frames including the nearest critical timestamp. Events between inspected frames remain unknown.")
-        for start in range(0, len(inference_frames), settings.qwen_batch_frames):
-            context = AnalysisContext(registry, duration, inference_frames[start:start + settings.qwen_batch_frames], tuple(rows), job_id, candidate.flags, (candidate.start_s, candidate.critical_s, candidate.end_s))
+        batch_size = len(inference_frames) if getattr(provider, 'two_stage', False) else settings.qwen_batch_frames
+        for start in range(0, len(inference_frames), batch_size):
+            context = AnalysisContext(registry, duration, inference_frames[start:start + batch_size], tuple(rows), job_id, candidate.flags, (candidate.start_s, candidate.critical_s, candidate.end_s))
             try:
                 result = analyze(context)
             except (ValidationError, UnsupportedModelClaimError) as exc:
@@ -179,13 +182,18 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
             if result.analysis.window and not candidate.start_s <= result.analysis.window.start_s < result.analysis.window.end_s <= candidate.end_s:
                 raise InsufficientEvidence("Local report window is outside candidate.")
             records.append({"candidate": asdict(candidate), "frame_times_s": [frame.time_start_s for frame in context.frames], "analysis": result.analysis.model_dump(mode="json"), "provenance": result.provenance, "usage": result.usage})
+            conflict = negative_telemetry_conflict(rows, context.frames[0].time_start_s, context.frames[-1].time_start_s, result.analysis.incident_detected)
+            if conflict:
+                records[-1]['consistency_check'] = conflict
+                consistency_checks.append(conflict)
+                unknowns.append(conflict['code'] + ': ' + conflict['message'])
             unknowns.extend(result.analysis.unknowns)
             if result.analysis.incident_detected:
                 results.append(result.analysis)
         evidence_assets.extend(assets)
     unknowns.append("Visual analysis covers only supplied candidate frames, not every source video frame. Events outside candidate windows or between inspected frames remain unknown.")
-    if not results and any(any(flag.get("signal") == "brake" and flag.get("value", 0) >= 0.8 for flag in candidate.flags) and any(flag.get("signal") == "acceleration" and flag.get("value", 0) <= -8 for flag in candidate.flags) for candidate in candidates):
-        unknowns.append("MODEL_TELEMETRY_CONFLICT: strong braking telemetry candidate remains unresolved by the negative model verdict; engineer must review video, raw log and clock mapping. Absence of contact does not rule out hard braking or near miss.")
+    if consistency_checks:
+        model_summaries.insert(0, consistency_checks[0]['message'])
     service.write_json(directory / "local-analysis.json", {"coverage": asdict(detection.coverage), "visual_coverage": {"complete": False, "source_duration_s": duration, "candidate_windows": [[candidate.start_s, candidate.end_s] for candidate in candidates], "extracted_frame_count": extracted_frame_count, "model_frame_times_s": sorted(set(submitted_times)), "model_frame_count": len(set(submitted_times)), "validated_model_frame_times_s": sorted(set(inspected_times)), "validated_model_frame_count": len(set(inspected_times))}, "alignment": asdict(alignment) if alignment else {"quality": "UNKNOWN"}, "unknowns": list(dict.fromkeys(unknowns)), "calls": calls, "results": records})
     if on_progress:
         on_progress(2, calls, calls)
@@ -197,9 +205,11 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
         service.write_json(directory / "draft-v2.json", model_draft.model_dump(mode="json"))
     if not results:
         if calls == 0:
+            if settings.qwen_flag_only and not candidates:
+                return ProcessedResult(AnalysisResult(incident_detected=False, model_metadata={'detection_state': 'NOT_ANALYZED_NO_FLAGS', 'requires_engineer_review': True, 'unknowns': ['No qualifying telemetry flags; video was not analyzed.']}), [], None)
             raise InsufficientEvidence("No candidate was analyzed; inspect local-analysis.json for missing coverage.")
         # V1 requires an empty no-detection report; retain unknowns in the private manifest.
-        return ProcessedResult(AnalysisResult(incident_detected=False, model_metadata={"provider": settings.qwen_runtime, "model": settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else settings.qwen_model_file, "manifest": (directory.relative_to(root) / "local-analysis.json").as_posix(), "detection_state": "NO_DETECTION_IN_SAMPLED_EVIDENCE", "requires_engineer_review": True, "draft_v2": model_draft.model_dump(mode="json"), "unknowns": list(dict.fromkeys(unknowns))}), [], None)
+        return ProcessedResult(AnalysisResult(incident_detected=False, model_metadata={"provider": settings.qwen_runtime, "model": settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else settings.qwen_model_file, "manifest": (directory.relative_to(root) / "local-analysis.json").as_posix(), "detection_state": "REVIEW_REQUIRED_TELEMETRY_CONFLICT" if consistency_checks else "NO_DETECTION_IN_SAMPLED_EVIDENCE", "consistency_checks": consistency_checks, "requires_engineer_review": True, "draft_v2": model_draft.model_dump(mode="json"), "unknowns": list(dict.fromkeys(unknowns))}), [], None)
     offset = results[0].window.critical_s
     timeline = [{**item.model_dump(mode="json"), "time_s": item.time_s - offset} for result in results for item in result.timeline]
     analysis = AnalysisResult(incident_detected=True, incident_type=results[0].event_type, incident_window={"start": min(result.window.start_s for result in results) - offset, "critical": 0.0, "end": max(result.window.end_s for result in results) - offset}, summary="\n".join(result.summary for result in results), timeline=sorted(timeline, key=lambda item: item["time_s"]), key_factors=[item.model_dump(mode="json") for result in results for item in result.factors], unknowns=list(dict.fromkeys(unknowns)), model_metadata={"provider": settings.qwen_runtime, "model": settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else settings.qwen_model_file, "manifest": (directory.relative_to(root) / "local-analysis.json").as_posix(), "time_basis": "incident_relative", "video_offset_s": offset, "requires_engineer_review": True, "draft_v2": model_draft.model_dump(mode="json")})

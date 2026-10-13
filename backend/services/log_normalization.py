@@ -113,7 +113,14 @@ def normalize_log(
         raise TelemetryError("ROS2 bag is not supported by this CSV adapter; export approved topics to CSV with explicit clock metadata")
     if format.lower() != "csv":
         raise TelemetryError("unsupported telemetry format; supported format: csv")
-    config = config or LogNormalizationConfig()
+    if config is None:
+        try:
+            with Path(path).open('r', encoding='utf-8-sig', newline='') as stream:
+                columns = next(csv.reader(stream), [])
+        except (OSError, UnicodeError, csv.Error) as exc:
+            raise TelemetryError('CSV could not be read') from exc
+        config = (LogNormalizationConfig(timestamp_column='t_video_s', time_reference='recording_relative')
+                  if 't_video_s' in columns else LogNormalizationConfig())
     source = Path(path)
     count = 0
     first = last = origin = None
