@@ -1,7 +1,11 @@
+"use client";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Film, Plus, UserCircle } from "@/components/icons";
 
 export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
+  if (pathname === "/") return <>{children}</>;
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur">

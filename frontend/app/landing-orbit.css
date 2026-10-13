@@ -1,0 +1,244 @@
+/* Camera-facing data satellites. Static/reduced-motion positions remain in galaxy.css. */
+.landing-galaxy .lp-dashcam { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #111b2b; }
+.landing-galaxy .lp-dashcam > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.landing-galaxy .lp-dashcam-overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+.landing-galaxy .lp-dashcam::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 26px #05061133; }
+.landing-galaxy .lp-galaxy-scene[data-orbiting="true"] > .lp-source {
+  left: 52%;
+  top: 50%;
+  width: 27%;
+  max-width: 205px;
+  transform: translate(-50%, -50%) translate3d(var(--orbit-x, 0px), var(--orbit-y, 0px), 0) rotate(var(--orbit-tilt, 0deg)) scale(var(--orbit-scale, 1));
+  transform-origin: center;
+  opacity: var(--orbit-opacity, 1);
+  animation: none;
+  transition: none;
+  will-change: transform;
+}
+
+.landing-galaxy .lp-galaxy-atmosphere { z-index: 1; }
+.landing-galaxy .lp-galaxy-core-label { z-index: 2; }
+.landing-galaxy .lp-stars-near { animation-duration: 36s; opacity: .4; }
+.landing-galaxy .lp-nebula-page { animation-duration: 21s; }
+.landing-galaxy .lp-workflow-illustration::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at 8% 30%, #b09bff 0 1px, transparent 2px), radial-gradient(circle at 90% 75%, #22d3ee 0 1px, transparent 2px), radial-gradient(circle at 78% 13%, #e0b8ef 0 1px, transparent 2px);
+  animation: space-art-drift 12s ease-in-out infinite alternate;
+}
+.landing-galaxy .lp-mini-list { position: relative; }
+.landing-galaxy .lp-mini-list::after {
+  content: "";
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  right: -10px;
+  top: -14px;
+  pointer-events: none;
+  border: 1px solid #a186de3b;
+  border-radius: 50%;
+  box-shadow: 0 0 25px #8b5cf617;
+  transform: rotateX(55deg) rotate(-24deg);
+  animation: space-ring-lean 14s ease-in-out infinite alternate;
+}
+.landing-galaxy .lp-demo-video::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 30px #8b5cf617;
+}
+
+/* Ambient depth belongs to artwork, never the controls or reading column. */
+.landing-galaxy .lp-workflow-illustration {
+  animation: space-art-drift 14s ease-in-out infinite alternate;
+}
+.landing-galaxy .lp-mini-list {
+  animation: space-art-drift 16s ease-in-out -6s infinite alternate;
+}
+.landing-galaxy .lp-feature-chain {
+  animation: space-art-drift 12s ease-in-out -4s infinite alternate-reverse;
+}
+.landing-galaxy .lp-feature-report {
+  animation: space-art-drift 18s ease-in-out -8s infinite alternate;
+}
+.landing-galaxy .lp-feature-icon {
+  animation: space-small-drift 10s ease-in-out -3s infinite alternate;
+}
+.landing-galaxy .lp-handoff-core {
+  animation: space-small-drift 12s ease-in-out infinite alternate;
+}
+.landing-galaxy .lp-handoff-core > i {
+  animation: space-ring-lean 16s ease-in-out infinite alternate;
+}
+.landing-galaxy .lp-final-orbit {
+  animation: space-aureole-drift 18s ease-in-out -5s infinite alternate;
+}
+.landing-galaxy .lp-demo-video > .lp-road {
+  animation: space-small-drift 18s ease-in-out infinite alternate;
+  scale: 1.025;
+}
+.landing-galaxy .lp-demo-chart {
+  animation: space-small-drift 15s ease-in-out -5s infinite alternate-reverse;
+}
+
+.landing-galaxy .lp-space-satellite {
+  position: absolute;
+  left: 52%;
+  top: 50%;
+  width: 33px;
+  height: 33px;
+  pointer-events: none;
+  transform: translate(-50%, -50%) translate3d(var(--sat-x, 0px), var(--sat-y, 0px), 0) rotate(var(--sat-tilt, 0deg)) scale(var(--sat-scale, 1));
+  opacity: var(--sat-opacity, .85);
+  filter: drop-shadow(0 0 9px #8b5cf644);
+}
+.landing-galaxy .lp-space-satellite[data-kind="crystal"], .landing-galaxy .lp-space-crystal {
+  width: 26px;
+  height: 44px;
+  clip-path: polygon(48% 0, 91% 31%, 75% 81%, 39% 100%, 6% 63%, 17% 20%);
+  background: linear-gradient(117deg, #e7d9ff 0%, #8a6de6 24%, #28184d 25%, #6b4ac6 53%, #c391f1 54%, #432769 78%, #18132d 79%);
+  box-shadow: inset 0 0 10px #d1b7ff55;
+}
+.landing-galaxy .lp-space-satellite[data-kind="rock"] {
+  width: 39px;
+  height: 31px;
+  clip-path: polygon(21% 4%, 72% 0, 100% 34%, 88% 81%, 43% 100%, 4% 66%, 0 28%);
+  background: linear-gradient(142deg, #bdabe0 0%, #574366 27%, #241a39 28%, #76628b 52%, #322241 53%, #1b172a 82%, #625371 83%);
+  box-shadow: inset 4px 4px 7px #d3bde92d;
+}
+.landing-galaxy .lp-space-satellite[data-kind="cube"], .landing-galaxy .lp-space-cube {
+  width: 29px;
+  height: 29px;
+  border: 1px solid #91e4ef9c;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #22d3ee15, #8b5cf60a);
+  box-shadow: inset 0 0 12px #22d3ee1a, 0 0 9px #22d3ee15;
+}
+.landing-galaxy .lp-space-satellite[data-kind="cube"]::before, .landing-galaxy .lp-space-cube::before {
+  content: "";
+  position: absolute;
+  inset: -7px 7px 7px -7px;
+  border: 1px solid #8b5cf680;
+  border-radius: 3px;
+}
+.landing-galaxy .lp-space-satellite[data-kind="cube"]::after, .landing-galaxy .lp-space-cube::after {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: 9px;
+  height: 1px;
+  background: #b6a0f0;
+  rotate: 45deg;
+  box-shadow: 20px 0 #b6a0f0, 0 20px #b6a0f0, 20px 20px #b6a0f0;
+}
+.landing-galaxy .lp-space-satellite[data-kind="probe"], .landing-galaxy .lp-space-probe {
+  width: 45px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid #907dcba6;
+  background: linear-gradient(90deg, #1c253e 0 29%, #b5b0d7 30% 39%, #352d51 40% 61%, #b5b0d7 62% 71%, #1c253e 72%);
+  box-shadow: 0 0 10px #22d3ee17;
+}
+.landing-galaxy .lp-space-satellite[data-kind="probe"]::before, .landing-galaxy .lp-space-probe::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: -10px;
+  width: 1px;
+  height: 10px;
+  background: #a295c6;
+}
+.landing-galaxy .lp-space-satellite[data-kind="probe"]::after, .landing-galaxy .lp-space-probe::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: -13px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #b4f1fa;
+  box-shadow: 0 0 9px #22d3ee99;
+}
+.landing-galaxy .lp-space-moon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 27% 25%, #cfb9e8 0%, #8a719b 20%, #554060 45%, #211c35 72%);
+  box-shadow: inset -5px -3px 9px #050611, 0 0 12px #8b5cf623;
+}
+.landing-galaxy .lp-space-satellite > i, .landing-galaxy .lp-space-satellite > b { display: none; }
+.landing-galaxy .lp-space-crystal { --sat-x: -175px; --sat-y: -130px; --sat-tilt: -18deg; }
+.landing-galaxy .lp-space-cube { --sat-x: 195px; --sat-y: -90px; --sat-tilt: 22deg; }
+.landing-galaxy .lp-space-probe { --sat-x: -190px; --sat-y: 135px; --sat-tilt: -12deg; }
+.landing-galaxy .lp-space-moon { --sat-x: 165px; --sat-y: 180px; }
+.landing-galaxy .lp-space-crystal.lp-space-small { --sat-x: 85px; --sat-y: -195px; --sat-scale: .65; }
+.landing-galaxy .lp-space-cube.lp-space-small { --sat-x: -110px; --sat-y: 220px; --sat-scale: .65; }
+
+.landing-galaxy [data-space-active="false"] *,
+.landing-galaxy [data-space-active="false"] *::before,
+.landing-galaxy [data-space-active="false"] *::after,
+.landing-galaxy[data-page-active="false"] *,
+.landing-galaxy[data-page-active="false"] *::before,
+.landing-galaxy[data-page-active="false"] *::after {
+  animation-play-state: paused !important;
+}
+
+@keyframes space-art-drift {
+  from { translate: 0 -5px; rotate: -.4deg; }
+  to { translate: 0 7px; rotate: .4deg; }
+}
+@keyframes space-small-drift {
+  from { translate: 0 -3px; }
+  to { translate: 0 5px; }
+}
+@keyframes space-ring-lean {
+  from { rotate: -5deg; }
+  to { rotate: 5deg; }
+}
+@keyframes space-aureole-drift {
+  from { translate: -4px -7px; rotate: -4deg; }
+  to { translate: 5px 8px; rotate: 4deg; }
+}
+
+@media (max-width: 480px) {
+  .landing-galaxy .lp-galaxy-scene[data-orbiting="true"] > .lp-source {
+    left: 50%;
+    width: 48%;
+    max-width: 170px;
+  }
+  .landing-galaxy .lp-space-satellite { left: 50%; }
+  .landing-galaxy .lp-space-satellite.lp-space-small { display: none; }
+  .landing-galaxy .lp-space-crystal { --sat-x: -100px; --sat-y: -95px; }
+  .landing-galaxy .lp-space-cube { --sat-x: 98px; --sat-y: -100px; }
+  .landing-galaxy .lp-space-probe { --sat-x: -85px; --sat-y: 115px; }
+  .landing-galaxy .lp-space-moon { --sat-x: 85px; --sat-y: 145px; }
+  .landing-galaxy .lp-workflow-illustration,
+  .landing-galaxy .lp-mini-list,
+  .landing-galaxy .lp-feature-chain,
+  .landing-galaxy .lp-feature-report { animation-name: space-mobile-drift; }
+}
+
+@keyframes space-mobile-drift {
+  from { translate: 0 -2px; rotate: -.2deg; }
+  to { translate: 0 3px; rotate: .2deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-galaxy .lp-galaxy-scene > .lp-source { will-change: auto; }
+  .landing-galaxy .lp-workflow-illustration,
+  .landing-galaxy .lp-mini-list,
+  .landing-galaxy .lp-feature-chain,
+  .landing-galaxy .lp-feature-report,
+  .landing-galaxy .lp-feature-icon,
+  .landing-galaxy .lp-handoff-core,
+  .landing-galaxy .lp-handoff-core > i,
+  .landing-galaxy .lp-final-orbit,
+  .landing-galaxy .lp-demo-video > .lp-road,
+  .landing-galaxy .lp-demo-chart { animation: none !important; translate: 0 0; rotate: 0deg; }
+}

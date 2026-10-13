@@ -1,0 +1,115 @@
+/* Subtle surface motion and local pointer light. The hero is intentionally untouched. */
+.landing-galaxy .lp-demo,
+.landing-galaxy .lp-workflow-console,
+.landing-galaxy .lp-feature-primary,
+.landing-galaxy .lp-feature-secondary,
+.landing-galaxy .lp-final-layout {
+  position: relative;
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-strength: 0;
+}
+
+.landing-galaxy .lp-demo::after,
+.landing-galaxy .lp-workflow-console::after,
+.landing-galaxy .lp-feature-primary::after,
+.landing-galaxy .lp-feature-secondary::after,
+.landing-galaxy .lp-final-layout::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: var(--glow-strength, 0);
+  background: radial-gradient(320px circle at var(--glow-x, 50%) var(--glow-y, 50%), #22d3ee18, #8b5cf614 38%, transparent 74%);
+  box-shadow: inset 0 0 0 1px #c3adff1a;
+  transition: opacity .35s ease;
+}
+
+.landing-galaxy .lp-demo,
+.landing-galaxy .lp-workflow-console,
+.landing-galaxy .lp-feature-primary,
+.landing-galaxy .lp-feature-secondary {
+  animation: polish-surface-float 17s ease-in-out infinite alternate;
+  transition: border-color .3s ease, box-shadow .3s ease;
+}
+.landing-galaxy .lp-workflow-console { animation-delay: -5s; animation-duration: 19s; }
+.landing-galaxy .lp-feature-primary { animation-delay: -8s; animation-duration: 20s; }
+.landing-galaxy .lp-feature-secondary { animation-delay: -3s; animation-duration: 16s; }
+.landing-galaxy .lp-feature-secondary:last-child { animation-delay: -10s; animation-duration: 21s; }
+
+.landing-galaxy .lp-demo:focus-within,
+.landing-galaxy .lp-workflow-console:focus-within,
+.landing-galaxy .lp-feature-primary:focus-within,
+.landing-galaxy .lp-feature-secondary:focus-within {
+  animation-play-state: paused;
+  border-color: #aa91d782;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .landing-galaxy .lp-demo:hover,
+  .landing-galaxy .lp-workflow-console:hover,
+  .landing-galaxy .lp-feature-primary:hover,
+  .landing-galaxy .lp-feature-secondary:hover {
+    animation-play-state: paused;
+    border-color: #b191e46b;
+  }
+}
+
+.landing-galaxy[data-page-active="false"] .lp-demo,
+.landing-galaxy[data-page-active="false"] .lp-workflow-console,
+.landing-galaxy[data-page-active="false"] .lp-feature-primary,
+.landing-galaxy[data-page-active="false"] .lp-feature-secondary,
+.landing-galaxy [data-space-active="false"] .lp-demo,
+.landing-galaxy [data-space-active="false"] .lp-workflow-console,
+.landing-galaxy [data-space-active="false"] .lp-feature-primary,
+.landing-galaxy [data-space-active="false"] .lp-feature-secondary,
+.landing-galaxy .lp-demo[data-space-active="false"],
+.landing-galaxy .lp-workflow-console[data-space-active="false"] {
+  animation-play-state: paused !important;
+}
+
+@keyframes polish-surface-float {
+  from { translate: 0 -2px; }
+  to { translate: 0 3px; }
+}
+
+@media (max-width: 768px) {
+  .landing-galaxy .lp-demo,
+  .landing-galaxy .lp-workflow-console,
+  .landing-galaxy .lp-feature-primary,
+  .landing-galaxy .lp-feature-secondary { animation-name: polish-surface-mobile; }
+}
+@keyframes polish-surface-mobile {
+  from { translate: 0 -1px; }
+  to { translate: 0 2px; }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .landing-galaxy .lp-demo,
+  .landing-galaxy .lp-workflow-console,
+  .landing-galaxy .lp-feature-primary,
+  .landing-galaxy .lp-feature-secondary { animation: none; translate: 0 0; }
+  .landing-galaxy .lp-demo::after,
+  .landing-galaxy .lp-workflow-console::after,
+  .landing-galaxy .lp-feature-primary::after,
+  .landing-galaxy .lp-feature-secondary::after,
+  .landing-galaxy .lp-final-layout::after { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-galaxy .lp-demo,
+  .landing-galaxy .lp-workflow-console,
+  .landing-galaxy .lp-feature-primary,
+  .landing-galaxy .lp-feature-secondary {
+    animation: none !important;
+    translate: 0 0;
+    transition: none;
+  }
+  .landing-galaxy .lp-demo::after,
+  .landing-galaxy .lp-workflow-console::after,
+  .landing-galaxy .lp-feature-primary::after,
+  .landing-galaxy .lp-feature-secondary::after,
+  .landing-galaxy .lp-final-layout::after { transition: none; }
+}
