@@ -17,6 +17,7 @@ from backend.db import session_scope
 from backend.errors import ApiError
 from backend.models.contracts import IncidentRecordV1
 from backend.models.tables import AuditEvent, Incident
+from backend.services.access import Principal, require_permission
 from backend.services.errors import IncidentIngestionError
 from backend.services.storage import LocalStorage
 from backend.services.telemetry import TelemetryError, parse_telemetry
@@ -33,7 +34,8 @@ def _ingestion_error(exc: IncidentIngestionError) -> ApiError:
     return ApiError("INTERNAL_ERROR", "Incident ingestion failed.", 500)
 
 
-def create_incident(video: UploadFile, log: UploadFile | None = None, *, sync_offset_s: float | None = None, sync_metadata: UploadFile | None = None) -> dict:
+def create_incident(video: UploadFile, log: UploadFile | None = None, *, principal: Principal, sync_offset_s: float | None = None, sync_metadata: UploadFile | None = None) -> dict:
+    require_permission(principal, "incident:create")
     settings = get_settings()
     storage = LocalStorage(settings.incident_storage_dir)
     video_service = VideoService(settings.ffprobe_bin, settings.ffmpeg_bin)
@@ -96,7 +98,7 @@ def create_incident(video: UploadFile, log: UploadFile | None = None, *, sync_of
             )
             session.add(incident)
             session.flush()
-            session.add(AuditEvent(incident_id=incident.id, action="INCIDENT_CREATED", actor="system", event_metadata={}))
+            session.add(AuditEvent(incident_id=incident.id, action="INCIDENT_CREATED", actor=str(principal.user_id), event_metadata={}))
         return {
             "incident_id": incident_id,
             "processing_status": "READY",

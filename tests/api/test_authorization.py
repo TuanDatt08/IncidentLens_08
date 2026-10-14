@@ -59,6 +59,8 @@ def test_missing_invalid_or_expired_identity_is_401(identity_key, kind):
 def test_local_signing_fixture_cannot_enable_production(identity_key, monkeypatch):
     module = importlib.import_module("backend.services.identity")
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("AUTH_COOKIE_SECURE", "true")
+    monkeypatch.setenv("CORS_ORIGINS", "https://incidentlens.example.com")
     get_settings.cache_clear()
     with pytest.raises(ApiError) as exc:
         module.authenticate("Bearer " + signed_identity(identity_key))

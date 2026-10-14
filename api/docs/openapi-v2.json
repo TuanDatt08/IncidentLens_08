@@ -2372,6 +2372,70 @@
         ],
         "title": "Body_upload_incident_api_v1_incidents_upload_post"
       },
+      "ChangePassword": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Current Password"
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 6,
+            "title": "New Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePassword"
+      },
+      "CreateUser": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Display Name"
+          },
+          "roles": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "engineer",
+                "reviewer",
+                "admin"
+              ]
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "temporary_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 6,
+            "title": "Temporary Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email",
+          "display_name",
+          "roles",
+          "temporary_password"
+        ],
+        "title": "CreateUser"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2600,6 +2664,27 @@
         ],
         "title": "JobResponse"
       },
+      "Login": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "Login"
+      },
       "RejectRequest": {
         "properties": {
           "reason": {
@@ -2786,6 +2871,22 @@
         "title": "ReportPatch",
         "description": "Engineer-editable fields confirmed for the MVP demo."
       },
+      "ResetPassword": {
+        "properties": {
+          "temporary_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 6,
+            "title": "Temporary Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "temporary_password"
+        ],
+        "title": "ResetPassword"
+      },
       "ReviewActionResponse": {
         "properties": {
           "incident_id": {
@@ -2907,6 +3008,56 @@
           "expected_version"
         ],
         "title": "TransitionV2"
+      },
+      "UpdateUser": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "roles": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "engineer",
+                    "reviewer",
+                    "admin"
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roles"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "UpdateUser"
       },
       "UploadRequestV2": {
         "properties": {

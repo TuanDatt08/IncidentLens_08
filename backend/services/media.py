@@ -10,7 +10,7 @@ from backend.config import get_settings
 from backend.db import session_scope
 from backend.errors import ApiError
 from backend.models.tables import Evidence, Incident
-from backend.services.access import require_demo_access
+from backend.services.access import Principal, require_permission
 
 
 def _resolve_asset(incident_id: str, uri: str) -> Path:
@@ -23,8 +23,8 @@ def _resolve_asset(incident_id: str, uri: str) -> Path:
     return path
 
 
-def source_video(incident_id: str) -> tuple[Path, str]:
-    require_demo_access()
+def source_video(incident_id: str, *, principal: Principal) -> tuple[Path, str]:
+    require_permission(principal, "incident:read")
     with session_scope() as session:
         incident = session.scalar(select(Incident).where(Incident.incident_id == incident_id))
         if incident is None:
@@ -32,8 +32,19 @@ def source_video(incident_id: str) -> tuple[Path, str]:
         return _resolve_asset(incident_id, incident.video_uri), "video/mp4"
 
 
-def evidence_asset(incident_id: str, evidence_id: str) -> tuple[Path, str]:
-    require_demo_access()
+def source_telemetry(incident_id: str, *, principal: Principal) -> tuple[Path, str]:
+    require_permission(principal, "incident:read")
+    with session_scope() as session:
+        incident = session.scalar(select(Incident).where(Incident.incident_id == incident_id))
+        if incident is None:
+            raise ApiError("INCIDENT_NOT_FOUND", "Incident was not found.", 404)
+        if not incident.telemetry_uri:
+            raise ApiError("MEDIA_NOT_FOUND", "Media is not available.", 404)
+        return _resolve_asset(incident_id, incident.telemetry_uri), "text/csv"
+
+
+def evidence_asset(incident_id: str, evidence_id: str, *, principal: Principal) -> tuple[Path, str]:
+    require_permission(principal, "incident:read")
     with session_scope() as session:
         incident = session.scalar(select(Incident).where(Incident.incident_id == incident_id))
         if incident is None:

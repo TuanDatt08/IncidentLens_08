@@ -43,6 +43,12 @@ def test_both_adapters_share_schema_filter_telemetry_and_record_provenance(tmp_p
     assert "gps" not in json.dumps(requests)
     assert "private" not in json.dumps(requests)
     assert requests[0]["model"] == "fixture-model"
+    if kind == "self_hosted":
+        branches = requests[0]["response_format"]["json_schema"]["schema"]["anyOf"]
+        absent = next(branch for branch in branches if branch["properties"]["incident_detected"]["const"] is False)
+        assert absent["properties"]["window"] == {"type": "null"}
+        assert absent["properties"]["timeline"]["maxItems"] == 0
+        assert absent["properties"]["factors"]["maxItems"] == 0
 
 
 @pytest.mark.parametrize("kind", ["external_api", "self_hosted"])

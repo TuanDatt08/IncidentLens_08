@@ -35,7 +35,26 @@
     "**/*.ts",
     "**/*.tsx",
     ".next-task10/types/**/*.ts",
-    ".next-task10-clean/types/**/*.ts"
+    ".next-task10-clean/types/**/*.ts",
+    ".next/ui-e2e/types/**/*.ts",
+    ".next/ui-build/types/**/*.ts",
+    ".next/ui-responsive/types/**/*.ts",
+    ".next/fe-auth-validation/types/**/*.ts",
+    ".next/landing-auth-verify/types/**/*.ts",
+    ".next/landing-build/types/**/*.ts",
+    ".next/redesign-verify/types/**/*.ts",
+    ".next/redesign-build/types/**/*.ts",
+    ".next/galaxy-auth/types/**/*.ts",
+    ".next/galaxy-build/types/**/*.ts",
+    ".next/galaxy-orbit-build/types/**/*.ts",
+    ".next/test-system/types/**/*.ts",
+    ".next/galaxy-space-build/types/**/*.ts",
+    ".next/upload-build/types/**/*.ts",
+    ".next/ux-focused-build/types/**/*.ts",
+    ".next/theme-verify/types/**/*.ts",
+    ".next/pinned-verify/types/**/*.ts",
+    ".next/pinned-build/types/**/*.ts",
+    ".next/structured-dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

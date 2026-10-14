@@ -8,6 +8,7 @@ from backend.models.contracts import EvidenceV1
 from backend.services.jobs import claim_job, fail_job, get_job, heartbeat
 from backend.services.video import VideoProbeResult, VideoService
 from backend.worker import run_once
+from tests.api.test_auth import login
 
 
 @pytest.fixture(autouse=True)
@@ -86,8 +87,11 @@ async def test_review_requires_report_and_valid_transition_order(db_client):
 
     job_id = (await db_client.post(f"/api/v1/incidents/{incident_id}/analyze")).json()["job_id"]
     assert run_once(vlm=DemoVLM(), job_id=job_id)
+    await login(db_client, "reviewer@example.com")
     assert (await db_client.post(f"{report_url}/approve")).status_code == 409
+    await login(db_client)
     assert (await db_client.post(f"{report_url}/submit")).json()["status"] == "IN_REVIEW"
+    await login(db_client, "reviewer@example.com")
     assert (await db_client.post(f"{report_url}/reject", json={"reason": "  "})).status_code == 422
     assert (await db_client.post(f"{report_url}/approve")).json()["status"] == "APPROVED"
     assert (await db_client.post(f"{report_url}/reject", json={"reason": "too late"})).status_code == 409

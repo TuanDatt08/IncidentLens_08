@@ -1,15 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { V2_WORKSPACE_ENABLED } from "@/lib/config";
+import { V2WorkspaceUnavailable } from "@/components/auth/v2-workspace-gate";
 import { useCallback, useEffect, useState } from "react";
 import { RecordingUpload } from "@/components/incidents/recording-upload";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { v2Error, v2Request } from "@/services/v2.service";
 import type { PageV2, SessionV2 } from "@/types/v2";
 
 type Recording = { recording_id: string; duration_s: number };
 
 export default function Recordings() {
+  return V2_WORKSPACE_ENABLED ? <EnabledRecordings /> : <V2WorkspaceUnavailable />;
+}
+
+function EnabledRecordings() {
   const [items, setItems] = useState<Recording[]>([]);
   const [session, setSession] = useState<SessionV2>();
   const [cursor, setCursor] = useState<string | null>(null);
@@ -25,11 +32,13 @@ export default function Recordings() {
   }, []);
   useEffect(() => { void load(); }, [load]);
   return <div className="mx-auto max-w-5xl space-y-6">
-    <div className="flex flex-wrap items-center justify-between gap-4"><h1 className="text-3xl font-bold text-vf-navy">Recordings</h1><Button variant="ghost" onClick={() => void load()} disabled={loading}>Refresh</Button></div>
-    {loading && <p role="status">Loading recordings…</p>}
-    {error && <p role="alert" className="text-red-700">{error}</p>}
-    {!loading && !error && items.length === 0 && <p className="text-slate-600">No recordings are available in your scope.</p>}
-    <ul className="divide-y divide-slate-200">{items.map((item) => <li key={item.recording_id} className="flex flex-wrap justify-between gap-3 py-4"><Link href={`/recordings/${encodeURIComponent(item.recording_id)}`} className="font-bold text-vf-primary underline underline-offset-4">{item.recording_id}</Link><span className="tabular-nums text-slate-600">{item.duration_s.toFixed(1)} seconds</span></li>)}</ul>
+    <PageHeader title="Recordings" description="Upload recordings, follow analysis and inspect candidate incidents." action={<Button variant="secondary" onClick={() => void load()} disabled={loading}>{loading ? "Refreshing…" : error ? "Retry" : "Refresh"}</Button>} />
+    <section className="recording-list" aria-label="Available recordings" aria-busy={loading}>
+      {loading && <p role="status" className="recording-list-status">Loading recordings…</p>}
+      {error && <p role="alert" className="auth-error m-4">{error}</p>}
+      {!loading && !error && items.length === 0 && <div className="recording-list-status"><h2 className="font-semibold">No recordings yet</h2><p className="mt-2 text-sm text-slate-600">{session?.roles.includes("Engineer") ? "Upload a recording below to begin." : "Recordings will appear here when they are available in your scope."}</p></div>}
+      <ul>{items.map((item) => <li key={item.recording_id}><Link href={`/recordings/${encodeURIComponent(item.recording_id)}`}><strong>{item.recording_id}</strong><span className="tabular-nums">{item.duration_s.toFixed(1)} seconds <span aria-hidden="true">→</span></span></Link></li>)}</ul>
+    </section>
     {cursor && <Button onClick={() => void load(cursor)} disabled={loading}>Load more recordings</Button>}
     {session?.roles.includes("Engineer") && <RecordingUpload onComplete={() => void load()} />}
   </div>;

@@ -25,6 +25,16 @@ export type IncidentDraft = {
   rejection_reason?: string;
 };
 
+export type AnalysisCoverage = {
+  state: "available" | "unknown";
+  time_basis: "video_seconds";
+  duration_s: number | null;
+  sampled_timestamps_s: number[];
+  sampled_frame_count: number | null;
+  telemetry_alignment: string;
+  limitations: string[];
+};
+
 export type IncidentRecord = {
   incident_id: string;
   processing_status: ProcessingStatus;
@@ -67,6 +77,6 @@ export type UploadIncidentResponse = {
 export type UploadIncidentInput = {
   video: File;
   log?: File;
-  syncOffset?: number;
-  syncMetadata?: File;
+    syncOffset?: number;
+    syncMetadata?: File;
 };

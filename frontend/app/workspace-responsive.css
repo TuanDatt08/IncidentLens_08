@@ -1,0 +1,104 @@
+/* Keep workspace navigation and identifiers usable at narrow/reflow widths. */
+header[class]:has(nav) {
+  height: auto;
+}
+
+header[class]:has(nav) > div {
+  height: auto;
+  min-height: 56px;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+header:has(nav) > div > a,
+header nav a,
+header nav summary,
+header nav button {
+  min-height: 44px;
+}
+
+header nav a {
+  align-content: center;
+}
+
+header nav {
+  flex-wrap: wrap;
+}
+
+header nav details > div {
+  max-width: calc(100vw - 24px);
+}
+
+main a[href^='/recordings/'] {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+
+main a[href^='/incidents/'] > div > div,
+main td:first-child a[href^='/incidents/'] > span:last-child {
+  min-width: 0;
+  flex: 1;
+}
+
+main a[href^='/incidents/'] > div > div > p:first-child,
+main td:first-child a[href^='/incidents/'] > span:last-child > span:first-child {
+  overflow-wrap: anywhere;
+}
+
+main a[href^='/incidents/'] > div > svg,
+main td:first-child a[href^='/incidents/'] > span:first-child {
+  flex-shrink: 0;
+}
+
+main [aria-label='Filter incidents by processing status'] {
+  flex-wrap: wrap;
+}
+
+main [aria-label='Filter incidents by processing status'] button,
+main section:has([aria-label='Filter incidents by processing status']) > div:last-child > button {
+  min-height: 44px;
+}
+
+main section:has([aria-label='Filter incidents by processing status']) td:last-child a {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+main section:has([aria-label='Filter incidents by processing status']) > div:first-child {
+  flex-wrap: wrap;
+}
+
+main section:has([aria-label='Filter incidents by processing status']) > div:first-child > div:last-child {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+main section:has([aria-label='Filter incidents by processing status']) table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+main section:has([aria-label='Filter incidents by processing status']) th:first-child {
+  width: 45%;
+}
+
+main section:has([aria-label='Filter incidents by processing status']) th:last-child {
+  width: 12%;
+}
+
+@media (max-width: 1023px) {
+  header nav {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 639px) {
+  header nav {
+    justify-content: space-between;
+  }
+}

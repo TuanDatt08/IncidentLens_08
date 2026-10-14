@@ -6,7 +6,7 @@ import math
 
 from backend.config import get_settings
 from backend.errors import ApiError
-from backend.services.access import require_demo_access
+from backend.services.access import Principal, require_permission
 from backend.services.incidents import get_incident
 from backend.services.log_normalization import normalize_log
 from backend.services.media import _resolve_asset
@@ -31,15 +31,26 @@ def chart_points(rows):
     return [points[i] for i in sorted(selected)]
 
 
-def get_review_context(incident_id):
-    require_demo_access()
+def get_review_context(incident_id, *, principal: Principal):
+    require_permission(principal, "incident:read")
     incident = get_incident(incident_id)
     metadata = get_model_metadata(incident_id)
-    draft = metadata.get('draft_v2') or metadata.get('draft_v3') or {}
+    draft = metadata.get('draft_v3') or metadata.get('draft_v2') or {}
+    # V3 stores several independent analyses in a pipeline bundle. Expose the
+    # original validated objects without rebasing their video timestamps or
+    # mixing model suggestions into the engineer's editable report.
+    analyses = [item for item in draft.get('stage_b', []) if isinstance(item, dict)]
+    if draft.get('schema_version') == 'incident_analysis_v3':
+        analyses = [draft]
+    primary_analysis = next((item for item in analyses if item.get('analysis_status') == 'CONFIRMED'), analyses[0] if analyses else None)
+    summary = primary_analysis.get('summary') if primary_analysis else draft.get('summary')
+    warnings = list(dict.fromkeys([*(draft.get('unknowns') or metadata.get('unknowns', [])),
+                                  *(warning for item in analyses for warning in item.get('unknowns', []))]))
     checks = metadata.get('consistency_checks', [])
     result = {'review_required': metadata.get('detection_state') == 'REVIEW_REQUIRED_TELEMETRY_CONFLICT' or any('MODEL_TELEMETRY_CONFLICT' in str(item) for item in metadata.get('unknowns', [])),
-              'detection_state': metadata.get('detection_state'), 'summary': draft.get('summary'), 'model_output': draft,
-              'warnings': draft.get('unknowns') or metadata.get('unknowns', []), 'consistency_checks': checks,
+              'detection_state': metadata.get('detection_state'), 'summary': summary, 'model_output': draft,
+              'analyses': analyses, 'primary_analysis': primary_analysis,
+              'warnings': warnings, 'consistency_checks': checks,
               'time_basis': 'video_seconds', 'alignment': 'UNKNOWN', 'points': [], 'windows': [], 'telemetry_error': None}
     if not incident.get('telemetry_uri'):
         result['telemetry_error'] = 'Không có telemetry để vẽ biểu đồ.'

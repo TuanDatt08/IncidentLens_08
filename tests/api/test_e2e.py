@@ -10,6 +10,7 @@ from backend.models.contracts import AnalysisResult, LocalizationResult
 from backend.models.tables import AnalysisReport, Incident, ReportVersion
 from backend.services.video import VideoProbeResult, VideoService
 from backend.worker import run_once
+from tests.api.test_auth import login
 
 
 class IncidentVLM:
@@ -87,6 +88,9 @@ async def test_upload_poll_edit_review_and_media(db_client):
     assert any(item["kind"] == "video" and item["time_range_s"] == [-1.0, 1.0] for item in evidence)
     video = await db_client.get(f"/api/v1/incidents/{incident_id}/video")
     assert video.status_code == 200 and video.content == b"source-video"
+    telemetry = await db_client.get(f"/api/v1/incidents/{incident_id}/telemetry")
+    assert telemetry.status_code == 200
+    assert telemetry.content == b"sec_from_incident,sim_time_s\n-1,9\n0,10\n1,11\n"
     seek = await db_client.get(f"/api/v1/incidents/{incident_id}/video", headers={"Range": "bytes=0-5"})
     assert seek.status_code == 206 and seek.content == b"source"
     clip = next(item for item in evidence if item["kind"] == "video")
@@ -111,6 +115,7 @@ async def test_upload_poll_edit_review_and_media(db_client):
     assert forbidden_field.status_code == 422
     submitted = await db_client.post(f"{report_url}/submit")
     assert submitted.status_code == 200 and submitted.json()["status"] == "IN_REVIEW"
+    await login(db_client, "reviewer@example.com")
     approved = await db_client.post(f"{report_url}/approve")
     assert approved.status_code == 200 and approved.json()["status"] == "APPROVED"
     assert (await db_client.post(f"{report_url}/reject", json={"reason": "late"})).status_code == 409
@@ -126,9 +131,11 @@ async def test_reject_requires_reason_and_keeps_rejected_state(db_client):
     assert run_once(vlm=IncidentVLM())
     report_url = f"/api/v1/incidents/{incident_id}/report"
     await db_client.post(f"{report_url}/submit")
+    await login(db_client, "reviewer@example.com")
     assert (await db_client.post(f"{report_url}/reject", json={"reason": "  "})).status_code == 422
     rejected = await db_client.post(f"{report_url}/reject", json={"reason": "Evidence needs review"})
     assert rejected.status_code == 200 and rejected.json()["status"] == "REJECTED"
+    await login(db_client)
     assert (await db_client.patch(report_url, json={"version": 1, "summary": "late"})).status_code == 409
     audit = (await db_client.get(f"/api/v1/incidents/{incident_id}/audit")).json()["items"]
     assert audit[-1]["metadata"]["reason"] == "Evidence needs review"
@@ -155,10 +162,23 @@ async def test_no_incident_is_success_with_empty_report(db_client):
 async def test_review_and_media_are_closed_in_production_without_auth(db_client, monkeypatch):
     incident_id = await upload(db_client)
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("AUTH_COOKIE_SECURE", "true")
+    monkeypatch.setenv("CORS_ORIGINS", "https://incidentlens.example.com")
     get_settings.cache_clear()
     report_url = f"/api/v1/incidents/{incident_id}/report"
-    assert (await db_client.get(f"/api/v1/incidents/{incident_id}/video")).status_code == 403
-    assert (await db_client.patch(report_url, json={"version": 1, "summary": "x"})).status_code == 403
+    assert (await db_client.get(f"/api/v1/incidents/{incident_id}/video")).status_code == 401
+    assert (await db_client.get(f"/api/v1/incidents/{incident_id}/telemetry")).status_code == 401
+    assert (await db_client.patch(report_url, json={"version": 1, "summary": "x"})).status_code == 401
+    from httpx import ASGITransport, AsyncClient
+
+    from api.main import app
+    from tests.api.test_auth import PASSWORD
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="https://incidentlens.example.com") as secure:
+        response = await secure.post("/api/v1/auth/login", json={"email": "engineer@example.com", "password": PASSWORD}, headers={"Origin": "https://incidentlens.example.com"})
+        assert response.status_code == 200
+        cookie = response.headers["set-cookie"]
+        assert "__Host-incidentlens_session=" in cookie and "Secure" in cookie and "Domain=" not in cookie
+        assert (await secure.get(f"/api/v1/incidents/{incident_id}/video")).status_code == 200
     get_settings.cache_clear()
 
 
@@ -171,6 +191,10 @@ async def test_media_route_rejects_storage_path_escape(db_client):
     response = await db_client.get(f"/api/v1/incidents/{incident_id}/video")
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "MEDIA_NOT_FOUND"
+    with session_scope() as session:
+        incident = session.scalar(select(Incident).where(Incident.incident_id == incident_id))
+        incident.telemetry_uri = "../outside.csv"
+    assert (await db_client.get(f"/api/v1/incidents/{incident_id}/telemetry")).status_code == 404
 
 
 @pytest.mark.asyncio

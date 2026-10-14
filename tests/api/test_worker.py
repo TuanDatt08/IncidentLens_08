@@ -46,8 +46,8 @@ async def test_slow_vlm_keeps_job_lease_alive(db_client, monkeypatch):
         return destination
 
     monkeypatch.setattr(VideoService, "extract_frame", frame)
-    incident_id = create_incident(UploadFile(file=BytesIO(b"video"), filename="clip.mp4"))["incident_id"]
-    job_id = create_job(incident_id)["job_id"]
+    incident_id = create_incident(UploadFile(file=BytesIO(b"video"), filename="clip.mp4"), principal=db_client.principal)["incident_id"]
+    job_id = create_job(incident_id, principal=db_client.principal)["job_id"]
     started = Event()
     release = Event()
 
@@ -83,8 +83,8 @@ async def test_claim_is_single_and_failed_job_is_terminal(db_client, monkeypatch
     from starlette.datastructures import UploadFile
 
     monkeypatch.setattr(VideoService, "probe", lambda self, path: VideoProbeResult(10, 30, 320, 240))
-    incident_id = create_incident(UploadFile(file=BytesIO(b"video"), filename="clip.mp4"))["incident_id"]
-    job_id = create_job(incident_id)["job_id"]
+    incident_id = create_incident(UploadFile(file=BytesIO(b"video"), filename="clip.mp4"), principal=db_client.principal)["incident_id"]
+    job_id = create_job(incident_id, principal=db_client.principal)["job_id"]
     first = claim_job()
     assert first.job_id == job_id
     assert claim_job() is None
@@ -103,8 +103,8 @@ async def test_reclaimed_job_rejects_stale_worker_updates(db_client, monkeypatch
     from starlette.datastructures import UploadFile
 
     monkeypatch.setattr(VideoService, "probe", lambda self, path: VideoProbeResult(10, 30, 320, 240))
-    incident_id = create_incident(UploadFile(file=BytesIO(b"video"), filename="clip.mp4"))["incident_id"]
-    job_id = create_job(incident_id)["job_id"]
+    incident_id = create_incident(UploadFile(file=BytesIO(b"video"), filename="clip.mp4"), principal=db_client.principal)["incident_id"]
+    job_id = create_job(incident_id, principal=db_client.principal)["job_id"]
     first = claim_job()
     with session_scope() as session:
         job = session.scalar(select(Job).where(Job.job_id == job_id))
@@ -127,8 +127,8 @@ async def test_expired_lease_retries_then_fails_after_limit(db_client, monkeypat
     from starlette.datastructures import UploadFile
 
     monkeypatch.setattr(VideoService, "probe", lambda self, path: VideoProbeResult(10, 30, 320, 240))
-    incident_id = create_incident(UploadFile(file=BytesIO(b"video"), filename="clip.mp4"))["incident_id"]
-    job_id = create_job(incident_id)["job_id"]
+    incident_id = create_incident(UploadFile(file=BytesIO(b"video"), filename="clip.mp4"), principal=db_client.principal)["incident_id"]
+    job_id = create_job(incident_id, principal=db_client.principal)["job_id"]
     for attempt in range(1, 4):
         claimed = claim_job()
         assert claimed.job_id == job_id
@@ -162,8 +162,8 @@ async def test_v1_default_worker_uses_local_pipeline_without_openai(db_client, m
         return destination
     monkeypatch.setattr(VideoService, "extract_frame", output)
     monkeypatch.setattr(VideoService, "extract_clip", output)
-    incident = create_incident(UploadFile(file=BytesIO(b"video"), filename="video.mp4"), UploadFile(file=BytesIO(b"sec_from_incident,brake\n0,0\n10,1\n11,0\n20,0\n"), filename="log.csv"))
-    job = create_job(incident["incident_id"])
+    incident = create_incident(UploadFile(file=BytesIO(b"video"), filename="video.mp4"), UploadFile(file=BytesIO(b"sec_from_incident,brake\n0,0\n10,1\n11,0\n20,0\n"), filename="log.csv"), principal=db_client.principal)
+    job = create_job(incident["incident_id"], principal=db_client.principal)
     calls = []
     class Local:
         def analyze(self, context):

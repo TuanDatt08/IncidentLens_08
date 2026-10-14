@@ -121,3 +121,11 @@ def test_missing_video_collision_offset_rejects_unsafe_timestamp_mapping(tmp_pat
     with pytest.raises(InsufficientEvidence):
         process_incident(incident, storage_root=root, vlm=fake)
     assert fake.pass2_calls == 0
+
+@pytest.mark.parametrize('metadata', [{'duration': 1.0, 'fps': 2.0}, {'duration': 0.1, 'fps': 10.0}, {'duration': 10.0, 'fps': 30.0}])
+def test_scan_times_are_unique_ordered_and_decodable(metadata):
+    from backend.services.processing import pass1_sample_times
+    times = pass1_sample_times(metadata)
+    assert times == sorted(set(times))
+    assert times[0] == 0.0
+    assert all(0 <= value <= max(0, metadata['duration'] - 1.5 / metadata['fps']) for value in times)

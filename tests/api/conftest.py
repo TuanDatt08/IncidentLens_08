@@ -8,7 +8,7 @@ from api.main import app
 
 
 @pytest_asyncio.fixture
-async def db_client(tmp_path, monkeypatch):
+async def auth_client(tmp_path, monkeypatch):
     """Real HTTP routes against an Alembic-created isolated SQL database."""
     from alembic import command
     from alembic.config import Config
@@ -20,6 +20,9 @@ async def db_client(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", url)
     monkeypatch.setenv("DATABASE_CLOUD", "false")
     monkeypatch.setenv("INCIDENT_STORAGE_DIR", str(tmp_path / "storage"))
+    monkeypatch.setenv("APP_ENV", "test")
+    monkeypatch.setenv("AUTH_COOKIE_SECURE", "false")
+    monkeypatch.setenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
     get_settings.cache_clear()
     get_session_factory.cache_clear()
     config = Config("alembic.ini")
@@ -30,6 +33,18 @@ async def db_client(tmp_path, monkeypatch):
         yield ac
     get_session_factory.cache_clear()
     get_settings.cache_clear()
+
+
+@pytest_asyncio.fixture
+async def db_client(auth_client):
+    """Existing business tests authenticate real DB accounts, never bypass auth."""
+    from backend.services.access import Principal
+    from tests.api.test_auth import login, seed_user
+    user_id = seed_user()
+    seed_user("reviewer@example.com", ["reviewer"])
+    await login(auth_client)
+    auth_client.principal = Principal(user_id, frozenset({"engineer"}), False)
+    yield auth_client
 
 
 @pytest_asyncio.fixture
