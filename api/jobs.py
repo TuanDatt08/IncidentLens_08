@@ -3,24 +3,26 @@ import json
 import re
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
+from api.dependencies import permission
 from backend.config import get_settings
 from backend.db import session_scope
 from backend.models.contracts import AnalyzeAccepted, JobResponse
 from backend.models.tables import Incident, Job
+from backend.services.access import Principal
 from backend.services.incidents import get_incident
 from backend.services.jobs import create_job, get_job
 from backend.services.pipeline_status import read_status
 
-router = APIRouter(tags=["jobs"])
+router = APIRouter(tags=["jobs"], dependencies=[Depends(permission("incident:read"))])
 
 
 @router.post("/incidents/{incident_id}/analyze", status_code=202, response_model=AnalyzeAccepted)
-async def analyze_incident(incident_id: str):
-    return await run_in_threadpool(create_job, incident_id)
+async def analyze_incident(incident_id: str, principal: Principal = Depends(permission("analysis:create"))):
+    return await run_in_threadpool(create_job, incident_id, principal=principal)
 
 
 @router.get("/jobs/{job_id}", response_model=JobResponse)

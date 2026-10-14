@@ -1,6 +1,6 @@
-import { ApiError, apiRequest, parseApiError } from "@/lib/api-client";
-import { API_BASE_URL, USE_MOCK_API } from "@/lib/config";
-import type { IncidentDraft, ReviewState } from "@/types/incident";
+import { ApiError, apiRequest } from "@/lib/api-client";
+import { USE_MOCK_API } from "@/lib/config";
+import type { AnalysisCoverage, IncidentDraft, ReviewState } from "@/types/incident";
 import type { ReportActionResponse, ReportPatch } from "@/types/report";
 import { mockStore } from "./mock-data";
 
@@ -11,13 +11,18 @@ export class ReportConflictError extends ApiError {
   }
 }
 
-export async function getIncidentReport(id: string): Promise<IncidentDraft> {
+export async function getAnalysisCoverage(id: string): Promise<AnalysisCoverage> {
+  if (USE_MOCK_API) return { state: "unknown", time_basis: "video_seconds", duration_s: null, sampled_timestamps_s: [], sampled_frame_count: null, telemetry_alignment: "UNKNOWN", limitations: ["Mock data does not establish analysis coverage."] };
+  return apiRequest(`/incidents/${encodeURIComponent(id)}/analysis-coverage`);
+}
+
+export async function getIncidentReport(id: string, signal?: AbortSignal): Promise<IncidentDraft> {
   if (USE_MOCK_API) {
     const report = mockStore.getDraft(id);
     if (!report) throw new Error("Incident report could not be found.");
     return report;
   }
-  return apiRequest<IncidentDraft>(`/incidents/${encodeURIComponent(id)}/report`);
+  return apiRequest<IncidentDraft>(`/incidents/${encodeURIComponent(id)}/report`, { signal });
 }
 
 export async function updateReport(id: string, patch: ReportPatch): Promise<IncidentDraft> {
@@ -26,14 +31,12 @@ export async function updateReport(id: string, patch: ReportPatch): Promise<Inci
     if (current && patch.version !== current.version) throw new ReportConflictError("Report version is stale.", current.version);
     return mockStore.updateReport(id, patch);
   }
-  const response = await fetch(`${API_BASE_URL}/incidents/${encodeURIComponent(id)}/report`, {
+  try { return await apiRequest<IncidentDraft>(`/incidents/${encodeURIComponent(id)}/report`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
-  });
-  if (!response.ok) {
-    const error = await parseApiError(response);
-    if (response.status === 409) {
+  }); } catch (error) {
+    if (error instanceof ApiError && error.status === 409) {
       const details = error.details;
       const currentVersion = details && typeof details === "object" && "current_version" in details && typeof details.current_version === "number"
         ? details.current_version
@@ -42,7 +45,6 @@ export async function updateReport(id: string, patch: ReportPatch): Promise<Inci
     }
     throw error;
   }
-  return response.json() as Promise<IncidentDraft>;
 }
 
 export async function submitReport(id: string): Promise<ReportActionResponse> {

@@ -12,6 +12,7 @@ from backend.errors import ApiError
 async def api_error_handler(request: Request, exc: ApiError) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
+        headers={"Retry-After": str(exc.details["retry_after"])} if exc.code == "RATE_LIMITED" else None,
         content={"error": {"code": exc.code, "message": exc.message, "details": exc.details}},
     )
 
@@ -25,9 +26,10 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 async def http_error_handler(request: Request, exc: HTTPException) -> JSONResponse:
     code = "INTERNAL_ERROR" if exc.status_code >= 500 else "INVALID_REQUEST"
     message = "Internal server error." if exc.status_code >= 500 else str(exc.detail)
-    return JSONResponse(status_code=exc.status_code, content={"error": {"code": code, "message": message, "details": None}})
+    return JSONResponse(status_code=exc.status_code,
+        headers=exc.headers, content={"error": {"code": code, "message": message, "details": None}})
 
 
 async def internal_error_handler(request: Request, exc: Exception) -> JSONResponse:
     logging.getLogger(__name__).exception("Unhandled API error", exc_info=exc)
-    return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL_ERROR", "message": "Internal server error.", "details": None}})
+    return JSONResponse(status_code=500, headers={"Cache-Control": "no-store"}, content={"error": {"code": "INTERNAL_ERROR", "message": "Internal server error.", "details": None}})

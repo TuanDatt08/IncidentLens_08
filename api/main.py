@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.audit import router as audit_router
+from api.auth import router as auth_router
 from api.errors import (
     ApiError,
     api_error_handler,
@@ -18,6 +19,7 @@ from api.jobs import router as job_router
 from api.media import router as media_router
 from api.reports import router as report_router
 from api.uploads_v2 import router as uploads_v2_router
+from api.users import router as user_router
 from api.v2 import router as v2_router
 from backend.config import get_settings
 
@@ -35,6 +37,9 @@ app = FastAPI(
     description="Incident ingestion, analysis jobs, reports, evidence, and audit",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url=None if get_settings().app_env == "production" else "/docs",
+    redoc_url=None if get_settings().app_env == "production" else "/redoc",
+    openapi_url=None if get_settings().app_env == "production" else "/openapi.json",
 )
 app.add_exception_handler(ApiError, api_error_handler)
 app.add_exception_handler(RequestValidationError, validation_error_handler)
@@ -59,6 +64,18 @@ app.include_router(report_router, prefix="/api/v1")
 app.include_router(evidence_router, prefix="/api/v1")
 app.include_router(audit_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(user_router, prefix="/api/v1")
+
+
+@app.middleware("http")
+async def auth_cache_control(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith(("/api/v1/auth", "/api/v1/admin/users")):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 app.include_router(v2_router)
 app.include_router(uploads_v2_router)
 

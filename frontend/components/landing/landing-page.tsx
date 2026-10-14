@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { WorkspaceTheme } from "@/components/layout/workspace-theme";
 import { useEffect, useRef } from "react";
 import { ArrowRight, Check, Film, FileText, Gauge, Lock } from "@/components/icons";
 import { HeroScene, LensMark } from "./landing-visuals";
@@ -33,6 +34,7 @@ function LandingNav() {
   return <header ref={header} className="lp-nav" data-scrolled="false"><div className="lp-nav-inner">
     <a href="#dau-trang" className="lp-brand" onClick={scrollToSection} aria-label="IncidentLens — đầu trang"><LensMark /><span>Incident<span>Lens</span><small>INTELLIGENCE IN CONTEXT</small></span></a>
     <nav className="lp-nav-desktop" aria-label="Điều hướng landing page"><a href="#trai-nghiem" onClick={scrollToSection}>Trải nghiệm</a><a href="#quy-trinh" onClick={scrollToSection}>Quy trình</a><a href="#nang-luc" onClick={scrollToSection}>Năng lực</a></nav>
+    <WorkspaceTheme />
     <Link href="/incidents" className="lp-nav-cta">Mở workspace <ArrowRight className="lp-icon" /></Link>
     <details ref={menu} className="lp-mobile-menu" onKeyDown={event => { if (event.key === "Escape" && menu.current?.open) { menu.current.open = false; menu.current.querySelector("summary")?.focus(); event.stopPropagation(); } }}><summary aria-label="Menu điều hướng"><span /><span /></summary><nav aria-label="Điều hướng mobile"><a href="#trai-nghiem" onClick={closeAndScroll}>Trải nghiệm</a><a href="#quy-trinh" onClick={closeAndScroll}>Quy trình</a><a href="#nang-luc" onClick={closeAndScroll}>Năng lực</a><Link href="/incidents" onClick={() => { if (menu.current) menu.current.open = false; }}>Mở workspace <ArrowRight className="lp-icon" /></Link></nav></details>
   </div></header>;

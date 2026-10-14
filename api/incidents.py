@@ -1,17 +1,19 @@
 """Incident upload and factual metadata routes."""
 
-from fastapi import APIRouter, File, Form, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from starlette.concurrency import run_in_threadpool
 
+from api.dependencies import permission
 from backend.models.contracts import UploadResponse
+from backend.services.access import Principal
 from backend.services.incidents import create_incident, get_incident, list_incidents
 
-router = APIRouter(tags=["incidents"])
+router = APIRouter(tags=["incidents"], dependencies=[Depends(permission("incident:read"))])
 
 
 @router.post("/incidents/upload", status_code=201, response_model=UploadResponse)
-async def upload_incident(video: UploadFile = File(...), log: UploadFile | None = File(default=None), sync_offset_s: float | None = Form(default=None), sync_metadata: UploadFile | None = File(default=None)):
-    return await run_in_threadpool(create_incident, video, log, sync_offset_s=sync_offset_s, sync_metadata=sync_metadata)
+async def upload_incident(video: UploadFile = File(...), log: UploadFile | None = File(default=None), sync_offset_s: float | None = Form(default=None), sync_metadata: UploadFile | None = File(default=None), principal: Principal = Depends(permission("incident:create"))):
+    return await run_in_threadpool(create_incident, video, log, sync_offset_s=sync_offset_s, sync_metadata=sync_metadata, principal=principal)
 
 
 @router.get("/incidents")

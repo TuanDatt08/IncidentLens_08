@@ -48,9 +48,9 @@ async def test_ollama_worker_exports_sql_draft_uncertainty_and_scoped_paths(db_c
         return Provider()
 
     monkeypatch.setattr(worker, "create_local_provider", factory)
-    incident = create_incident(UploadFile(BytesIO(b"video"), filename="sample.mp4"), UploadFile(BytesIO(b"sec_from_incident,brake\n0,0\n10,1\n11,0\n20,0\n"), filename="sample.csv"))
+    incident = create_incident(UploadFile(BytesIO(b"video"), filename="sample.mp4"), UploadFile(BytesIO(b"sec_from_incident,brake\n0,0\n10,1\n11,0\n20,0\n"), filename="sample.csv"), principal=db_client.principal)
     identity = incident["incident_id"]
-    job = create_job(identity)
+    job = create_job(identity, principal=db_client.principal)
     assert worker.run_once(job_id=job["job_id"])
     output = Path(get_settings().incident_storage_dir) / identity / "output"
     assert get_job(job["job_id"])["status"] == "succeeded"

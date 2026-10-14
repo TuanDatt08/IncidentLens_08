@@ -1,0 +1,94 @@
+{
+  "phase": "after",
+  "browser": "155.0.4283.45",
+  "font": [
+    {
+      "fcp": 344,
+      "lcp": 464,
+      "stylesheet": 1810.5999999996275,
+      "links": 1,
+      "requests": 1
+    },
+    {
+      "fcp": 60,
+      "lcp": 136,
+      "stylesheet": 1821.699999999255,
+      "links": 1,
+      "requests": 1
+    },
+    {
+      "fcp": 56,
+      "lcp": 136,
+      "stylesheet": 1818.699999999255,
+      "links": 1,
+      "requests": 1
+    }
+  ],
+  "polling": [
+    {
+      "count": {
+        "jobs": 3,
+        "candidates": 3,
+        "session": 3,
+        "mutations": 0
+      },
+      "maxSameEndpoint": 1,
+      "latencyMs": [
+        1.8999999985098839,
+        3.5,
+        4.099999999627471
+      ]
+    },
+    {
+      "count": {
+        "jobs": 3,
+        "candidates": 3,
+        "session": 3,
+        "mutations": 0
+      },
+      "maxSameEndpoint": 1,
+      "latencyMs": [
+        1.400000000372529,
+        1.699999999254942,
+        1.599999999627471
+      ]
+    },
+    {
+      "count": {
+        "jobs": 3,
+        "candidates": 3,
+        "session": 3,
+        "mutations": 0
+      },
+      "maxSameEndpoint": 1,
+      "latencyMs": [
+        1.799999998882413,
+        5.400000000372529,
+        3.200000001117587
+      ]
+    }
+  ],
+  "naturalFont": {
+    "fcp": 56,
+    "fontStatus": "loaded",
+    "mulishAvailable": true,
+    "cls": 0.044898225241662384,
+    "resources": [
+      {
+        "url": "https://fonts.googleapis.com/css2?family=Mulish:wght@400..900&display=swap",
+        "duration": 196.09999999962747,
+        "bytes": 845
+      }
+    ],
+    "network": [
+      {
+        "url": "https://fonts.googleapis.com/css2?family=Mulish:wght@400..900&display=swap",
+        "status": "finished"
+      },
+      {
+        "url": "https://fonts.gstatic.com/s/mulish/v18/1Ptvg83HX_SGhgqk3wot.woff2",
+        "status": "finished"
+      }
+    ]
+  }
+}

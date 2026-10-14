@@ -4,7 +4,10 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from backend.config import cloud_database_url, get_settings
-from backend.models import tables_v2  # noqa: F401 - register additive V2 metadata
+from backend.models import (
+    auth,  # noqa: F401 - register auth metadata
+    tables_v2,  # noqa: F401 - register additive V2 metadata
+)
 from backend.models.tables import Base
 
 config = context.config

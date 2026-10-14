@@ -2,7 +2,7 @@ from functools import lru_cache
 from typing import Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,6 +40,28 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     runtime_log_dir: str = "./logs/runtime"
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+
+    auth_cookie_secure: bool = False
+    auth_absolute_timeout_seconds: int = Field(default=28800, ge=60)
+    auth_idle_timeout_seconds: int = Field(default=1800, ge=60)
+    auth_email_failure_limit: int = Field(default=5, ge=1)
+    auth_ip_failure_limit: int = Field(default=30, ge=1)
+
+    @property
+    def auth_cookie_name(self) -> str:
+        return "__Host-incidentlens_session" if self.auth_cookie_secure else "incidentlens_session"
+
+    @model_validator(mode="after")
+    def validate_production_auth(self):
+        from urllib.parse import urlsplit
+        origins = [value.strip() for value in self.cors_origins.split(",") if value.strip()]
+        for origin in origins:
+            parsed = urlsplit(origin)
+            if "*" in origin or parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.path or parsed.query or parsed.fragment or parsed.username:
+                raise ValueError("CORS_ORIGINS must contain exact HTTP(S) origins")
+        if self.app_env == "production" and (not self.auth_cookie_secure or not origins or any(not value.startswith("https://") for value in origins)):
+            raise ValueError("Production auth requires Secure cookies and explicit HTTPS origins")
+        return self
 
     # LLM
     openai_api_key: str = ""

@@ -3,7 +3,7 @@ WORKDIR /frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
-ENV NEXT_TELEMETRY_DISABLED=1 NEXT_PUBLIC_USE_MOCK_API=false NEXT_PUBLIC_API_BASE_URL=/api/v1 NEXT_PUBLIC_API_V2_BASE_URL=/api/v2
+ENV NEXT_TELEMETRY_DISABLED=1 NEXT_PUBLIC_USE_MOCK_API=false NEXT_PUBLIC_ENABLE_AUTH=true NEXT_PUBLIC_ENABLE_V2_WORKSPACE=false NEXT_PUBLIC_API_BASE_URL=/api/v1 NEXT_PUBLIC_API_V2_BASE_URL=/api/v2
 # Packaging only; compile the unchanged checkout frontend as a standalone app.
 RUN node -e "import('./next.config.mjs').then(({default:config})=>require('fs').writeFileSync('next.config.mjs','export default '+JSON.stringify({...config,output:'standalone'})))"
 RUN npm run typecheck && npm run lint && npm run build

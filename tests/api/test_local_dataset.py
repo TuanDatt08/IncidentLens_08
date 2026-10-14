@@ -47,7 +47,7 @@ async def test_dataset_archives_reference_labels_without_sending_them_to_model(d
     monkeypatch.setattr(worker, "create_local_provider", lambda settings: Provider())
     client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"models": []})))
     monkeypatch.setattr("backend.analyze_local_dataset.httpx.Client", lambda **kw: client)
-    result = analyze_directory(source, 0, "fixture explicit frame/log mapping")
+    result = analyze_directory(source, 0, "fixture explicit frame/log mapping", principal=db_client.principal)
     identity = result[0]["incident_id"]
     assert result[0]["review_status"] == "DRAFT"
     assert all("REFERENCE_ONLY_POISON" not in repr(context) for context in calls)

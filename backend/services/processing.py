@@ -50,7 +50,8 @@ def pass1_sample_times(metadata: dict) -> list[float]:
     duration = float(metadata["duration"])
     # Container duration can extend beyond the final frame presentation time.
     last_decodable_s = max(0.0, duration - 1.5 / float(metadata["fps"]))
-    return [min(duration * i / 4, last_decodable_s) for i in range(5)]
+    # Clamping short/low-FPS clips can map several samples to the same time.
+    return sorted({min(duration * i / 4, last_decodable_s) for i in range(5)})
 
 
 def _evidence(root: Path, path: Path, kind: str, start_s: float, end_s: float, media_type: str) -> EvidenceV1:

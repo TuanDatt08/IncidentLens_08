@@ -27,12 +27,13 @@ const GalaxyCanvas = dynamic(() => import("./galaxy-canvas").catch(() => ({ defa
 function GalaxyFallback() {
   const id = useId().replace(/:/g, "");
   return <div className="lp-galaxy-fallback" aria-hidden="true"><svg className="lp-galaxy-rings" viewBox="0 0 720 680" fill="none">
-    <defs><radialGradient id={`${id}-core`} cx=".3" cy=".25"><stop stopColor="#f4dfff" /><stop offset=".12" stopColor="#c4a2ff" /><stop offset=".38" stopColor="#8b5cf6" /><stop offset=".7" stopColor="#213673" /><stop offset=".92" stopColor="#102444" /><stop offset="1" stopColor="#22d3ee" /></radialGradient><radialGradient id={`${id}-halo`}><stop stopColor="#8b5cf6" stopOpacity=".5" /><stop offset=".6" stopColor="#8b5cf6" stopOpacity=".08" /><stop offset="1" stopColor="#8b5cf6" stopOpacity="0" /></radialGradient></defs>
+    <defs><radialGradient id={`${id}-celestial`} cx=".3" cy=".25"><stop className="lp-celestial-highlight" stopColor="#edf0f5" /><stop className="lp-celestial-mid" offset=".55" stopColor="#a5adbb" /><stop className="lp-celestial-edge" offset="1" stopColor="#3d4658" /></radialGradient><radialGradient id={`${id}-core`} cx=".3" cy=".25"><stop stopColor="#f4dfff" /><stop offset=".12" stopColor="#c4a2ff" /><stop offset=".38" stopColor="#8b5cf6" /><stop offset=".7" stopColor="#213673" /><stop offset=".92" stopColor="#102444" /><stop offset="1" stopColor="#22d3ee" /></radialGradient><radialGradient id={`${id}-halo`}><stop stopColor="#8b5cf6" stopOpacity=".5" /><stop offset=".6" stopColor="#8b5cf6" stopOpacity=".08" /><stop offset="1" stopColor="#8b5cf6" stopOpacity="0" /></radialGradient></defs>
     <circle cx="375" cy="340" r="230" fill={`url(#${id}-halo)`} />
     <g className="lp-galaxy-orbit"><ellipse cx="375" cy="340" rx="240" ry="82" transform="rotate(-24 375 340)" stroke="#22d3ee" strokeWidth="1.3" strokeOpacity=".7" /><ellipse cx="375" cy="340" rx="258" ry="108" transform="rotate(27 375 340)" stroke="#a684ff" strokeWidth="1.4" strokeOpacity=".65" /><ellipse cx="375" cy="340" rx="188" ry="77" transform="rotate(-68 375 340)" stroke="#e879f9" strokeOpacity=".45" /><circle cx="565" cy="255" r="4" fill="#a4f8ff" /><circle cx="148" cy="265" r="3" fill="#e879f9" /><circle cx="434" cy="470" r="4" fill="#c6acff" /></g>
-    <g transform="translate(375 340) scale(1.35) translate(-375 -340)"><circle cx="375" cy="340" r="91" fill={`url(#${id}-core)`} stroke="#91e9ff" strokeOpacity=".55" />
-    <ellipse cx="375" cy="340" rx="84" ry="37" transform="rotate(-27 375 340)" stroke="#e7caff" strokeOpacity=".5" /><ellipse cx="375" cy="340" rx="71" ry="19" transform="rotate(-27 375 340)" stroke="#22d3ee" strokeOpacity=".5" /><ellipse cx="352" cy="308" rx="45" ry="14" transform="rotate(-27 352 308)" fill="#ddb5ff" fillOpacity=".13" />
-    </g>{[0, 1, 2, 3, 4, 5, 6, 7].map(n => <circle key={n} cx={90 + n * 77} cy={150 + (n * 83) % 390} r={n % 3 === 0 ? 2 : 1} fill={n % 2 ? "#22d3ee" : "#c6b2ff"} opacity=".7" />)}
+    <g transform="translate(375 340) scale(1.35) translate(-375 -340)"><circle className="lp-celestial-body" cx="375" cy="340" r="91" fill={`url(#${id}-celestial)`} stroke="#91e9ff" strokeOpacity=".55" />
+    <g className="lp-lunar-craters" fill="#646b78" stroke="#cbd0d9" strokeWidth="1.5" opacity=".6">
+      <circle cx="344" cy="307" r="17" /><circle cx="399" cy="362" r="24" /><circle cx="350" cy="381" r="11" /><circle cx="411" cy="298" r="9" /><circle cx="381" cy="323" r="7" />
+    </g>    </g>{[0, 1, 2, 3, 4, 5, 6, 7].map(n => <circle key={n} cx={90 + n * 77} cy={150 + (n * 83) % 390} r={n % 3 === 0 ? 2 : 1} fill={n % 2 ? "#22d3ee" : "#c6b2ff"} opacity=".7" />)}
   </svg></div>;
 }
 
@@ -149,11 +150,11 @@ export function HeroScene() {
     frame.current = requestAnimationFrame(() => { element.style.setProperty("--scene-x", `${-y * 2}deg`); element.style.setProperty("--scene-y", `${x * 2.5}deg`); });
   }} onPointerLeave={() => { if (frame.current) cancelAnimationFrame(frame.current); scene.current?.style.setProperty("--scene-x", "0deg"); scene.current?.style.setProperty("--scene-y", "0deg"); }}>
     <div className="lp-galaxy-atmosphere"><GalaxyFallback />{loadCanvas && <GalaxyCanvas onReady={ready} onUnavailable={unavailable} />}</div>
-    <div className="lp-space-satellite lp-space-crystal" aria-hidden="true"><i /><i /></div>
+    <div className="lp-space-satellite lp-space-crystal" data-kind="rock" aria-hidden="true"><i /><i /></div>
     <div className="lp-space-satellite lp-space-cube" aria-hidden="true"><i /></div>
     <div className="lp-space-satellite lp-space-probe" aria-hidden="true"><i /><b /><i /></div>
     <div className="lp-space-satellite lp-space-moon" aria-hidden="true" />
-    <div className="lp-space-satellite lp-space-crystal lp-space-small" aria-hidden="true"><i /><i /></div>
+    <div className="lp-space-satellite lp-space-crystal lp-space-small" data-kind="rock" aria-hidden="true"><i /><i /></div>
     <div className="lp-space-satellite lp-space-cube lp-space-small" aria-hidden="true"><i /></div>
     <div className="lp-galaxy-core-label"><span className="lp-dot" /> INCIDENT ANALYSIS CORE<small>AI ASSISTED / HUMAN REVIEWED</small></div>
     <div className="lp-source lp-source-video"><div className="lp-source-title"><Film className="lp-icon" /><span>VIDEO</span><span className="lp-source-live">01</span></div><RoadIllustration /><div className="lp-source-foot"><span>FRAME / 06.8 s</span><span>DEMO MINH HỌA</span></div></div>

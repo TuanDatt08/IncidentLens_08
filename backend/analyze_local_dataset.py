@@ -19,7 +19,9 @@ from sqlalchemy import select
 
 from backend.config import get_settings
 from backend.db import session_scope
+from backend.models.auth import User
 from backend.models.tables import Incident
+from backend.services.access import Principal, require_permission
 from backend.services.evidence_extraction import file_hash
 from backend.services.incidents import create_incident
 from backend.services.jobs import create_job, get_job
@@ -33,7 +35,9 @@ def write_json(path: Path, value) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def analyze_directory(source: Path, offset_s: float, offset_source: str) -> list[dict]:
+def analyze_directory(source: Path, offset_s: float, offset_source: str, *, principal: Principal) -> list[dict]:
+    require_permission(principal, "incident:create")
+    require_permission(principal, "analysis:create")
     settings = get_settings()
     if settings.qwen_runtime != "ollama":
         raise ValueError("Set QWEN_RUNTIME=ollama for this local dataset command")
@@ -47,9 +51,9 @@ def analyze_directory(source: Path, offset_s: float, offset_source: str) -> list
         with video.open("rb") as stream:
             if log.is_file():
                 with log.open("rb") as telemetry:
-                    created = create_incident(UploadFile(stream, filename=video.name), UploadFile(telemetry, filename=log.name))
+                    created = create_incident(UploadFile(stream, filename=video.name), UploadFile(telemetry, filename=log.name), principal=principal)
             else:
-                created = create_incident(UploadFile(stream, filename=video.name))
+                created = create_incident(UploadFile(stream, filename=video.name), principal=principal)
         identity = created["incident_id"]
         directory = Path(settings.incident_storage_dir).resolve() / identity
         output = directory / "output"
@@ -84,7 +88,7 @@ def analyze_directory(source: Path, offset_s: float, offset_source: str) -> list
             response.raise_for_status()
             tags = response.json()
         write_json(output / "runtime.json", {"endpoint": settings.qwen_endpoint, "model": settings.qwen_ollama_model, "tags": tags, "settings": {"sampling_fps": settings.qwen_sampling_fps, "batch_frames": settings.qwen_batch_frames, "inference_frame_limit": settings.qwen_inference_frame_limit, "candidate_min_acceleration": settings.qwen_candidate_min_acceleration}, "database_url": settings.database_url.split("@")[-1]})
-        job = create_job(identity)
+        job = create_job(identity, principal=principal)
         write_json(output / "job.json", job)
         logging.info("Analyzing %s job=%s output=%s", identity, job["job_id"], output)
         run_once(job_id=job["job_id"])
@@ -106,9 +110,15 @@ def main() -> None:
     parser.add_argument("--input", type=Path, default=Path("vlm/data"))
     parser.add_argument("--log-offset-s", type=float, required=True)
     parser.add_argument("--offset-source", required=True, help="Evidence establishing frame/log clock mapping")
+    parser.add_argument("--actor-email", required=True, help="Active engineer account used for audited local ingestion")
     args = parser.parse_args()
+    with session_scope() as session:
+        user = session.scalar(select(User).where(User.email == args.actor_email.strip().lower()))
+        if user is None or not user.is_active:
+            parser.error("An active engineer account is required")
+        principal = Principal(user.id, frozenset(user.roles), user.must_change_password)
     logging.basicConfig(level=logging.INFO)
-    print(json.dumps(analyze_directory(args.input, args.log_offset_s, args.offset_source), ensure_ascii=False, indent=2))
+    print(json.dumps(analyze_directory(args.input, args.log_offset_s, args.offset_source, principal=principal), ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

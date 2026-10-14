@@ -15,9 +15,14 @@ void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
 // One full-screen pass: analytically shaded sphere and projected orbit paths.
 // The canvas stays transparent so the permanent SVG scene supplies the baseline.
 const fragmentSource = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 uniform vec2 u_resolution;
 uniform float u_time;
+uniform float u_day;
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
 float noise(vec2 p) {
   vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
@@ -50,7 +55,7 @@ void main() {
     float front=1.-smoothstep(-.045,.045,q.y);
     float visible=1.;
     if(r<sr && q.y>0.) visible=0.;
-    vec3 ringColor=mix(violet,cyan,fi*.32);
+    vec3 ringColor=mix(mix(violet,cyan,fi*.32),vec3(.70,.57,.34),u_day*.62);
     vec3 orbit=ringColor*(exp(-d*220.)*.31+exp(-d*55.)*.047)*(.32+.68*front)*visible;
     col+=orbit;
     if(r<sr && q.y<0.) foreground+=orbit;
@@ -66,7 +71,7 @@ void main() {
   // not a flat radial gradient. Perspective contours follow its surface normal.
   float halo=exp(-abs(r-sr)*31.);
   vec3 atmosphere=mix(violet,cyan,smoothstep(-.20,.17,p.x+p.y));
-  col+=atmosphere*(halo*.30+exp(-abs(r-sr)*115.)*.40);
+  col+=mix(atmosphere,vec3(1.,.60,.18),u_day)*(halo*mix(.08,.38,u_day)+exp(-abs(r-sr)*115.)*mix(.08,.50,u_day));
   if(r<sr) {
     vec2 xy=p/sr; float z=sqrt(max(0.,1.-dot(xy,xy)));
     vec3 normal=vec3(xy,z);
@@ -92,6 +97,27 @@ void main() {
     vec3 sphere=material*(.32+diffuse*1.18)+cyan*filaments*(.08+.21*diffuse);
     sphere+=violet*terminator*.10;
     sphere+=atmosphere*rim*.90+vec3(.67,.92,1.)*spec*.32;
+        // Silver lunar maria and crater rims at night; glowing convection by day.
+    vec2 lunarUV=vec2(atan(surface.x,surface.z),asin(clamp(surface.y,-1.,1.)))*2.;
+    float grain=cloud(lunarUV*14.);
+    float maria=smoothstep(.3,.7,cloud(lunarUV*2.2+7.));
+    vec3 moon=mix(vec3(.48,.50,.54),vec3(.72,.73,.75),maria);
+    moon*=.94+grain*.12;
+    vec2 craterUV=lunarUV*4.;
+    vec2 craterCell=floor(craterUV), craterLocal=fract(craterUV);
+    float craterSeed=hash(craterCell);
+    vec2 center=vec2(.3+hash(craterCell+7.)*.4,.3+hash(craterCell+19.)*.4);
+    float craterRadius=.055+craterSeed*.10;
+    float craterDistance=length(craterLocal-center);
+    float craterMask=step(.68,craterSeed);
+    moon-=vec3(.065)*(1.-smoothstep(craterRadius*.6,craterRadius,craterDistance))*craterMask;
+    moon+=vec3(.055)*exp(-abs(craterDistance-craterRadius)*90.)*craterMask;
+    moon*=.38+diffuse*.75;
+    moon+=vec3(.63,.70,.83)*rim*.055;    float convection=cloud(uv*7.+currents+vec2(t*.018,0.));
+    vec3 sun=mix(vec3(.94,.38,.045),vec3(1.,.85,.42),convection);
+    sun*=.77+z*.25;
+    sun+=vec3(.15,.07,.0)*filaments;
+    sphere=mix(moon,sun,u_day);
     col=mix(col,sphere,1.-smoothstep(sr-.002,sr,r));
   }
   col+=foreground;
@@ -172,11 +198,13 @@ export default function GalaxyCanvas({ onReady, onUnavailable }: GalaxyCanvasPro
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
     const resolution = gl.getUniformLocation(program, "u_resolution");
     const time = gl.getUniformLocation(program, "u_time");
+    const day = gl.getUniformLocation(program, "u_day");
     const draw = () => {
       if (disposed || failed || !canvas.width || !canvas.height) return;
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(resolution, canvas.width, canvas.height);
       gl.uniform1f(time, activeTime);
+      gl.uniform1f(day, document.documentElement.dataset.theme === "light" ? 1 : 0);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       frameCount += 1;
       canvas.dataset.frame = String(frameCount);
@@ -205,6 +233,8 @@ export default function GalaxyCanvas({ onReady, onUnavailable }: GalaxyCanvasPro
       canvas.height = Math.max(1, Math.round(bounds.height*ratio));
       draw();
     };
+    const themeObserver = new MutationObserver(() => draw());
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
     const intersection = new IntersectionObserver(([entry]) => {
@@ -225,6 +255,7 @@ export default function GalaxyCanvas({ onReady, onUnavailable }: GalaxyCanvasPro
       disposed = true;
       cancelAnimationFrame(frameId);
       observer.disconnect();
+      themeObserver.disconnect();
       intersection.disconnect();
       canvas.removeEventListener("webglcontextlost", contextLost);
       document.removeEventListener("visibilitychange", resume);

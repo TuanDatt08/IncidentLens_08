@@ -93,7 +93,7 @@ async def test_invalid_evidence_rolls_back_report_and_job_success(db_client):
         files={"video": ("clip.mp4", b"video", "video/mp4")},
     )
     incident_id = upload.json()["incident_id"]
-    job_id = create_job(incident_id)["job_id"]
+    job_id = create_job(incident_id, principal=db_client.principal)["job_id"]
     assert claim_job().job_id == job_id
     result = ProcessedResult(
         analysis=AnalysisResult(incident_detected=True, incident_window={"start": -1, "critical": 0, "end": 1}),
@@ -115,7 +115,7 @@ async def test_evidence_hash_must_match_stored_file(db_client):
         files={"video": ("clip.mp4", b"video", "video/mp4")},
     )
     incident_id = upload.json()["incident_id"]
-    job_id = create_job(incident_id)["job_id"]
+    job_id = create_job(incident_id, principal=db_client.principal)["job_id"]
     claim_job()
     clip = Path(get_settings().incident_storage_dir) / incident_id / "clips" / "candidate.mp4"
     clip.parent.mkdir(parents=True, exist_ok=True)

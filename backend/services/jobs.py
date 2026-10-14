@@ -13,6 +13,7 @@ from backend.db import session_scope
 from backend.errors import ApiError
 from backend.models.contracts import JobResponse
 from backend.models.tables import AuditEvent, Incident, Job
+from backend.services.access import Principal, require_permission
 
 LEASE_SECONDS = 120
 MAX_ATTEMPTS = 3
@@ -43,7 +44,8 @@ def _job_dict(job: Job) -> dict:
     ).model_dump(by_alias=True)
 
 
-def create_job(incident_id: str) -> dict:
+def create_job(incident_id: str, *, principal: Principal) -> dict:
+    require_permission(principal, "analysis:create")
     try:
         with session_scope() as session:
             incident = session.scalar(select(Incident).where(Incident.incident_id == incident_id).with_for_update())
@@ -58,7 +60,7 @@ def create_job(incident_id: str) -> dict:
             job = Job(job_id=job_id, incident_id=incident.id, status="queued", progress_done=0, progress_total=None, attempt=0)
             session.add(job)
             incident.processing_status = "PROCESSING"
-            session.add(AuditEvent(incident_id=incident.id, action="ANALYSIS_STARTED", actor="system", event_metadata={"job_id": job_id}))
+            session.add(AuditEvent(incident_id=incident.id, action="ANALYSIS_STARTED", actor=str(principal.user_id), event_metadata={"job_id": job_id}))
             session.flush()
             return {"job_id": job_id, "incident_id": incident_id, "status": "queued"}
     except IntegrityError as exc:

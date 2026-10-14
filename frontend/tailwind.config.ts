@@ -11,12 +11,12 @@ const config: Config = {
     extend: {
       colors: {
         vf: {
-          primary: "#1464F4",
-          navy: "#0D1528",
-          secondary: "#ACCAED",
-          text: "#3C3C3C",
-          muted: "#6B7280",
-          canvas: "#F8F9FA",
+          primary: "var(--workspace-primary)",
+          navy: "var(--workspace-ink)",
+          secondary: "#B8C8E8",
+          text: "var(--workspace-ink)",
+          muted: "var(--workspace-muted)",
+          canvas: "var(--workspace-bg)",
         },
       },
       boxShadow: {
