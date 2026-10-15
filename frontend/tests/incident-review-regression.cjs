@@ -12,6 +12,16 @@ function fixture(getIncidentReport) {
   return exports.loadIncidentReviews;
 }
 const records = n => Array.from({ length: n }, (_, index) => ({ incident_id: String(index), processing_status: 'COMPLETED' }));
+
+test('list summaries avoid per-row requests and preserve missing reports', async () => {
+  let calls = 0; const seen = [];
+  const load = fixture(async () => { calls++; throw new Error('unnecessary report fetch'); });
+  await load([{ incident_id: 'A', processing_status: 'COMPLETED', review_status: 'APPROVED', report_version: 4 }, { incident_id: 'B', processing_status: 'READY', review_status: null }], new AbortController().signal, (id, result) => seen.push([id, result]));
+  assert.equal(calls, 0);
+  assert.equal(seen[0][1].status, 'APPROVED');
+  assert.equal(seen[0][1].version, 4);
+  assert.equal(seen[1][1].state, 'missing');
+});
 test('review reads cap concurrency at four, ignore unfinished processing and use report state', async () => {
   let active = 0, peak = 0;
   const seen = [];

@@ -10,13 +10,13 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import UploadFile
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 
 from backend.config import get_settings
 from backend.db import session_scope
 from backend.errors import ApiError
 from backend.models.contracts import IncidentRecordV1
-from backend.models.tables import AuditEvent, Incident
+from backend.models.tables import AnalysisReport, AuditEvent, Incident, ReportVersion
 from backend.services.access import Principal, require_permission
 from backend.services.errors import IncidentIngestionError
 from backend.services.storage import LocalStorage
@@ -125,11 +125,25 @@ def get_incident(incident_id: str) -> dict:
         return _incident_dict(incident)
 
 
-def list_incidents(limit: int = 20, offset: int = 0) -> dict:
+def list_incidents(limit: int = 20, offset: int = 0, *, q: str = "", processing_status: str | None = None, review_status: str | None = None) -> dict:
     with session_scope() as session:
-        total = session.scalar(select(func.count()).select_from(Incident))
-        incidents = session.scalars(select(Incident).order_by(Incident.created_at.desc(), Incident.incident_id.desc()).limit(limit).offset(offset)).all()
-        return {"items": [_incident_dict(item) for item in incidents], "total": total, "limit": limit, "offset": offset}
+        query = select(Incident, AnalysisReport).outerjoin(AnalysisReport, AnalysisReport.incident_id == Incident.id)
+        if q.strip():
+            term = q.strip().replace("/", "//").replace("%", "/%").replace("_", "/_")
+            query = query.where(or_(Incident.incident_id.ilike(f"%{term}%", escape="/"), Incident.scenario.ilike(f"%{term}%", escape="/")))
+        if processing_status:
+            query = query.where(Incident.processing_status == processing_status)
+        if review_status:
+            query = query.where(AnalysisReport.review_status == review_status)
+        total = session.scalar(select(func.count()).select_from(query.subquery()))
+        rows = session.execute(query.order_by(Incident.created_at.desc(), Incident.incident_id.desc()).limit(limit).offset(offset)).all()
+        report_ids = [report.id for _, report in rows if report]
+        versions = dict(session.execute(select(ReportVersion.report_id, func.max(ReportVersion.version)).where(ReportVersion.report_id.in_(report_ids)).group_by(ReportVersion.report_id)).all()) if report_ids else {}
+        processing = dict(session.execute(select(Incident.processing_status, func.count()).group_by(Incident.processing_status)).all())
+        reviews = dict(session.execute(select(AnalysisReport.review_status, func.count()).group_by(AnalysisReport.review_status)).all())
+        items = [{**_incident_dict(item), "review_status": report.review_status if report else None, "report_version": versions.get(report.id, 1) if report else None} for item, report in rows]
+        return {"items": items, "total": total, "limit": limit, "offset": offset,
+                "summary": {"total": sum(processing.values()), "processing": processing, "reviews": reviews}}
 
 
 def import_incident_record(incident_id: str, record: IncidentRecordV1) -> None:

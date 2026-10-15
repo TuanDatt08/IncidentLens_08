@@ -11,7 +11,10 @@ export async function loadIncidentReviews(
   incidents: IncidentRecord[], signal: AbortSignal,
   onResult: (id: string, summary: IncidentReviewSummary) => void,
 ): Promise<void> {
-  const completed = incidents.filter((item) => item.processing_status === "COMPLETED");
+  for (const item of incidents) {
+    if (item.review_status !== undefined) onResult(item.incident_id, item.review_status ? { state: "available", status: item.review_status, version: item.report_version ?? 1 } : { state: "missing" });
+  }
+  const completed = incidents.filter((item) => item.processing_status === "COMPLETED" && item.review_status === undefined);
   let next = 0;
   let stopped = false;
   async function worker() {

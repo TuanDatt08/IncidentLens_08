@@ -18,8 +18,8 @@ const listeners = new Map();
 const documentMock = { fullscreenElement: null, addEventListener(name, fn) { listeners.set(name, fn); }, removeEventListener(name) { listeners.delete(name); }, async exitFullscreen() { this.fullscreenElement = null; listeners.get('fullscreenchange')?.(); } };
 const moduleMock = { exports: {} };
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('components/review/video-player.tsx', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText, {
-  exports: moduleMock.exports, module: moduleMock, Error, document: documentMock,
-  require(name) { if (name === 'react') return react; if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx }; if (name.includes('icons')) return { Play: 'PlayIcon', Pause: 'PauseIcon' }; if (name.includes('button')) return { Button: 'Button' }; return { formatSeconds: String }; },
+  exports: moduleMock.exports, module: moduleMock, Error, AbortController, document: documentMock,
+  require(name) { if (name === 'react') return react; if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx }; if (name.includes('media-access')) return { mediaAccessFailure: async () => null }; if (name.includes('icons')) return { Play: 'PlayIcon', Pause: 'PauseIcon' }; if (name.includes('button')) return { Button: 'Button' }; return { formatSeconds: String }; },
 });
 const playbackUpdates = [];
 assert.match(moduleMock.exports.mediaFailureMessage(4), /unsupported/);
@@ -38,7 +38,9 @@ const media = { readyState: 0, duration: 10, paused: true, error: null, currentT
   load() { loads++; this.error = null; this.readyState = 0; event('onEmptied'); },
 };
 async function run() {
-  render(); videoNode().props.ref.current = media; render();
+  render();
+  assert.match(videoNode().props.className, /object-contain/, 'evidence video must preserve the complete frame');
+  videoNode().props.ref.current = media; render();
   ref.current.seekTo(20); render(); assert.equal(calls, 0); assert.equal(media.currentTime, 0);
   media.readyState = 1; event('onLoadedMetadata'); assert.equal(media.currentTime, 10); assert.equal(calls, 1);
   const overlay = button('Play incident video');

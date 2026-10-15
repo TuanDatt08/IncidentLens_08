@@ -146,3 +146,7 @@ html[data-theme='light'] .landing-galaxy .lp-space-satellite {filter:drop-shadow
 html[data-theme='light'] .landing-galaxy .lp-nav {box-shadow:0 8px 28px #27233914,inset 0 1px #fff}
 html[data-theme='dark'] .landing-galaxy .lp-source {border-color:#8d9ab333;box-shadow:0 10px 28px #0003}
 html[data-theme='dark'] .landing-galaxy .lp-source-title {background:#171d30;color:#bcc9da;border-color:#69758b33}
+
+/* Full-frame evidence with usable touch controls. */
+.video-player .video-player-controls .video-player-control{min-width:44px;min-height:44px;width:auto;height:auto}
+.video-player .video-player-controls input[type=range]{min-height:44px}

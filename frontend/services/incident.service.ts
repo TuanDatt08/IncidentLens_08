@@ -3,6 +3,7 @@ import { API_BASE_URL, USE_MOCK_API } from "@/lib/config";
 import type {
   IncidentRecord,
   IncidentListResponse,
+  ProcessingStatus, ReviewState,
   UploadIncidentInput,
   UploadIncidentResponse,
 } from "@/types/incident";
@@ -18,9 +19,19 @@ export async function getIncidentPreviewStatus(incidentId: string): Promise<{ st
   return { state: "ready" }; // Original Qwen media: no local preview worker required.
 }
 
-export async function listIncidents(limit = 20, offset = 0, signal?: AbortSignal): Promise<IncidentListResponse> {
-  if (USE_MOCK_API) return mockStore.listIncidents(limit, offset);
-  return apiRequest<IncidentListResponse>(`/incidents?limit=${limit}&offset=${offset}`, { signal });
+export async function listIncidents(limit = 20, offset = 0, signal?: AbortSignal, filters: { q?: string; processing_status?: ProcessingStatus; review_status?: ReviewState } = {}): Promise<IncidentListResponse> {
+  if (USE_MOCK_API) {
+    const all = mockStore.listIncidents(Number.MAX_SAFE_INTEGER, 0).items;
+    const items = all.map(item => { const draft = item.processing_status === "COMPLETED" ? mockStore.getDraft(item.incident_id) : undefined; return { ...item, review_status: draft?.review_status ?? null, report_version: draft?.version ?? null }; });
+    const summary: NonNullable<IncidentListResponse["summary"]> = { total: items.length, processing: {}, reviews: {} };
+    for (const item of items) { summary.processing[item.processing_status] = (summary.processing[item.processing_status] ?? 0) + 1; if (item.review_status) summary.reviews[item.review_status] = (summary.reviews[item.review_status] ?? 0) + 1; }
+    const q = filters.q?.trim().toLowerCase();
+    const matches = items.filter(item => (!q || `${item.incident_id} ${item.incident_record?.scenario ?? ""}`.toLowerCase().includes(q)) && (!filters.processing_status || item.processing_status === filters.processing_status) && (!filters.review_status || item.review_status === filters.review_status));
+    return { items: matches.slice(offset, offset + limit), total: matches.length, limit, offset, summary };
+  }
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value);
+  return apiRequest<IncidentListResponse>(`/incidents?${params}`, { signal });
 }
 
 export async function getIncident(incidentId: string): Promise<IncidentRecord> {

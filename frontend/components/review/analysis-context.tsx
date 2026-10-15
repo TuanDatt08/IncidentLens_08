@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { apiRequest } from "@/lib/api-client";
-import { USE_MOCK_API } from "@/lib/config";
+import Link from "next/link";
+import { ApiError, apiRequest } from "@/lib/api-client";
+import { AUTH_ENABLED, USE_MOCK_API } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { StructuredAnalysis, asRecord } from "./structured-analysis";
 
@@ -14,22 +15,23 @@ export type ReviewContext = {
   alignment: string; points: Point[]; windows: number[][]; telemetry_error: string | null;
 };
 
-type Resource = { id: string; data?: ReviewContext; error: string; retry: () => void };
+type Resource = { id: string; data?: ReviewContext; error: string; accessError: boolean; retry: () => void };
 const AnalysisResourceContext = createContext<Resource | null>(null);
 function useAnalysisResource(id: string, enabled: boolean): Resource {
   const [data, setData] = useState<ReviewContext>();
   const [error, setError] = useState("");
+  const [accessError, setAccessError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
-    setData(undefined); setError("");
+    setData(undefined); setError(""); setAccessError(false);
     if (USE_MOCK_API || !enabled) return;
     apiRequest<ReviewContext>(`/incidents/${encodeURIComponent(id)}/review-context`)
       .then(value => { if (active) { setData(value); } })
-      .catch((cause: Error) => { if (active) setError(cause.message); });
+      .catch((cause: Error) => { if (active) { setError(cause.message); setAccessError(cause instanceof ApiError && (cause.status === 401 || cause.status === 403)); } });
     return () => { active = false; };
   }, [id, attempt, enabled]);
-  return { id, data, error, retry: () => setAttempt(value => value + 1) };
+  return { id, data, error, accessError, retry: () => setAttempt(value => value + 1) };
 }
 export function AnalysisContextProvider({ id, children }: { id: string; children: React.ReactNode }) {
   const resource = useAnalysisResource(id, true);
@@ -39,7 +41,7 @@ export function AnalysisContextProvider({ id, children }: { id: string; children
 export function AnalysisContext({ id, onSeek, currentTime = 0, seekEnabled = true, mode = "all" }: { mode?: "all" | "telemetry" | "analysis"; id: string; onSeek: (time: number) => void; currentTime?: number; seekEnabled?: boolean }) {
   const shared = useContext(AnalysisResourceContext);
   const fallback = useAnalysisResource(id, !shared || shared.id !== id);
-  const { data, error, retry } = shared?.id === id ? shared : fallback;
+  const { data, error, accessError, retry } = shared?.id === id ? shared : fallback;
   const [cursor, setCursor] = useState(0);
   const [analysisIndex, setAnalysisIndex] = useState(0);
   useEffect(() => { setAnalysisIndex(0); }, [id]);
@@ -52,8 +54,10 @@ export function AnalysisContext({ id, onSeek, currentTime = 0, seekEnabled = tru
     setCursor(data.points.reduce((best, point, index) => Math.abs(point.time_s - currentTime) < Math.abs(data.points[best].time_s - currentTime) ? index : best, 0));
   }, [currentTime, data]);
   if (USE_MOCK_API) return null;
-  if (error) return <section className="section-card p-5"><h2 className="font-semibold text-vf-navy">Output AI và telemetry</h2><p role="alert" className="mt-2 text-sm text-red-700">Không tải được dữ liệu bổ sung: {error}</p><Button variant="secondary" className="mt-4" onClick={retry}>Thử lại</Button></section>;
-  if (!data) return <p className="text-sm text-slate-600" role="status">Đang tải output Qwen và telemetry…</p>;
+  // Shared loading and failure state belongs to one surface, not both modes.
+  if ((!data || error) && mode === "analysis" && shared) return null;
+  if (error) return <section lang="vi" className="section-card p-5"><h2 className="font-semibold text-vf-navy">Output AI và telemetry</h2><p role="alert" className="mt-2 text-sm text-red-700">{accessError ? "Chưa có phiên đăng nhập hợp lệ hoặc tài khoản chưa được cấp quyền đọc dữ liệu bổ sung." : `Không tải được dữ liệu bổ sung: ${error}`}</p>{accessError && <p className="mt-2 text-sm text-slate-600">{AUTH_ENABLED ? "Đăng nhập bằng tài khoản có quyền đọc sự cố, sau đó thử lại." : "Workspace chưa bật đăng nhập. Quản trị viên cần đồng bộ cấu hình xác thực frontend và backend trước khi truy cập."}</p>}{accessError && AUTH_ENABLED ? <Link href={`/login?returnTo=${encodeURIComponent(`/incidents/${id}`)}`} className="mt-4 inline-flex min-h-11 items-center font-semibold underline">Đăng nhập</Link> : !accessError && <Button variant="secondary" className="mt-4" onClick={retry}>Thử lại</Button>}</section>;
+  if (!data) return <p lang="vi" className="text-sm text-slate-600" role="status">Đang tải output Qwen và telemetry…</p>;
   const point = data.points[Math.min(cursor, data.points.length - 1)];
   const primary = asRecord(data.primary_analysis), legacy = asRecord(data.model_output.analysis);
   const analysis = data.analyses?.[analysisIndex] || (Object.keys(primary).length ? primary : Object.keys(legacy).length ? legacy : data.model_output);
@@ -62,7 +66,7 @@ export function AnalysisContext({ id, onSeek, currentTime = 0, seekEnabled = tru
     setCursor(index);
     if (seekEnabled && data.points[index]) onSeek(data.points[index].time_s);
   };
-  return <section className="section-card p-5 sm:p-6" aria-label={mode === "telemetry" ? "Telemetry đồng bộ" : "Phân tích sự cố"}>
+  return <section lang="vi" className="section-card p-5 sm:p-6" aria-label={mode === "telemetry" ? "Telemetry đồng bộ" : "Phân tích sự cố"}>
     <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold text-vf-navy">{mode === "telemetry" ? "Telemetry đồng bộ" : "Phân tích sự cố"}</h2><span className="text-xs text-slate-600">Giây từ đầu video gốc</span></div>
     {showAnalysis && data.review_required && <div role="note" className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-950"><p className="font-bold">Cần kỹ sư review — kết luận AI chưa giải quyết được nguy cơ</p><p className="mt-1 text-sm leading-6">Qwen trả âm tính nhưng telemetry có dấu hiệu phanh khẩn cấp. Đây không phải xác nhận “không có incident”. Output vẫn được giữ bên dưới và cần được đối chiếu với evidence.</p></div>}
     {showAnalysis && <>

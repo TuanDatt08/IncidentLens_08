@@ -1,5 +1,8 @@
-export const AUTH_ENABLED = process.env.NEXT_PUBLIC_ENABLE_AUTH === "true";
 export const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API !== "false";
+// Real API uses verified sessions; the default mock walkthrough needs no backend.
+export const AUTH_ENABLED = process.env.NEXT_PUBLIC_ENABLE_AUTH === undefined
+  ? !USE_MOCK_API
+  : process.env.NEXT_PUBLIC_ENABLE_AUTH === "true";
 
 export const API_BASE_URL = AUTH_ENABLED
   ? "/api/v1"

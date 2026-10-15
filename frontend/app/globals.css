@@ -650,4 +650,4 @@ html:has(.workspace-header-shell .report-workspace)::-webkit-scrollbar{display:n
 @media(max-width:650px){.workspace-header-shell .review-pinned-video{max-height:29dvh}}
 /* Fill the bounded player stage without stretching or off-centre positioning. */
 .video-player .video-player-stage{overflow:hidden}
-.video-player .video-player-stage>video{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+.video-player .video-player-stage>video{display:block;width:100%;height:100%;object-fit:contain;object-position:center}

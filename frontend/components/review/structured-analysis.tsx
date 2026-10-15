@@ -29,7 +29,7 @@ function Fields({ value }: { value: unknown }) {
 
 export function StructuredAnalysis({ analysis, onSeek, seekEnabled = true }: { analysis: RecordValue; onSeek: (time: number) => void; seekEnabled?: boolean }) {
   const timeline = Array.isArray(analysis.timeline) ? analysis.timeline : [];
-  return <div className="structured-analysis mt-5 space-y-5">
+  return <div lang="vi" className="structured-analysis mt-5 space-y-5">
     <dl className="flex flex-wrap gap-5 rounded-lg border border-slate-200 p-4">{[["Trạng thái phân tích", analysis.analysis_status], ["Mức độ", analysis.severity], ["Độ tin cậy do mô hình tự báo", typeof analysis.confidence === "number" ? `${Math.round(analysis.confidence * 100)}%` : null]].map(([label, value]) => <div key={String(label)}><dt className="text-xs text-slate-500">{String(label)}</dt><dd className="mt-1 text-sm"><Value value={value} /></dd></div>)}</dl>
     {analysis.summary !== undefined && <div className="rounded-xl border border-slate-200 p-4 text-sm leading-7 text-slate-700"><Value value={analysis.summary} /></div>}
     <Group title="Điều kiện"><Fields value={analysis.scene_context} /></Group>

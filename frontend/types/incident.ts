@@ -36,6 +36,8 @@ export type AnalysisCoverage = {
 };
 
 export type IncidentRecord = {
+  review_status?: ReviewState | null;
+  report_version?: number | null;
   incident_id: string;
   processing_status: ProcessingStatus;
   video_uri: string;
@@ -52,6 +54,7 @@ export type IncidentRecord = {
 };
 
 export type IncidentListResponse = {
+  summary?: { total: number; processing: Partial<Record<ProcessingStatus, number>>; reviews: Partial<Record<ReviewState, number>> };
   items: IncidentRecord[];
   total: number;
   limit: number;

@@ -4,6 +4,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { Maximize, Minimize, Pause, Play, Volume, VolumeOff } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { formatSeconds } from "@/lib/format";
+import { mediaAccessFailure } from "@/lib/media-access";
 
 export type VideoPlayerHandle = { seekTo: (seconds: number, autoplay?: boolean) => void; pause: () => void };
 export type VideoPlaybackState = { currentTime: number; duration: number; ready: boolean };
@@ -48,6 +49,20 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(funct
   const pendingSeek = useRef<{ seconds: number; play: boolean }>();
   const playbackAttempt = useRef(0);
   const playInFlight = useRef(false);
+  const mediaCheck = useRef<AbortController>();
+  useEffect(() => () => { mediaCheck.current?.abort(); }, [src]);
+
+  function diagnoseMediaFailure(code?: number) {
+    stopPlaybackState(); setMetadataReady(false);
+    setMediaError(mediaFailureMessage(code));
+    mediaCheck.current?.abort();
+    if (!src) return;
+    const controller = new AbortController();
+    mediaCheck.current = controller;
+    void mediaAccessFailure(src, controller.signal).then(message => {
+      if (!controller.signal.aborted && message) setMediaError(message);
+    });
+  }
 
   useEffect(() => {
     onPlaybackChange?.({ currentTime: current, duration, ready: metadataReady && !mediaError });
@@ -192,6 +207,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(funct
   }
 
   function retryVideo() {
+    mediaCheck.current?.abort();
     const video = videoRef.current;
     if (!video) return;
     stopPlaybackState();
@@ -228,7 +244,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(funct
   return <div ref={containerRef} role="region" aria-label="Video player" data-playing={isPlaying} data-control-error={Boolean(mediaError || playError || controlError)} aria-keyshortcuts="Space K J L ArrowLeft ArrowRight ArrowUp ArrowDown M F" tabIndex={0} onKeyDown={shortcuts} className="video-player overflow-hidden rounded-2xl bg-[#101d2b] text-white shadow-soft outline-none focus-visible:ring-2 focus-visible:ring-teal-400">
     <div className="video-player-stage relative aspect-video bg-[#080e1d]">
       <div className="absolute left-4 top-4 z-10 hidden sm:flex items-center gap-2 rounded-full bg-black/35 px-2.5 py-1.5 text-[10px] font-medium text-white backdrop-blur"><span className="h-1.5 w-1.5 rounded-full bg-teal-400" /> Incident video</div>
-      {src ? <video ref={videoRef} src={src} aria-label={ariaLabel} onClick={togglePlay} className="h-full w-full object-cover object-center" playsInline preload="metadata"
+      {src ? <video ref={videoRef} src={src} aria-label={ariaLabel} onClick={togglePlay} className="h-full w-full object-contain object-center" playsInline preload="metadata"
         onProgress={updateBuffered}
         onVolumeChange={() => { if (videoRef.current) { setVolume(videoRef.current.volume); setMuted(videoRef.current.muted); } }}
         onRateChange={() => { if (videoRef.current) setSpeed(videoRef.current.playbackRate); }}
@@ -242,7 +258,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(funct
         onPause={stopPlaybackState} onEnded={stopPlaybackState}
         onCanPlay={() => {  applyPendingSeek(); }}
         onEmptied={() => { stopPlaybackState(); setMetadataReady(false); setDuration(0); setCurrent(0); }}
-        onError={(event) => { stopPlaybackState(); setMetadataReady(false); setMediaError(mediaFailureMessage(event.currentTarget.error?.code)); }}
+        onError={(event) => diagnoseMediaFailure(event.currentTarget.error?.code)}
       /> : <div className="flex h-full w-full items-center justify-center text-sm font-medium text-slate-500">Video preview unavailable</div>}
       {src && !mediaError && !metadataReady && <p role="status" className="pointer-events-none absolute right-4 top-4 rounded-lg bg-black/35 px-2.5 py-1.5 text-xs text-white/80">Loading video...</p>}
       {!isPlaying && src && !mediaError && <button ref={overlayRef} type="button" aria-label="Play incident video" onClick={togglePlay} className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-teal-400 text-[#08232b] shadow-lg transition-colors hover:bg-teal-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-200 disabled:opacity-50"><Play className="ml-0.5 h-6 w-6" /></button>}

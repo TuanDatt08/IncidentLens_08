@@ -1,5 +1,7 @@
 """Incident upload and factual metadata routes."""
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from starlette.concurrency import run_in_threadpool
 
@@ -17,8 +19,13 @@ async def upload_incident(video: UploadFile = File(...), log: UploadFile | None 
 
 
 @router.get("/incidents")
-async def list_incidents_route(limit: int = Query(default=20, ge=1, le=100), offset: int = Query(default=0, ge=0)):
-    return await run_in_threadpool(list_incidents, limit, offset)
+async def list_incidents_route(
+    limit: int = Query(default=20, ge=1, le=100), offset: int = Query(default=0, ge=0),
+    q: str = Query(default="", max_length=255),
+    processing_status: Literal["UPLOADED", "READY", "PROCESSING", "COMPLETED", "FAILED"] | None = None,
+    review_status: Literal["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED"] | None = None,
+):
+    return await run_in_threadpool(list_incidents, limit, offset, q=q, processing_status=processing_status, review_status=review_status)
 
 
 @router.get("/incidents/{incident_id}")
