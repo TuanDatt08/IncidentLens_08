@@ -9,9 +9,11 @@ for service in gpu-media gpu-worker; do
     if [ "$service" = gpu-media ]; then
         command='/workspace/incidentlens-venv/bin/python -m uvicorn api.gpu_media:app --host 127.0.0.1 --port 18000'
         automatic=true
+        preflight='bash /workspace/incidentlens/deploy/vast/restore_media_key.sh'
     else
         command='/workspace/incidentlens-venv/bin/python -m backend.gpu_worker'
         automatic=false
+        preflight=':'
     fi
     cat > "/opt/supervisor-scripts/incidentlens-$service.sh" <<EOF
 #!/bin/bash
@@ -21,6 +23,7 @@ set -a
 . $base/worker.env
 set +a
 cd $base
+$preflight
 exec $command
 EOF
     chmod 700 "/opt/supervisor-scripts/incidentlens-$service.sh"

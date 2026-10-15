@@ -1,0 +1,78 @@
+{
+  "checked_at_utc": "2026-10-15T11:25:32.308773+00:00",
+  "implementation_commit": "50cc0ac9722e1333a78a30a2c06033c00a7dd53b",
+  "runtime_files_verified": 110,
+  "runtime": {
+    "model": "qwen2.5vl:7b",
+    "context": 32768,
+    "processor": "100% GPU",
+    "consumer": "single GPU worker"
+  },
+  "video_only": {
+    "validation_clip_duration_s": 2.0,
+    "sampled_frames": 8,
+    "stages": [
+      {
+        "stage": "A",
+        "frames": 6
+      },
+      {
+        "stage": "A",
+        "frames": 4
+      },
+      {
+        "stage": "A",
+        "frames": 6
+      },
+      {
+        "stage": "B",
+        "frames": 6
+      }
+    ],
+    "final_status": "CONFIRMED",
+    "confirmed_types": [
+      "PEDESTRIAN_CONFLICT"
+    ],
+    "retained_unresolved": [
+      [
+        "A0-0"
+      ],
+      [
+        "A0-1"
+      ]
+    ],
+    "elapsed_s": 159.79,
+    "review_status": "DRAFT",
+    "coordinate": "frame_seq",
+    "ground_truth_verified": false
+  },
+  "video_with_log": {
+    "validation_clip_duration_s": 2.0,
+    "final_status": "INCONCLUSIVE",
+    "detection_state": "REVIEW_REQUIRED_TELEMETRY_CONFLICT",
+    "elapsed_s": 135.1,
+    "coordinate": "t_video_s",
+    "review_status": "DRAFT",
+    "ground_truth_verified": false
+  },
+  "integration": {
+    "render_health_http": 200,
+    "gpu_media_health_http": 200,
+    "render_media_anonymous_http": 401,
+    "matching_gpu_access_log": true,
+    "existing_render_public_key_restored": true,
+    "private_key_rotated": false
+  },
+  "tests": {
+    "full_suite_passed": 431,
+    "full_suite_skipped": 4,
+    "focused_passed": 38,
+    "linux_key_restore_passed": 1,
+    "ruff": "passed"
+  },
+  "limitations": [
+    "No precision/recall claim; validation clips lack independent labels.",
+    "Video-only currently samples at 4 FPS; adaptive 8 FPS is only active around log-derived critical times.",
+    "Model omission of preliminary suspicions is preserved as INCONCLUSIVE, never silently dropped."
+  ]
+}

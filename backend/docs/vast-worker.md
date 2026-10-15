@@ -46,6 +46,10 @@ duy trì tunnel rồi tự reconnect khi ngắt. Các biến secret trên Render
 
 Khóa public trên Vast dùng `restrict,port-forwarding,permitopen="127.0.0.1:18000",command="/bin/false"`.
 Không sao chép khóa quản trị cá nhân vào Render; không tắt kiểm tra host key.
+Giữ public key đã cấp tại `/workspace/render_media_ed25519.pub`. Media service
+chạy `deploy/vast/restore_media_key.sh` trước khi start để khôi phục đúng dòng
+giới hạn nếu Vast đã làm mới `authorized_keys` khi khởi động. Helper không tạo
+khóa mới, không lấy private key và không thay thế các khóa quản trị khác.
 Nếu tunnel/GPU tắt, upload/media trả 503; API danh sách/report/login vẫn chạy.
 Render không có worker. Không đặt `GPU_MEDIA_BASE_URL` trong env của GPU.
 

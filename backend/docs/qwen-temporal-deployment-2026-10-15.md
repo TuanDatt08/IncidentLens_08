@@ -16,6 +16,11 @@ Các lớp kiểm tra giữ ID/tọa độ thật, không coi model notes là b�
 - Đã chạy đoạn video thật 2 giây trích từ recording có sẵn, không log: Stage A/B và FINAL_VIDEO hoàn thành; model kết luận PEDESTRIAN_CONFLICT ở DRAFT. Đây là kết luận model trên clip kiểm thử, chưa có nhãn độc lập để xác nhận đúng/sai.
 - Cùng đoạn hình ảnh với log đồng bộ đã quy đổi theo video kiểm thử: pipeline và tổng hợp cuối hoàn thành; giữ INCONCLUSIVE/REVIEW_REQUIRED_TELEMETRY_CONFLICT khi Qwen phủ nhận bằng chứng phanh, không tự ép incident_detected=true.
 - Các lần thử ban đầu làm lộ lỗi ngôn ngữ, tọa độ phân số và nhầm frame cuối với biên clip. Đã sửa chỉ dẫn cuối request, schema integer và const cho hai biên clip; raw attempts được giữ trên GPU.
+- Commit triển khai logic: `50cc0ac9722e1333a78a30a2c06033c00a7dd53b`; Render báo Live. GPU đã xác minh 110 file runtime khớp nội dung commit trước khi restart worker/media.
+- Lượt video-only sau triển khai hoàn thành trong 159,79 giây trên clip kiểm thử 2 giây: model xác nhận PEDESTRIAN_CONFLICT, đồng thời backend giữ hai ghi chú sơ bộ chưa được summary đối chiếu đầy đủ. Đây là chi phí của nhiều lượt inference, chưa tối ưu throughput.
+- Kiểm tra sau deploy phát hiện Vast đã làm mất dòng public key dành riêng cho Render trong authorized_keys. Đã phục hồi từ public key có sẵn, giữ nguyên private key và giới hạn chuyển tiếp. Request qua Render xuất hiện trong log GPU, trả 401 cho người chưa đăng nhập; health API/media trả 200.
+- Startup media gọi helper khôi phục khóa cũ. Test Linux thực tế xác nhận không thêm trùng, giữ các dòng cũ và quyền file 0600, kể cả file thiếu newline cuối. Không tạo thêm credential hoặc cài thêm dependency.
+- Bằng chứng máy đọc được: [qwen-temporal-validation-2026-10-15.json](qwen-temporal-validation-2026-10-15.json).
 
 ## Giới hạn và rollback
 
