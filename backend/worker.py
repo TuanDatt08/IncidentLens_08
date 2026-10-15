@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import socket
 import time
 from pathlib import Path
 from threading import Event, Lock, Thread
@@ -79,7 +80,7 @@ def run_once(*, vlm: VLMAdapter | None = None, job_id: str | None = None) -> boo
                 has_log = bool(incident.get('telemetry_uri'))
                 if output is not None:
                     from backend.services.pipeline_status import update_status
-                    update_status(output, claim.job_id, 'backend', 'MP4 + CSV: tìm trigger từ log, trích clip/frame và gọi provider.' if has_log else 'Chỉ MP4: phát hiện và phân tích bằng Stage A/B.', pipeline='log_triggers' if has_log else 'video_stages')
+                    update_status(output, claim.job_id, 'backend', 'MP4 + CSV: tìm trigger từ log, trích clip/frame và gọi provider.' if has_log else 'Chỉ MP4: phát hiện và phân tích bằng Stage A/B.', pipeline='log_triggers' if has_log else 'video_stages', worker_host=socket.gethostname())
                 if settings.qwen_runtime == 'ollama' and not has_log:
                     from backend.services.prompt_pipeline import process_prompt_incident
                     result = process_prompt_incident(incident, storage_root=settings.incident_storage_dir, settings=settings, on_progress=lease.update, job_id=claim.job_id)

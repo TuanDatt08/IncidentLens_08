@@ -14,6 +14,7 @@ from api.errors import (
     validation_error_handler,
 )
 from api.evidence import router as evidence_router
+from api.gpu_media_proxy import GpuMediaProxy
 from api.incidents import router as incident_router
 from api.jobs import router as job_router
 from api.media import router as media_router
@@ -50,6 +51,7 @@ settings = get_settings()
 cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
 if settings.app_env != "production":
     cors_origins = list(dict.fromkeys([*cors_origins, "http://localhost:3000", "http://127.0.0.1:3000"]))
+app.add_middleware(GpuMediaProxy)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,

@@ -79,6 +79,18 @@ class Settings(BaseSettings):
 
     # Incident ingestion
     incident_storage_dir: str = "./backend/data/incidents"
+    gpu_media_base_url: str = ""
+
+    @field_validator('gpu_media_base_url')
+    @classmethod
+    def validate_gpu_media_base_url(cls, value):
+        if value:
+            from urllib.parse import urlsplit
+            parsed = urlsplit(value)
+            if parsed.scheme != 'http' or parsed.hostname != '127.0.0.1' or parsed.username or parsed.password or parsed.path not in {'', '/'} or parsed.query or parsed.fragment:
+                raise ValueError('GPU media service must use the private loopback SSH tunnel')
+        return value
+
     max_video_size_mb: int = Field(default=2048, ge=1)
     max_log_size_mb: int = Field(default=100, ge=1)
     ffprobe_bin: str = "ffprobe"
