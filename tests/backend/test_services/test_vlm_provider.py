@@ -90,3 +90,21 @@ def test_self_hosted_rejects_public_endpoint(tmp_path):
     module, context, config = context_and_config(tmp_path, "self_hosted")
     with pytest.raises(ValueError, match="internal"):
         module.create_provider(replace(config, endpoint="https://8.8.8.8/v1"))
+
+
+def test_candidate_measurements_are_explicit_in_model_context(tmp_path):
+    module, context, config = context_and_config(tmp_path, 'self_hosted')
+    context = replace(context, candidate_window=(0.,2.,4.), telemetry_rows=(
+        {'time_s':1.,'speed':9.,'brake':0.,'acceleration':0.},
+        {'time_s':2.,'speed':2.,'brake':.902,'acceleration':-27.043},
+        {'time_s':2.5,'speed':0.,'brake':.902,'acceleration':0.}))
+    payloads=[]
+    def handler(request):
+        payloads.append(json.loads(request.content))
+        return httpx.Response(200,json=provider_response())
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        module.create_provider(config,client=client).analyze(context)
+    data=json.loads(payloads[0]['messages'][0]['content'][0]['text'].split('\n')[-1])
+    assert data['telemetry_findings']['peak_brake']==.902
+    assert data['telemetry_findings']['min_acceleration_m_s2']==-27.043
+    assert data['telemetry_findings']['speed_drop_m_s']==9.

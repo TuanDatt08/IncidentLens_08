@@ -61,6 +61,7 @@ export function AnalysisContext({ id, onSeek, currentTime = 0, seekEnabled = tru
   const point = data.points[Math.min(cursor, data.points.length - 1)];
   const primary = asRecord(data.primary_analysis), legacy = asRecord(data.model_output.analysis);
   const analysis = data.analyses?.[analysisIndex] || (Object.keys(primary).length ? primary : Object.keys(legacy).length ? legacy : data.model_output);
+  const extraWarnings = (data.warnings || []).filter(warning => !Array.isArray(analysis.unknowns) || !analysis.unknowns.includes(warning));
   const showAnalysis = mode !== "telemetry", showTelemetry = mode !== "analysis";
   const chooseTime = (index: number) => {
     setCursor(index);
@@ -71,8 +72,8 @@ export function AnalysisContext({ id, onSeek, currentTime = 0, seekEnabled = tru
     {showAnalysis && data.review_required && <div role="note" className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-950"><p className="font-bold">Cần kỹ sư review — kết luận AI chưa giải quyết được nguy cơ</p><p className="mt-1 text-sm leading-6">Kết quả AI còn mâu thuẫn với telemetry hoặc thiếu kết luận đầy đủ theo thời gian. Đây không phải xác nhận “không có incident”. Đối chiếu video, telemetry và output bên dưới trước khi kết luận.</p></div>}
     {showAnalysis && <>
     {data.analyses && data.analyses.length > 1 && <label className="mt-4 block text-xs font-semibold text-slate-600">Chọn sự kiện được phân tích<select value={analysisIndex} onChange={event => setAnalysisIndex(Number(event.target.value))} className="mt-2 block w-full rounded-lg border border-slate-300 bg-transparent p-3 text-sm text-vf-navy">{data.analyses.map((item, index) => <option key={index} value={index}>{typeof item.incident_id === "string" ? item.incident_id : `Sự kiện ${index + 1}`}</option>)}</select></label>}
-    {data.warnings?.length > 0 && <ul className="mt-4 space-y-2 text-sm text-amber-700" aria-label="Cảnh báo dữ liệu">{data.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
-    <StructuredAnalysis analysis={{ ...analysis, summary: analysis.summary ?? data.summary }} onSeek={onSeek} seekEnabled={seekEnabled} />
+    {extraWarnings.length > 0 && <ul className="mt-4 space-y-2 text-sm text-amber-700" aria-label="Cảnh báo dữ liệu">{extraWarnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
+    <StructuredAnalysis analysis={{ ...analysis, analysis_status: analysis.analysis_status ?? (data.review_required ? "CẦN KỸ SƯ REVIEW" : analysis.incident_detected === true ? "MÔ HÌNH BÁO CÓ SỰ CỐ — DRAFT" : "CHƯA XÁC NHẬN SỰ CỐ"), summary: analysis.summary ?? data.summary }} onSeek={onSeek} seekEnabled={seekEnabled} />
     <details className="mt-4 border-t border-slate-200 pt-3"><summary className="cursor-pointer text-sm font-semibold text-vf-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">Xem JSON output đã lưu</summary><pre className="mt-3 max-h-80 overflow-auto rounded-lg bg-slate-950 p-4 text-xs leading-5 text-slate-100">{JSON.stringify(data.analyses?.length ? data.analyses : data.model_output, null, 2)}</pre></details>
     </>}
     {showTelemetry && <>{data.points.length > 1 ? <div className="mt-7 border-t border-slate-200 pt-5">

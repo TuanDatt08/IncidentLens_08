@@ -23,6 +23,7 @@ from backend.services.evidence_extraction import EvidenceAsset, file_hash
 from backend.services.evidence_validation import EvidenceRegistry, validate_analysis
 from backend.services.prompt_io import append_output, read_prompt
 from backend.services.synchronization import finite
+from backend.services.telemetry_consistency import braking_measurements
 
 TELEMETRY_ALLOWLIST = frozenset({"time_s", "speed", "brake", "acceleration", "jerk", "collision_intensity", "mode"})
 
@@ -165,6 +166,11 @@ class HTTPVLMProvider:
             images.append({"type": "text", "text": f"{frame.evidence_id} at video_seconds={frame.time_start_s}"})
             images.append({"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + base64.b64encode(frame.path.read_bytes()).decode("ascii")}})
         telemetry = filtered_telemetry(context.telemetry_rows)
+        measured = braking_measurements(telemetry, *context.candidate_window[::2]) if context.candidate_window else None
+        telemetry_findings = None if measured is None else {
+            **measured, 'source': 'COMPUTED_FROM_SYNCHRONIZED_TELEMETRY',
+            'evidence_ids': [a.evidence_id for a in context.registry.assets if a.source == 'TELEMETRY'],
+            'meaning': 'Strong braking and rapid speed loss are supported by these measurements; collision and pedestrian causality remain unconfirmed.'}
         registry = batch_registry(context)
         if config.prompt_path:
             telemetry = sample_telemetry(telemetry, timestamps + [flag["time_s"] for flag in context.flags])
@@ -172,7 +178,7 @@ class HTTPVLMProvider:
         instructions = read_prompt(config.prompt_path) if config.prompt_path else "Analyze only supplied chronological evidence. Cite valid evidence IDs/time/source. Distinguish OBSERVED, SUPPORTED_INFERENCE, HYPOTHESIS, UNKNOWN. Internal causes without logs must remain UNKNOWN/HYPOTHESIS. Conflicts and missing coverage go in unknowns. Return only schema 2.0 JSON with DRAFT; never approve."
         if config.compact_context:
             instructions += "\nTelemetry/flags tables have ordered columns and rows of values in that column order; null means missing."
-        prompt = instructions + "\n" + json.dumps({"duration_s": context.duration_s, "candidate_window": context.candidate_window, "candidate_observations": context.candidate_observations, "decision_scope": "FINAL_CANDIDATE" if context.candidate_observations else "SUPPLIED_SEQUENCE", "flags": compact_records(context.flags) if config.compact_context else context.flags, "telemetry": compact_records(telemetry) if config.compact_context else telemetry, "telemetry_units": {"time_s": "video_seconds", "speed": "m/s", "acceleration": "m/s²", "jerk": "m/s³", "brake": "0..1"}, "telemetry_sampling": "bracketing rows at supplied frames and flags" if config.prompt_path else "all supplied rows", "evidence": refs_payload, "output_schema": AIIncidentAnalysisV2.model_json_schema()}, ensure_ascii=False, separators=(",", ":"))
+        prompt = instructions + "\n" + json.dumps({"duration_s": context.duration_s, "candidate_window": context.candidate_window, "candidate_observations": context.candidate_observations, "decision_scope": "FINAL_CANDIDATE" if context.candidate_observations else "SUPPLIED_SEQUENCE", "flags": compact_records(context.flags) if config.compact_context else context.flags, "telemetry": compact_records(telemetry) if config.compact_context else telemetry, "telemetry_findings": telemetry_findings, "telemetry_units": {"time_s": "video_seconds", "speed": "m/s", "acceleration": "m/s²", "jerk": "m/s³", "brake": "0..1"}, "telemetry_sampling": "bracketing rows at supplied frames and flags" if config.prompt_path else "all supplied rows", "evidence": refs_payload, "output_schema": AIIncidentAnalysisV2.model_json_schema()}, ensure_ascii=False, separators=(",", ":"))
         prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         output_schema = detection_output_schema() if config.compact_context or config.kind == "self_hosted" else AIIncidentAnalysisV2.model_json_schema()
         payload = {"model": config.model, "temperature": 0, "max_tokens": config.max_output_tokens, "response_format": {"type": "json_schema", "json_schema": {"name": "incident_analysis_v2", "strict": True, "schema": output_schema}}, "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, *images]}]}
