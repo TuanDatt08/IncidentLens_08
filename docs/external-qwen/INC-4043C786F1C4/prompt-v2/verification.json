@@ -1,0 +1,8 @@
+{
+  "completed_requests": 13,
+  "same_image_hashes_as_previous_run": true,
+  "exact_stage1_prompt": true,
+  "strict_json_responses": 0,
+  "parseable_after_removing_markdown_fence": 13,
+  "inference_total_s": 183.04
+}

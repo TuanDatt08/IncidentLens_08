@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5vl:7b",
+  "created_at": "2026-10-15T14:50:54.007746136Z",
+  "message": {
+    "role": "assistant",
+    "content": "```json\n{\n  \"frame_observation\": {\n    \"scene\": \"Đường nhỏ với hai bên là cây cối và một ngôi nhà ở phía trái. Xe đang di chuyển trên đường, phía trước có một người lái xe máy và một người đi bộ phía sau.\",\n    \"objects\": [\n      {\n        \"local_id\": \"obj_01\",\n        \"category\": \"person\",\n        \"subtype\": \"standing\",\n        \"appearance\": \"người mặc áo trắng, đội mũ bảo hiểm\",\n        \"position\": \"giữa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"standing\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"người đứng yên trên xe máy\",\n        \"certainty\": \"clear\"\n      },\n      {\n        \"local_id\": \"obj_02\",\n        \"category\": \"person\",\n        \"subtype\": \"walking_pose\",\n        \"appearance\": \"người mặc áo đỏ, đội mũ vàng\",\n        \"position\": \"phải\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"walking_pose\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"người đi bộ phía sau xe máy\",\n        \"certainty\": \"clear\"\n      },\n      {\n        \"local_id\": \"obj_03\",\n        \"category\": \"motorcycle\",\n        \"subtype\": \"loại cụ thể không rõ\",\n        \"appearance\": \"xe máy màu đỏ\",\n        \"position\": \"giữa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"standing\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"xe máy có người lái đứng yên\",\n        \"certainty\": \"clear\"\n      }\n    ],\n    \"road_features\": [\"đường nhỏ, hai bên là cây cối\"],\n    \"visible_interactions\": [\"người lái xe máy đứng yên, người đi bộ đi phía sau\"],\n    \"unusual_visual_cues\": [\"không có dấu hiệu bất thường\"],\n    \"unknowns\": [\"không có chi tiết không đủ chứng cứ\"]\n  }\n}\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 14854991179,
+  "load_duration": 103498400,
+  "prompt_eval_count": 3515,
+  "prompt_eval_cached_count": 796,
+  "prompt_eval_duration": 3649880000,
+  "eval_count": 477,
+  "eval_duration": 10440115000
+}

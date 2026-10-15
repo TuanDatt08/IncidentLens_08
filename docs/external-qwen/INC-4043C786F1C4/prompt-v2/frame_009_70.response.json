@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5vl:7b",
+  "created_at": "2026-10-15T14:50:37.344274134Z",
+  "message": {
+    "role": "assistant",
+    "content": "```json\n{\n  \"frame_observation\": {\n    \"scene\": \"Đường nhỏ với hai bên là cây cối và nhà cửa, xe đang di chuyển trên đường.\",\n    \"objects\": [\n      {\n        \"local_id\": \"obj_01\",\n        \"category\": \"motorcycle\",\n        \"subtype\": \"xe máy\",\n        \"appearance\": \"màu đen\",\n        \"position\": \"giữa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"ngồi\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"xe máy màu đen, người ngồi trên xe\",\n        \"certainty\": \"clear\"\n      },\n      {\n        \"local_id\": \"obj_02\",\n        \"category\": \"car\",\n        \"subtype\": \"xe ô tô\",\n        \"appearance\": \"màu trắng\",\n        \"position\": \"giữa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"đi\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"xe ô tô màu trắng phía trước\",\n        \"certainty\": \"clear\"\n      },\n      {\n        \"local_id\": \"obj_03\",\n        \"category\": \"person\",\n        \"subtype\": \"người ngồi trên xe máy\",\n        \"appearance\": \"màu da, mặc áo màu nâu\",\n        \"position\": \"giữa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"ngồi\",\n        \"attached_to\": \"obj_01\",\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"người ngồi trên xe máy màu đen\",\n        \"certainty\": \"clear\"\n      }\n    ],\n    \"road_features\": [\"đường nhỏ, hai bên là cây cối và nhà cửa\"],\n    \"visible_interactions\": [\"xe máy và xe ô tô đang di chuyển trên đường\"],\n    \"unusual_visual_cues\": [\"không có dấu hiệu bất thường\"],\n    \"unknowns\": [\"không có chi tiết không đủ chứng cứ\"]\n  }\n}\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 15701348785,
+  "load_duration": 98959895,
+  "prompt_eval_count": 3515,
+  "prompt_eval_cached_count": 796,
+  "prompt_eval_duration": 3714904000,
+  "eval_count": 458,
+  "eval_duration": 11291080000
+}

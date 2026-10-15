@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5vl:7b",
+  "created_at": "2026-10-15T14:49:44.732712474Z",
+  "message": {
+    "role": "assistant",
+    "content": "```json\n{\n  \"frame_observation\": {\n    \"scene\": \"Đường đi qua khu vực có cây cối và tường đá, xe đang di chuyển trên đường.\",\n    \"objects\": [\n      {\n        \"local_id\": \"obj_01\",\n        \"category\": \"person\",\n        \"subtype\": \"standing\",\n        \"appearance\": \"đỏ, mặc áo vàng, đang đứng\",\n        \"position\": \"phải; gần\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"standing\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"người mặc áo vàng và quần đỏ đứng trên đường\",\n        \"certainty\": \"clear\"\n      },\n      {\n        \"local_id\": \"obj_02\",\n        \"category\": \"motorcycle\",\n        \"subtype\": \"motorcycle\",\n        \"appearance\": \"đỏ, có người ngồi\",\n        \"position\": \"phải; gần\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"seated_on_vehicle\",\n        \"attached_to\": \"obj_01\",\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"người mặc áo vàng và quần đỏ ngồi trên xe máy màu đỏ\",\n        \"certainty\": \"clear\"\n      },\n      {\n        \"local_id\": \"obj_03\",\n        \"category\": \"car\",\n        \"subtype\": \"car\",\n        \"appearance\": \"trắng, đang di chuyển\",\n        \"position\": \"giữa; xa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"standing\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"xe màu trắng đang di chuyển phía trước\",\n        \"certainty\": \"clear\"\n      }\n    ],\n    \"road_features\": [\"đường đi qua khu vực có cây cối và tường đá\"],\n    \"visible_interactions\": [\"không có\"],\n    \"unusual_visual_cues\": [\"không có\"],\n    \"unknowns\": [\"không có\"]\n  }\n}\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 15108980217,
+  "load_duration": 116913186,
+  "prompt_eval_count": 3515,
+  "prompt_eval_cached_count": 3,
+  "prompt_eval_duration": 4389030000,
+  "eval_count": 451,
+  "eval_duration": 10094917000
+}

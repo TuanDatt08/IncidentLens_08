@@ -1,0 +1,28 @@
+{
+  "recording_id": "INC-4043C786F1C4",
+  "started_at_utc": "2026-10-15T14:49:28.635195+00:00",
+  "source": "/workspace/incidentlens-media/INC-4043C786F1C4/source/video.mp4",
+  "source_sha256": "eeaea78b8546de20be64b5b281a8fcb9b59ac51957eddfd5309da878fb81ab3f",
+  "model": "qwen2.5vl:7b",
+  "requested_seconds": [
+    8.3,
+    9.3,
+    9.5,
+    9.7,
+    9.9,
+    10,
+    10.1,
+    10.2,
+    10.5,
+    10.9,
+    11.5,
+    12.5,
+    13.5
+  ],
+  "frame_selection": "First decoded frame with presentation timestamp >= requested time; original resolution PNG.",
+  "isolation": "Independent Ollama calls. No backend/worker imports, database updates, prior outputs or telemetry.",
+  "gpu_before": "NAME            ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   \nqwen2.5vl:7b    5ced39dfa4ba    7.3 GB    100% GPU     32768      llamacpp    Forever    \n",
+  "hardware": "name, memory.used [MiB]\nNVIDIA GeForce RTX 2080 Ti, 8754 MiB\n",
+  "gpu_after": "NAME            ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   \nqwen2.5vl:7b    5ced39dfa4ba    7.3 GB    100% GPU     32768      llamacpp    Forever    \n",
+  "completed_at_utc": "2026-10-15T14:52:49.653551+00:00"
+}

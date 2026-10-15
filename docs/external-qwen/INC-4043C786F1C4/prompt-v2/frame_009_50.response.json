@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5vl:7b",
+  "created_at": "2026-10-15T14:50:19.9110319Z",
+  "message": {
+    "role": "assistant",
+    "content": "```json\n{\n  \"frame_observation\": {\n    \"scene\": \"Đường nhỏ với hai bên là cây cối và một ngôi nhà ở phía trước. Xe đang di chuyển trên đường.\",\n    \"objects\": [\n      {\n        \"local_id\": \"obj_01\",\n        \"category\": \"person\",\n        \"subtype\": \"standing\",\n        \"appearance\": \"người mặc áo trắng, đội mũ bảo hiểm\",\n        \"position\": \"giữa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"standing\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"người đứng trên xe máy, mặc áo trắng và đội mũ bảo hiểm\",\n        \"certainty\": \"clear\"\n      },\n      {\n        \"local_id\": \"obj_02\",\n        \"category\": \"motorcycle\",\n        \"subtype\": \"xe máy\",\n        \"appearance\": \"xe máy màu đen\",\n        \"position\": \"giữa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"standing\",\n        \"attached_to\": \"obj_01\",\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"xe máy màu đen, người đứng trên xe\",\n        \"certainty\": \"clear\"\n      },\n      {\n        \"local_id\": \"obj_03\",\n        \"category\": \"car\",\n        \"subtype\": \"xe ô tô\",\n        \"appearance\": \"xe ô tô màu trắng\",\n        \"position\": \"giữa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"standing\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"xe ô tô màu trắng phía trước\",\n        \"certainty\": \"clear\"\n      }\n    ],\n    \"road_features\": [\"đường nhỏ, hai bên là cây cối\"],\n    \"visible_interactions\": [\"không có tương tác rõ ràng\"],\n    \"unusual_visual_cues\": [\"không có dấu hiệu bất thường\"],\n    \"unknowns\": [\"không có chi tiết không đủ chứng cứ\"]\n  }\n}\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 15252153212,
+  "load_duration": 99713667,
+  "prompt_eval_count": 3515,
+  "prompt_eval_cached_count": 796,
+  "prompt_eval_duration": 3695847000,
+  "eval_count": 456,
+  "eval_duration": 10648925000
+}

@@ -1,0 +1,45 @@
+{
+  "frame_observation": {
+    "scene": "Đường nhỏ với hai bên là cây cối và nhà cửa, xe đang di chuyển trên đường.",
+    "objects": [
+      {
+        "local_id": "obj_01",
+        "category": "car",
+        "subtype": "xe hơi",
+        "appearance": "trắng",
+        "position": "giữa",
+        "road_relation": "trên lòng đường",
+        "visible_pose": "stationary",
+        "attached_to": null,
+        "occlusion": "none",
+        "visual_evidence": "xe màu trắng đang di chuyển phía trước",
+        "certainty": "clear"
+      },
+      {
+        "local_id": "obj_02",
+        "category": "motorcycle",
+        "subtype": "xe máy",
+        "appearance": "đỏ",
+        "position": "phải",
+        "road_relation": "trên lòng đường",
+        "visible_pose": "standing",
+        "attached_to": null,
+        "occlusion": "none",
+        "visual_evidence": "xe máy màu đỏ đang di chuyển",
+        "certainty": "clear"
+      }
+    ],
+    "road_features": [
+      "đường nhỏ, hai bên là cây cối và nhà cửa"
+    ],
+    "visible_interactions": [
+      "xe hơi di chuyển phía trước, xe máy di chuyển"
+    ],
+    "unusual_visual_cues": [
+      "không có dấu hiệu bất thường"
+    ],
+    "unknowns": [
+      "không có chi tiết không đủ chứng cứ"
+    ]
+  }
+}

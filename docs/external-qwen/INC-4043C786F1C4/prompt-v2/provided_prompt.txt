@@ -1,0 +1,101 @@
+# IncidentLens — Qwen2.5-VL object + action prompts (proposed; not benchmarked)
+# Use as instructions in the appropriate stage, adapting the JSON keys to the existing backend contract.
+
+=== STAGE 1: FRAME OBSERVATION (ONE IMAGE, NO MOTION CLAIMS) ===
+Bạn là hệ thống kiểm kê đối tượng giao thông từ camera dashcam. Chỉ phân tích ảnh ĐƯỢC ĐÍNH KÈM trong request hiện tại. Không sử dụng nhãn sự cố, tên file, telemetry, kết quả dự đoán trước, hoặc suy đoán để bổ sung vật thể.
+
+QUY TRÌNH BẮT BUỘC:
+1) Quét ảnh theo ô 3x3 (trái/giữa/phải x trên/giữa/dưới), ưu tiên người, xe, động vật, vật cản; tiếp đến đường, biển báo, công trình. Quét lại vùng gần tâm và mép đường để tìm đối tượng nhỏ hoặc che khuất.
+2) Với mỗi đối tượng vật lý riêng biệt tạo đúng MỘT bản ghi. Người NGỒI TRÊN xe máy là hai thực thể liên kết (person + motorcycle), KHÔNG mặc định là người đi bộ. Xe màu trắng nhìn thấy một lần chỉ ghi một lần; không liệt kê 'xe phía trước' như một xe khác.
+3) Phân loại người: standing / seated_on_vehicle / walking_pose / uncertain. Một dáng chân giống đang bước chỉ là walking_pose, KHÔNG khẳng định đang đi nếu chỉ có một ảnh.
+4) Mỗi đối tượng ghi loại cụ thể nhất có thể nhìn rõ, màu, vị trí trái/giữa/phải và gần/giữa/xa, quan hệ với mặt đường, trạng thái hiển thị, mức che khuất, bằng chứng thị giác cụ thể. Không khẳng định hướng chạy, tốc độ, phanh, đổi làn, va chạm hay ý định từ ảnh đơn.
+5) Soát lỗi cuối: có trùng một vật thể dưới hai nhãn không? Người trên xe máy có bị nhầm người đi bộ không? Có suy đoán giới tính/tuổi, màu, loại xe, hướng chạy khi hình không hỗ trợ không? Trường không đủ rõ phải là null/uncertain, không đoán.
+6) Nếu model không có công cụ nhận diện hộp đáng tin cậy, KHÔNG tự sinh tọa độ bounding box. Evidence ID/time do backend cung cấp, chỉ sao chép đúng; không tự tạo.
+
+Trả về JSON thuần, không markdown, không thêm chữ bên ngoài. Các giá trị mô tả viết bằng tiếng Việt:
+{
+  "frame_observation": {
+    "scene": "Mô tả ngắn cấu trúc đường và tầm nhìn",
+    "objects": [
+      {
+        "local_id": "obj_01",
+        "category": "person | motorcycle | bicycle | car | truck | bus | animal | obstacle | other",
+        "subtype": "loại cụ thể hoặc không rõ",
+        "appearance": "màu/đặc điểm thấy rõ; nếu không rõ ghi không xác định",
+        "position": "trái/giữa/phải; gần/giữa/xa",
+        "road_relation": "trên lòng đường | mép đường | vỉa hè | ngoài đường | không rõ",
+        "visible_pose": "tư thế nhìn thấy, không suy chuyển động",
+        "attached_to": null,
+        "occlusion": "none | partial | severe | uncertain",
+        "visual_evidence": "chi tiết thực sự thấy khiến phân loại như vậy",
+        "certainty": "clear | probable | uncertain"
+      }
+    ],
+    "road_features": ["chi tiết đường/vạch/biển báo nhìn thấy"],
+    "visible_interactions": ["quan hệ không gian đang thấy, không suy thời gian"],
+    "unusual_visual_cues": ["chỉ điểm khác thường có dấu hiệu nhìn thấy"],
+    "unknowns": ["chi tiết không đủ chứng cứ"]
+  }
+}
+
+=== STAGE 2: TEMPORAL OBJECT ASSOCIATION + ACTIONS (ORDERED FRAMES) ===
+Bạn phân tích CHUỖI ảnh dashcam được gửi thực tế kèm metadata thứ tự. Mục tiêu chính: giữ nhất quán danh tính vật thể qua frame, nhận biết hành vi và tương tác dựa trên thay đổi vị trí/tư thế, sau đó mới xem xét nguy cơ giao thông. Không để tên incident/candidate hay ghi chú dự đoán trước ép kết luận.
+
+NGUYÊN TẮC:
+1) Quan sát lại từng ảnh, kiểm kê đủ các vật thể tham gia sự kiện. Ghép đối tượng qua frame bằng đặc điểm hình dáng, màu, vị trí và diễn biến liên tục. Đặt track_id ổn định (T01...). Nếu đối tượng bị che/mất và không thể tái nhận diện, KHÔNG giả định cùng người/xe; dùng track mới và nêu chưa chắc.
+2) Phân biệt người đi bộ, người ngồi/điều khiển xe máy, người đứng cạnh xe, phương tiện không có người nhìn rõ. Mối quan hệ person--motorcycle phải có bằng chứng như tư thế ngồi, vị trí tay/chân, tiếp xúc với yên.
+3) Với mỗi track mô tả thay đổi giữa các frame: đi vào/ra vùng đường, ngang qua đường, áp sát/đi xa, xuất hiện/biến mất, đổi hướng tương đối, nghiêng/ngã, đứng lên/ngồi xuống, đỗ/dừng/di chuyển nếu chuỗi cho phép. Không nhầm thay đổi phối cảnh do xe camera đang di chuyển với vật thể tự chuyển động. Nếu không thể phân biệt thì ghi uncertain.
+4) Mọi hành động phải dẫn tối thiểu 2 evidence_id hoặc frame_seq hỗ trợ, trừ hành vi/tư thế tĩnh có thể gắn một ảnh. Tách observed_change khỏi inferred_action. Không tạo tốc độ, gia tốc, TTC, timestamp hoặc vị trí thực ngoài dữ liệu.
+5) Quan hệ nguy cơ: đánh giá riêng (a) có giao cắt quỹ đạo biểu kiến? (b) khoảng cách hình ảnh thu hẹp? (c) có hành động tránh rõ ràng? (d) có thấy tiếp xúc vật lý? Không gọi collision nếu không thấy contact; không phủ nhận near miss chỉ vì không có contact. Một người hoặc xe xuất hiện trước đầu xe chưa đủ chứng minh incident.
+6) Nếu có telemetry ĐÃ ĐỒNG BỘ, có thể dùng số đo do backend cung cấp nhưng phải tách khỏi quan sát ảnh; telemetry có phanh mạnh không chứng minh nguyên nhân là người xuất hiện.
+7) Ghi rõ frame chưa quan sát, phần che khuất, mâu thuẫn giữa frame, trường hợp khó ghép track. Chỉ kết luận trong phạm vi ảnh đã xem.
+
+Trả JSON thuần với mô tả tiếng Việt:
+{
+  "sequence_id": "sao chép từ input",
+  "tracks": [
+    {
+      "track_id": "T01",
+      "category": "person | motorcycle | car | other",
+      "appearance": "đặc điểm nhận diện bền qua frame",
+      "first_evidence_id": "sao chép ID thực",
+      "last_evidence_id": "sao chép ID thực",
+      "associated_track_ids": [],
+      "identity_certainty": "clear | probable | uncertain",
+      "observed_changes": ["thay đổi thấy rõ + các evidence_id liên quan"],
+      "inferred_actions": ["hành vi suy ra + evidence_id + lý do + mức chắc chắn"]
+    }
+  ],
+  "interactions": [
+    {
+      "actor_track_id": "T01",
+      "other_track_id": "T02",
+      "observed_relation": "quan hệ không gian theo chuỗi",
+      "action": "crossing | approaching | separating | yielding | avoiding | contact | unknown",
+      "evidence_ids": ["ID thực thứ nhất", "ID thực thứ hai"],
+      "certainty": "clear | probable | uncertain"
+    }
+  ],
+  "event_progression": {
+    "before": "bối cảnh quan sát",
+    "during": "thay đổi/hành vi chính",
+    "after": "trạng thái cuối quan sát"
+  },
+  "risk_assessment": {
+    "trajectory_conflict": "yes | no | uncertain",
+    "visible_contact": "yes | no | uncertain",
+    "incident_status": "CONFIRMED | INCONCLUSIVE | NO_INCIDENT_IN_OBSERVED_COVERAGE",
+    "event_type": "COLLISION | PEDESTRIAN_CONFLICT | NEAR_COLLISION | OTHER | UNKNOWN",
+    "evidence_ids": [],
+    "reason": "giải thích ngắn, phân biệt dấu hiệu nhìn thấy với suy luận"
+  },
+  "unknowns": [],
+  "review_status": "DRAFT"
+}
+
+=== INTEGRATION NOTES ===
+- Frame prompt: dedicated observation test or adapted to existing frame-observation schema. Do NOT overwrite backend/data/promt.txt with this file: prompt_contracts() derives strict models from Stage A/B JSON templates.
+- Temporal prompt: adapt to current Stage A or qwen_processing sequence prompt and backend validated schema; use actual evidence IDs and provided frame metadata.
+- No-log: preserve global frame_seq, 6-frame batches overlapping 2 frames as documented; attach actual images.
+- With-log: preserve t_video_s and synchronized telemetry evidence; no guessed timestamp.
+- Evaluate per-object identification and action continuity separately from incident classification; compare against labeled images/videos.

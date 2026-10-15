@@ -1,0 +1,52 @@
+```json
+{
+  "frame_observation": {
+    "scene": "Đường nhỏ với hai bên là cây cối và một ngôi nhà ở phía trước. Xe đang di chuyển trên đường.",
+    "objects": [
+      {
+        "local_id": "obj_01",
+        "category": "person",
+        "subtype": "standing",
+        "appearance": "người mặc áo trắng, đội mũ bảo hiểm",
+        "position": "giữa",
+        "road_relation": "trên lòng đường",
+        "visible_pose": "standing",
+        "attached_to": null,
+        "occlusion": "none",
+        "visual_evidence": "người đứng trên xe máy, mặc áo trắng và đội mũ bảo hiểm",
+        "certainty": "clear"
+      },
+      {
+        "local_id": "obj_02",
+        "category": "motorcycle",
+        "subtype": "xe máy",
+        "appearance": "xe máy màu đen",
+        "position": "giữa",
+        "road_relation": "trên lòng đường",
+        "visible_pose": "standing",
+        "attached_to": "obj_01",
+        "occlusion": "none",
+        "visual_evidence": "xe máy màu đen, người đứng trên xe",
+        "certainty": "clear"
+      },
+      {
+        "local_id": "obj_03",
+        "category": "car",
+        "subtype": "xe ô tô",
+        "appearance": "xe ô tô màu trắng",
+        "position": "giữa",
+        "road_relation": "trên lòng đường",
+        "visible_pose": "standing",
+        "attached_to": null,
+        "occlusion": "none",
+        "visual_evidence": "xe ô tô màu trắng phía trước",
+        "certainty": "clear"
+      }
+    ],
+    "road_features": ["đường nhỏ, hai bên là cây cối"],
+    "visible_interactions": ["không có tương tác rõ ràng"],
+    "unusual_visual_cues": ["không có dấu hiệu bất thường"],
+    "unknowns": ["không có chi tiết không đủ chứng cứ"]
+  }
+}
+```

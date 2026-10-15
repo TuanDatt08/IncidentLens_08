@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5vl:7b",
+  "created_at": "2026-10-15T14:52:13.320908742Z",
+  "message": {
+    "role": "assistant",
+    "content": "```json\n{\n  \"frame_observation\": {\n    \"scene\": \"Đường nhỏ với hai bên là cây cối và nhà cửa, xe đang di chuyển trên đường.\",\n    \"objects\": [\n      {\n        \"local_id\": \"obj_01\",\n        \"category\": \"car\",\n        \"subtype\": \"xe hơi\",\n        \"appearance\": \"trắng\",\n        \"position\": \"giữa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"stationary\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"xe màu trắng đang di chuyển phía trước\",\n        \"certainty\": \"clear\"\n      },\n      {\n        \"local_id\": \"obj_02\",\n        \"category\": \"motorcycle\",\n        \"subtype\": \"xe máy\",\n        \"appearance\": \"đỏ\",\n        \"position\": \"phải\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"standing\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"xe máy màu đỏ đang di chuyển\",\n        \"certainty\": \"clear\"\n      }\n    ],\n    \"road_features\": [\"đường nhỏ, hai bên là cây cối và nhà cửa\"],\n    \"visible_interactions\": [\"xe hơi di chuyển phía trước, xe máy di chuyển\"],\n    \"unusual_visual_cues\": [\"không có dấu hiệu bất thường\"],\n    \"unknowns\": [\"không có chi tiết không đủ chứng cứ\"]\n  }\n}\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 12014628189,
+  "load_duration": 135419925,
+  "prompt_eval_count": 3515,
+  "prompt_eval_cached_count": 796,
+  "prompt_eval_duration": 3769296000,
+  "eval_count": 330,
+  "eval_duration": 7467881000
+}

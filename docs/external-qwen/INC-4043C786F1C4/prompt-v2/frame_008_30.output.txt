@@ -1,0 +1,52 @@
+```json
+{
+  "frame_observation": {
+    "scene": "Đường đi qua khu vực có cây cối và tường đá, xe đang di chuyển trên đường.",
+    "objects": [
+      {
+        "local_id": "obj_01",
+        "category": "person",
+        "subtype": "standing",
+        "appearance": "đỏ, mặc áo vàng, đang đứng",
+        "position": "phải; gần",
+        "road_relation": "trên lòng đường",
+        "visible_pose": "standing",
+        "attached_to": null,
+        "occlusion": "none",
+        "visual_evidence": "người mặc áo vàng và quần đỏ đứng trên đường",
+        "certainty": "clear"
+      },
+      {
+        "local_id": "obj_02",
+        "category": "motorcycle",
+        "subtype": "motorcycle",
+        "appearance": "đỏ, có người ngồi",
+        "position": "phải; gần",
+        "road_relation": "trên lòng đường",
+        "visible_pose": "seated_on_vehicle",
+        "attached_to": "obj_01",
+        "occlusion": "none",
+        "visual_evidence": "người mặc áo vàng và quần đỏ ngồi trên xe máy màu đỏ",
+        "certainty": "clear"
+      },
+      {
+        "local_id": "obj_03",
+        "category": "car",
+        "subtype": "car",
+        "appearance": "trắng, đang di chuyển",
+        "position": "giữa; xa",
+        "road_relation": "trên lòng đường",
+        "visible_pose": "standing",
+        "attached_to": null,
+        "occlusion": "none",
+        "visual_evidence": "xe màu trắng đang di chuyển phía trước",
+        "certainty": "clear"
+      }
+    ],
+    "road_features": ["đường đi qua khu vực có cây cối và tường đá"],
+    "visible_interactions": ["không có"],
+    "unusual_visual_cues": ["không có"],
+    "unknowns": ["không có"]
+  }
+}
+```

@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5vl:7b",
+  "created_at": "2026-10-15T14:52:38.4109051Z",
+  "message": {
+    "role": "assistant",
+    "content": "```json\n{\n  \"frame_observation\": {\n    \"scene\": \"Đường nhỏ với hai bên là cây cối và nhà cửa, xe đang di chuyển trên đường.\",\n    \"objects\": [\n      {\n        \"local_id\": \"obj_01\",\n        \"category\": \"car\",\n        \"subtype\": \"xe màu trắng\",\n        \"appearance\": \"màu trắng\",\n        \"position\": \"giữa\",\n        \"road_relation\": \"trên lòng đường\",\n        \"visible_pose\": \"đi\",\n        \"attached_to\": null,\n        \"occlusion\": \"none\",\n        \"visual_evidence\": \"xe màu trắng đang di chuyển phía trước\",\n        \"certainty\": \"clear\"\n      }\n    ],\n    \"road_features\": [\"đường nhỏ, hai bên là cây cối và nhà cửa\"],\n    \"visible_interactions\": [\"không có tương tác rõ ràng\"],\n    \"unusual_visual_cues\": [\"không có dấu hiệu bất thường\"],\n    \"unknowns\": [\"không có chi tiết không đủ chứng cứ\"]\n  }\n}\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 9799619248,
+  "load_duration": 121112570,
+  "prompt_eval_count": 3515,
+  "prompt_eval_cached_count": 796,
+  "prompt_eval_duration": 3739640000,
+  "eval_count": 225,
+  "eval_duration": 5046636000
+}

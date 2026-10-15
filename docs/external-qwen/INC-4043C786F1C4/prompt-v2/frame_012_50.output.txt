@@ -1,0 +1,26 @@
+```json
+{
+  "frame_observation": {
+    "scene": "Đường nhỏ với hai bên là cây cối và nhà cửa, xe đang di chuyển trên đường.",
+    "objects": [
+      {
+        "local_id": "obj_01",
+        "category": "car",
+        "subtype": "xe màu trắng",
+        "appearance": "màu trắng",
+        "position": "giữa",
+        "road_relation": "trên lòng đường",
+        "visible_pose": "đi",
+        "attached_to": null,
+        "occlusion": "none",
+        "visual_evidence": "xe màu trắng đang di chuyển phía trước",
+        "certainty": "clear"
+      }
+    ],
+    "road_features": ["đường nhỏ, hai bên là cây cối và nhà cửa"],
+    "visible_interactions": ["không có tương tác rõ ràng"],
+    "unusual_visual_cues": ["không có dấu hiệu bất thường"],
+    "unknowns": ["không có chi tiết không đủ chứng cứ"]
+  }
+}
+```
