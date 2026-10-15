@@ -47,7 +47,7 @@ def get_review_context(incident_id, *, principal: Principal):
     warnings = list(dict.fromkeys([*(draft.get('unknowns') or metadata.get('unknowns', [])),
                                   *(warning for item in analyses for warning in item.get('unknowns', []))]))
     checks = metadata.get('consistency_checks', [])
-    result = {'review_required': metadata.get('detection_state') == 'REVIEW_REQUIRED_TELEMETRY_CONFLICT' or any('MODEL_TELEMETRY_CONFLICT' in str(item) for item in metadata.get('unknowns', [])),
+    result = {'review_required': str(metadata.get('detection_state', '')).startswith('REVIEW_REQUIRED') or any('MODEL_TELEMETRY_CONFLICT' in str(item) for item in metadata.get('unknowns', [])),
               'detection_state': metadata.get('detection_state'), 'summary': summary, 'model_output': draft,
               'analyses': analyses, 'primary_analysis': primary_analysis,
               'warnings': warnings, 'consistency_checks': checks,

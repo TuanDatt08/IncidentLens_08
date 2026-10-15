@@ -56,7 +56,7 @@ async def test_ollama_worker_exports_sql_draft_uncertainty_and_scoped_paths(db_c
     assert get_job(job["job_id"])["status"] == "succeeded"
     assert json.loads((output / "draft.json").read_text())["review_status"] == "DRAFT"
     rich_draft = json.loads((output / "draft-v2.json").read_text())
-    assert rich_draft["summary"] == "Uncertain\nUncertain"
+    assert rich_draft["summary"] == "Uncertain"
     assert "Missing visual coverage" in rich_draft["unknowns"]
     assert json.loads((output / "review.json").read_text())["approved_by"] is None
     metadata = json.loads((output / "model-metadata.json").read_text())

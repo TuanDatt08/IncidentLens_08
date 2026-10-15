@@ -28,9 +28,9 @@ const report = detected => ({ incident_id: 'I1', incident_detected: detected, in
       });
       await page.goto(`http://127.0.0.1:3102/incidents/I1${scenario === 'processing-none' ? '/processing' : ''}`);
       if (scenario === 'processing-none') {
-        await page.getByText('No incident detected in inspected samples', { exact: true }).waitFor();
+        await page.getByText('Analysis needs review: no incident confirmed', { exact: true }).waitFor();
         await expect(page.getByText('Draft report ready', { exact: true })).toHaveCount(0);
-        await expect(page.getByText('Analysis completed. This does not establish that the entire video is safe. Open review for coverage limits.')).toBeVisible();
+        await expect(page.getByText('Open review to check telemetry conflicts, unresolved observations and coverage limits.')).toBeVisible();
       } else {
         if (scenario === 'retry') {
           await page.getByRole('button', { name: 'Retry analysis coverage', exact: true }).focus();

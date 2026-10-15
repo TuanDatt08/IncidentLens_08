@@ -9,6 +9,7 @@ from api.gpu_media_proxy import GpuMediaProxy, is_gpu_media_request
     ('POST', '/api/v1/incidents/upload', True),
     ('GET', '/api/v1/incidents/INC-ABC/video', True),
     ('GET', '/api/v1/incidents/INC-ABC/telemetry', True),
+    ('GET', '/api/v1/incidents/INC-ABC/review-context', True),
     ('GET', '/api/v1/incidents/INC-ABC/evidence/EVD-ABC/media', True),
     ('GET', '/api/v1/jobs/JOB-ABC/diagnostics', True),
     ('POST', '/api/v1/incidents/INC-ABC/analyze', False),

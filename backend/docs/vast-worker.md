@@ -51,6 +51,19 @@ Render không có worker. Không đặt `GPU_MEDIA_BASE_URL` trong env của GPU
 
 ## Giới hạn và khôi phục
 
+Temporal context: bật `QWEN_TEMPORAL_CONTEXT=true`, `QWEN_BATCH_FRAMES=6`,
+`QWEN_TWO_STAGE=false`. Worker bổ sung mẫu 8 FPS quanh đỉnh ±1 giây, gồm đúng
+critical timestamp; tổng extraction vẫn không vượt 256 frame. Các batch chồng
+lấn 2 frame và có thêm lượt kết luận cuối với overview trước/đỉnh/sau và các
+quan sát sơ bộ. Evidence citation của lượt cuối chỉ dùng ảnh/telemetry gửi trong
+lượt đó. Kết luận sơ bộ không được OR thành incident cuối cùng.
+
+Consistency check chạy trên toàn cửa sổ candidate. Kết quả âm tính có mâu thuẫn
+telemetry chuyển `REVIEW_REQUIRED_TELEMETRY_CONFLICT`; lượt kết luận thiếu/hỏng
+chuyển `REVIEW_REQUIRED_INCOMPLETE_CANDIDATE`. Các trạng thái này không tự ép
+`incident_detected=true`. Raw response vẫn được lưu; summary chỉ tổng hợp ngắn.
+Route review-context cũng đi qua tunnel để đọc được telemetry và artifacts trên GPU.
+
 Bộ lọc phanh mạnh tùy chọn: `QWEN_TRIGGER_DECELERATION=22`,
 `QWEN_BRAKING_CONFIRMATION_S=0.08`, `QWEN_FLAG_ONLY=true`. Candidate cần
 phanh ≥ 0,8 đồng thời acceleration ≤ −22 trong ít nhất 0,08 giây;

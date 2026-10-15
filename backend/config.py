@@ -125,6 +125,7 @@ class Settings(BaseSettings):
     qwen_startup_timeout_s: float = Field(default=120, gt=0, le=600)
     qwen_context_size: int = Field(default=32768, ge=4096, le=131072)
     qwen_batch_frames: int = Field(default=1, ge=1, le=32)
+    qwen_temporal_context: bool = False
     qwen_sampling_fps: float = Field(default=4, gt=0, le=30)
     qwen_trigger_min_priority: int = Field(default=1, ge=1, le=5)
     qwen_trigger_deceleration: float = Field(default=6, gt=0)
@@ -135,6 +136,14 @@ class Settings(BaseSettings):
     qwen_delta_thresholds: dict[str, float] = Field(default_factory=dict)
     # V1 collision-relative CSV cannot imply where collision lies in the MP4.
     qwen_v1_log_offset_s: float | None = None
+
+    @model_validator(mode='after')
+    def validate_temporal_budget(self):
+        if self.qwen_temporal_context and (self.qwen_batch_frames < 4 or (self.qwen_inference_frame_limit is not None and self.qwen_inference_frame_limit < 4)):
+            raise ValueError('Temporal context requires at least four frames per batch and inference budget')
+        if self.qwen_temporal_context and self.qwen_two_stage:
+            raise ValueError('Select one candidate aggregation strategy: temporal context or frame-then-decision')
+        return self
 
 @lru_cache
 def get_settings() -> Settings:

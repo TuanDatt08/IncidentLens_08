@@ -15,7 +15,7 @@ def is_gpu_media_request(method: str, path: str) -> bool:
     if method == 'POST':
         return path == '/api/v1/incidents/upload'
     return method in {'GET', 'HEAD'} and bool(re.fullmatch(
-        r'/api/v1/(?:incidents/[^/]+/(?:video|telemetry|evidence/[^/]+/media)|jobs/[^/]+/diagnostics)', path))
+        r'/api/v1/(?:incidents/[^/]+/(?:video|telemetry|review-context|evidence/[^/]+/media)|jobs/[^/]+/diagnostics)', path))
 
 
 class GpuMediaProxy:
