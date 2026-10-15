@@ -163,7 +163,7 @@ class HTTPVLMProvider:
             byte_count += frame.path.stat().st_size
             if byte_count > config.max_image_bytes:
                 raise ValueError("frame byte budget exceeded")
-            images.append({"type": "text", "text": f"{frame.evidence_id} at video_seconds={frame.time_start_s}"})
+            images.append({"type": "text", "text": f"{frame.evidence_id} t_video_s={frame.time_start_s}"})
             images.append({"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + base64.b64encode(frame.path.read_bytes()).decode("ascii")}})
         telemetry = filtered_telemetry(context.telemetry_rows)
         measured = braking_measurements(telemetry, *context.candidate_window[::2]) if context.candidate_window else None
@@ -174,7 +174,7 @@ class HTTPVLMProvider:
         registry = batch_registry(context)
         if config.prompt_path:
             telemetry = sample_telemetry(telemetry, timestamps + [flag["time_s"] for flag in context.flags])
-        refs_payload = [{"evidence_id": item.evidence_id, "source": item.source, "start_s": item.time_start_s, "end_s": item.time_end_s} for item in registry.assets]
+        refs_payload = [{"evidence_id": item.evidence_id, "source": item.source, "t_video_s": item.time_start_s, "start_s": item.time_start_s, "end_s": item.time_end_s} for item in registry.assets]
         instructions = read_prompt(config.prompt_path) if config.prompt_path else "Analyze only supplied chronological evidence. Cite valid evidence IDs/time/source. Distinguish OBSERVED, SUPPORTED_INFERENCE, HYPOTHESIS, UNKNOWN. Internal causes without logs must remain UNKNOWN/HYPOTHESIS. Conflicts and missing coverage go in unknowns. Return only schema 2.0 JSON with DRAFT; never approve."
         if config.compact_context:
             instructions += "\nTelemetry/flags tables have ordered columns and rows of values in that column order; null means missing."

@@ -7,7 +7,7 @@ from backend.services.video import VideoService
 from backend.services.vlm_provider import ProviderResult
 
 
-def run_candidate(tmp_path, monkeypatch, temporal, positive_first=False, invalid_final=False):
+def run_candidate(tmp_path, monkeypatch, temporal, positive_first=False, invalid_final=False, video_summary=False):
     source = tmp_path/'INC-T/source'
     source.mkdir(parents=True)
     (source/'video.mp4').write_bytes(b'video')
@@ -39,7 +39,7 @@ def run_candidate(tmp_path, monkeypatch, temporal, positive_first=False, invalid
                 'time_basis':'video_seconds','window':None,'summary':'Không thấy va chạm.',
                 'timeline':[],'factors':[],'unknowns':['Chưa rõ diễn biến.'],'review_status':'DRAFT'}),{}, {})
     settings=Settings(_env_file=None,qwen_flag_only=True,qwen_batch_frames=6 if temporal else 1,
-                      qwen_temporal_context=temporal)
+                      qwen_temporal_context=temporal, qwen_video_summary=video_summary)
     incident={'incident_id':'INC-T','video_uri':'INC-T/source/video.mp4','telemetry_uri':'INC-T/source/log.csv',
               'video_metadata':{'duration':6.,'fps':24.}}
     result=process_local_incident(incident,storage_root=tmp_path,provider=Provider(),settings=settings)
@@ -88,3 +88,21 @@ def test_conflict_summary_preserves_independent_positive_finding():
                               [{'message':'Candidate khác còn mâu thuẫn.'}])
     assert 'Phanh khẩn cấp được xác nhận.' in summary
     assert 'Candidate khác còn mâu thuẫn.' in summary
+
+
+def test_log_pipeline_final_video_receives_all_sequence_notes_and_conflicts(tmp_path, monkeypatch):
+    from backend.services import qwen_processing
+    received = []
+    def summarize(records, **kwargs):
+        received.append((records, kwargs))
+        return {'overall_status': 'INCONCLUSIVE', 'events': [], 'summary': 'Cần review do mâu thuẫn.',
+                'unknowns': ['Mâu thuẫn telemetry.'], 'review_status': 'DRAFT'}
+    monkeypatch.setattr(qwen_processing, 'summarize_video', summarize)
+    result, calls, manifest = run_candidate(tmp_path, monkeypatch, True, video_summary=True)
+    assert received
+    records, kwargs = received[0]
+    assert records[0]['sequence_observations']
+    assert len(records[0]['sequence_observations']) == len(calls) - 1
+    assert kwargs['coverage']['sampled_entire_video'] is False
+    assert result.analysis.model_metadata['video_summary']['overall_status'] == 'INCONCLUSIVE'
+    assert manifest['video_summary']['summary'] == 'Cần review do mâu thuẫn.'

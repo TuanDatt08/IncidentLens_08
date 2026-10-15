@@ -25,6 +25,7 @@ from backend.services.synchronization import TimeAnchor, align
 from backend.services.telemetry_consistency import negative_telemetry_conflict
 from backend.services.temporal_context import overview_frames, temporal_batches, temporal_sample_times
 from backend.services.video import VideoService
+from backend.services.video_summary import summarize_video
 from backend.services.vlm_provider import AnalysisContext, batch_registry, filtered_telemetry
 
 
@@ -95,9 +96,11 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
     consistency_checks = []
     candidate_decisions = []
     unresolved_candidates = []
+    summary_records = []
+    positive_by_candidate = {}
     def analyze(context):
         nonlocal calls
-        if calls >= 200:
+        if calls >= (190 if settings.qwen_video_summary else 200):
             raise InsufficientEvidence("Local analysis call budget exhausted; remaining coverage is unknown.")
         calls += 1
         if on_progress:
@@ -206,7 +209,10 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
             records.append({"candidate": asdict(candidate), "frame_times_s": [frame.time_start_s for frame in context.frames], "analysis": result.analysis.model_dump(mode="json"), "provenance": result.provenance, "usage": result.usage})
             unknowns.extend(result.analysis.unknowns)
             observations.append({'frame_times_s': [f.time_start_s for f in frames], 'incident_detected': result.analysis.incident_detected,
-                                 'event_type': result.analysis.event_type, 'summary': result.analysis.summary[:500]})
+                                 'event_type': result.analysis.event_type, 'summary': result.analysis.summary[:500],
+                                 'evidence': [{'evidence_id': f.evidence_id, 't_video_s': f.time_start_s} for f in frames],
+                                 'timeline': [item.model_dump(mode='json') for item in result.analysis.timeline],
+                                 'unknowns': result.analysis.unknowns})
             if not settings.qwen_temporal_context or final:
                 candidate_results.append(result.analysis)
         candidate_positive = [item for item in candidate_results if item.incident_detected]
@@ -220,12 +226,37 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
         candidate_decisions.append({'candidate_id': candidate.candidate_id, 'analyses': [item.model_dump(mode='json') for item in candidate_results], 'consistency_check': conflict})
         model_summaries.extend(item.summary for item in candidate_results)
         results.extend(candidate_positive)
+        positive_by_candidate[candidate.candidate_id] = candidate_positive
+        if settings.qwen_video_summary:
+            summary_records.append({'candidate_id': candidate.candidate_id,
+                'status': 'CONFIRMED' if candidate_positive else 'INCONCLUSIVE' if conflict or candidate.candidate_id in unresolved_candidates or any(item.unknowns for item in candidate_results) else 'NO_INCIDENT',
+                'event_type': candidate_positive[0].event_type if candidate_positive else 'UNKNOWN',
+                'summary': candidate_summary([item.summary for item in candidate_results], candidate_positive, [conflict] if conflict else []),
+                'evidence_ids': [asset.evidence_id for asset in assets if asset.source == 'TELEMETRY' or asset.frame_order is not None],
+                'confirmation_evidence_ids': list(dict.fromkeys(eid for item in candidate_positive for observation in item.timeline for eid in observation.evidence_ids)),
+                'sequence_observations': observations[:-1] if settings.qwen_temporal_context else observations,
+                'candidate_decisions': [item.model_dump(mode='json') for item in candidate_results],
+                'consistency_check': conflict})
         evidence_assets.extend(assets)
     unknowns.append("Visual analysis covers only supplied candidate frames, not every source video frame. Events outside candidate windows or between inspected frames remain unknown.")
+    video_summary = None
+    if settings.qwen_video_summary and summary_records:
+        video_summary = summarize_video(summary_records, evidence=evidence_assets,
+            coverage={'sampled_entire_video': False,
+                      'candidate_windows': [[c.start_s, c.end_s] for c in candidates],
+                      'unresolved': list(dict.fromkeys(unknowns))},
+            settings=settings, output=directory, job_id=job_id, request_budget=200-calls)
+        unknowns.extend(video_summary['unknowns'])
+        confirmed_ids = {identity for event in video_summary['events'] if event['status']=='CONFIRMED' for identity in event['candidate_ids']}
+        results = [item for identity in confirmed_ids for item in positive_by_candidate.get(identity, [])]
+        if video_summary['overall_status']=='INCONCLUSIVE':
+            unresolved_candidates.append('FINAL_VIDEO')
     summary = candidate_summary(model_summaries, results, consistency_checks)
+    if video_summary:
+        summary = video_summary['summary']
     if unresolved_candidates:
         summary = 'Chưa thể kết luận toàn candidate: kết quả tổng hợp thiếu hoặc mâu thuẫn. Cần kỹ sư review.\n' + summary
-    service.write_json(directory / "local-analysis.json", {"coverage": asdict(detection.coverage), "visual_coverage": {"complete": False, "source_duration_s": duration, "candidate_windows": [[candidate.start_s, candidate.end_s] for candidate in candidates], "extracted_frame_count": extracted_frame_count, "model_frame_times_s": sorted(set(submitted_times)), "model_frame_count": len(set(submitted_times)), "validated_model_frame_times_s": sorted(set(inspected_times)), "validated_model_frame_count": len(set(inspected_times))}, "alignment": asdict(alignment) if alignment else {"quality": "UNKNOWN"}, "unknowns": list(dict.fromkeys(unknowns)), "calls": calls, "results": records, "candidate_decisions": candidate_decisions})
+    service.write_json(directory / "local-analysis.json", {"coverage": asdict(detection.coverage), "visual_coverage": {"complete": False, "source_duration_s": duration, "candidate_windows": [[candidate.start_s, candidate.end_s] for candidate in candidates], "extracted_frame_count": extracted_frame_count, "model_frame_times_s": sorted(set(submitted_times)), "model_frame_count": len(set(submitted_times)), "validated_model_frame_times_s": sorted(set(inspected_times)), "validated_model_frame_count": len(set(inspected_times))}, "alignment": asdict(alignment) if alignment else {"quality": "UNKNOWN"}, "unknowns": list(dict.fromkeys(unknowns)), "calls": calls, "results": records, "candidate_decisions": candidate_decisions, "video_summary": video_summary})
     if on_progress:
         on_progress(2, calls, calls)
     if calls and not inspected_times:
@@ -240,9 +271,11 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
                 return ProcessedResult(AnalysisResult(incident_detected=False, model_metadata={'detection_state': 'NOT_ANALYZED_NO_FLAGS', 'requires_engineer_review': True, 'unknowns': ['No qualifying telemetry flags; video was not analyzed.']}), [], None)
             raise InsufficientEvidence("No candidate was analyzed; inspect local-analysis.json for missing coverage.")
         # V1 requires an empty no-detection report; retain unknowns in the private manifest.
-        return ProcessedResult(AnalysisResult(incident_detected=False, model_metadata={"provider": settings.qwen_runtime, "model": settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else settings.qwen_model_file, "manifest": (directory.relative_to(root) / "local-analysis.json").as_posix(), "detection_state": "REVIEW_REQUIRED_TELEMETRY_CONFLICT" if consistency_checks else "REVIEW_REQUIRED_INCOMPLETE_CANDIDATE" if unresolved_candidates else "NO_DETECTION_IN_SAMPLED_EVIDENCE", "consistency_checks": consistency_checks, "requires_engineer_review": True, "draft_v2": model_draft.model_dump(mode="json"), "unknowns": list(dict.fromkeys(unknowns))}), [], None)
+        return ProcessedResult(AnalysisResult(incident_detected=False, model_metadata={"provider": settings.qwen_runtime, "model": settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else settings.qwen_model_file, "manifest": (directory.relative_to(root) / "local-analysis.json").as_posix(), "detection_state": "REVIEW_REQUIRED_TELEMETRY_CONFLICT" if consistency_checks else "REVIEW_REQUIRED_INCOMPLETE_CANDIDATE" if unresolved_candidates else "NO_DETECTION_IN_SAMPLED_EVIDENCE", "consistency_checks": consistency_checks, "requires_engineer_review": True, "video_summary": video_summary, "draft_v2": model_draft.model_dump(mode="json"), "unknowns": list(dict.fromkeys(unknowns))}), [], None)
     offset = results[0].window.critical_s
     timeline = [{**item.model_dump(mode="json"), "time_s": item.time_s - offset} for result in results for item in result.timeline]
     analysis = AnalysisResult(incident_detected=True, incident_type=results[0].event_type, incident_window={"start": min(result.window.start_s for result in results) - offset, "critical": 0.0, "end": max(result.window.end_s for result in results) - offset}, summary=summary, timeline=sorted(timeline, key=lambda item: item["time_s"]), key_factors=[item.model_dump(mode="json") for result in results for item in result.factors], unknowns=list(dict.fromkeys(unknowns)), model_metadata={"provider": settings.qwen_runtime, "model": settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else settings.qwen_model_file, "manifest": (directory.relative_to(root) / "local-analysis.json").as_posix(), "time_basis": "incident_relative", "video_offset_s": offset, "detection_state": "REVIEW_REQUIRED_TELEMETRY_CONFLICT" if consistency_checks else "REVIEW_REQUIRED_INCOMPLETE_CANDIDATE" if unresolved_candidates else "INCIDENT_DETECTED", "consistency_checks": consistency_checks, "unknowns": list(dict.fromkeys(unknowns)), "requires_engineer_review": True, "draft_v2": model_draft.model_dump(mode="json")})
     evidence = [EvidenceV1(evidence_id=asset.evidence_id, kind="telemetry" if asset.source == "TELEMETRY" else "frame" if asset.frame_order is not None else "video", uri=asset.path.relative_to(root).as_posix(), sha256=asset.sha256, time_range_s=(asset.time_start_s - offset, asset.time_end_s - offset), bytes=asset.path.stat().st_size, media_type=asset.media_type) for asset in evidence_assets]
+    if video_summary:
+        analysis.model_metadata['video_summary'] = video_summary
     return ProcessedResult(analysis, evidence, offset)

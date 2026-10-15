@@ -120,6 +120,8 @@ class Settings(BaseSettings):
     qwen_server_bin: str = "llama-server"
     qwen_prompt_path: str = "./backend/data/promt.txt"
     qwen_log_prompt_path: str = "./backend/prompts/ollama_incident.txt"
+    qwen_summary_prompt_path: str = "./backend/prompts/video_summary.txt"
+    qwen_video_summary: bool = False
     qwen_outputs_path: str = "./logs/qwen/outputs.txt"
     qwen_timeout_s: float = Field(default=600, gt=0, le=3600)
     qwen_startup_timeout_s: float = Field(default=120, gt=0, le=600)

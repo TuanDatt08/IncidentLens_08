@@ -17,13 +17,16 @@ from pydantic import ConfigDict, Field, create_model
 
 from backend.models.contracts import AnalysisResult, EvidenceV1
 from backend.services.evidence_extraction import EvidenceAsset, file_hash
+from backend.services.frame_clock import FrameClock
 from backend.services.log_normalization import normalize_log
 from backend.services.pipeline_status import update_status
 from backend.services.processing import InsufficientEvidence, ProcessedResult
 from backend.services.prompt_io import append_output, read_prompt
 from backend.services.qwen_local import ensure_ollama_runtime
 from backend.services.synchronization import TimeAnchor, align
+from backend.services.temporal_context import overview_frames, temporal_batches
 from backend.services.video import VideoService
+from backend.services.video_summary import summarize_video
 from backend.services.vlm_provider import compact_records, sample_telemetry
 
 NonblankText = Annotated[str, Field(min_length=1, pattern=r'\S')]
@@ -131,6 +134,18 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
         raise ValueError('video outside storage')
     duration = incident['video_metadata']['duration']
     fps = incident['video_metadata']['fps']
+    temporal = settings.qwen_video_summary
+    if temporal and settings.qwen_batch_frames < 4:
+        raise InsufficientEvidence('Video temporal workflow requires at least four images per batch.')
+    last_frame = max(0., duration - 1.5/fps)
+    sample_times = [round(i/settings.qwen_sampling_fps, 6) for i in range(math.floor(last_frame*settings.qwen_sampling_fps)+1)]
+    clock = FrameClock(sample_times, duration) if temporal and not incident.get('telemetry_uri') else None
+    frame_cache = {}
+    sequence_notes = []
+    sequence_cache = {}
+    failures = []
+    failed_candidates = []
+    request_attempts = 0
     service = VideoService(settings.ffprobe_bin, settings.ffmpeg_bin, max_output_bytes=2 * 1024**3, frame_max_width=640)
     text = read_prompt(settings.qwen_prompt_path)
     contracts = prompt_contracts(text)
@@ -182,7 +197,9 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
             log_sample_times.append(max(available, key=lambda row: abs(float(row[signal])))['time_s'])
     def frames(start, end, label, critical=None):
         last = min(end, max(0., duration - 1.5/fps))
-        times = [round(start+i/settings.qwen_sampling_fps, 6) for i in range(math.floor((last-start)*settings.qwen_sampling_fps)+1)]
+        times = [at for at in sample_times if start <= at <= last] if temporal else [round(start+i/settings.qwen_sampling_fps, 6) for i in range(math.floor((last-start)*settings.qwen_sampling_fps)+1)]
+        if len(times) < 2:
+            raise InsufficientEvidence('Insufficient chronological frames in the supplied window.')
         if len(times) > 256:
             raise InsufficientEvidence('Frame extraction budget exceeded.')
         selected = {min(times, key=lambda t: abs(t-(start+(last-start)*i/3))) for i in range(4)}
@@ -193,29 +210,77 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
             selected.add(min(times, key=lambda t: abs(t-critical)))
         assets = []
         for index, at in enumerate(sorted(times)):
+            if temporal and at in frame_cache:
+                assets.append(frame_cache[at])
+                continue
             path = output / 'frames' / f'{job_id}-{label}-{index}.jpg'
             service.extract_frame(source, at, path)
-            asset = EvidenceAsset('FRAME-' + file_hash(path)[:16] + '-' + str(at), incident['incident_id'], label, path, file_hash(path), at, at, 'VIDEO', 'image/jpeg', index)
+            evidence_id = f"FRAME-{incident['incident_id']}-{clock.position(at):08d}" if clock else 'FRAME-' + file_hash(path)[:16] + '-' + str(at)
+            asset = EvidenceAsset(evidence_id, incident['incident_id'], label, path, file_hash(path), at, at, 'VIDEO', 'image/jpeg', index)
             registry[asset.evidence_id] = asset
             evidence.append(asset)
-            if at in selected:
+            frame_cache[at] = asset
+            if temporal or at in selected:
                 assets.append(asset)
         return assets
     def call(stage, images, start, end, extra=None, attempt=1):
-        if len(calls) >= 200:
+        nonlocal request_attempts
+        if request_attempts >= 190:
             raise InsufficientEvidence('Model call budget exhausted; remaining windows are unreviewed.')
+        request_attempts += 1
         prompt, model = contracts[stage]
         request_id = uuid4().hex
         status('prompt', f'Nạp prompt Stage {stage}.', model=settings.qwen_ollama_model, prompt_path=settings.qwen_prompt_path, prompt_sha256=prompt_hash, prompt_text=prompt, request_id=request_id, stage_name=stage, alignment=alignment)
         sampled = sample_telemetry(rows, [a.time_start_s for a in images])
         refs = [{'evidence_id': a.evidence_id, 'time_s': a.time_start_s, 'end_s': a.time_end_s, 'source': 'VIDEO_FRAME' if a.source == 'VIDEO' else 'LOG'} for a in [*images, *[a for a in registry.values() if a.source == 'TELEMETRY']]]
+        historical_ids = set()
+        def collect_ids(value):
+            if isinstance(value, dict):
+                if 'evidence_id' in value:
+                    historical_ids.add(value['evidence_id'])
+                historical_ids.update(value.get('evidence_ids', []))
+                for item in value.values():
+                    collect_ids(item)
+            elif isinstance(value, list):
+                for item in value:
+                    collect_ids(item)
+        collect_ids((extra or {}).get('sequence_observations', []))
+        historical = [{'evidence_id': eid, 'time_s': registry[eid].time_start_s,
+                       'end_s': registry[eid].time_end_s, 'source': 'VIDEO_FRAME' if registry[eid].source=='VIDEO' else 'LOG'}
+                      for eid in sorted(historical_ids) if eid in registry]
         context = {'recording_id': incident['incident_id'], 'video_duration_s': duration, 'clip_start_s': start, 'clip_end_s': end, 'time_basis': 'video_seconds', 'extraction_fps': settings.qwen_sampling_fps, 'sample_rate_fps': None, 'frame_times_s': [a.time_start_s for a in images], 'telemetry': compact_records(sampled), 'unsynchronized_log': {'time_basis': 'incident_relative', 'row_count': len(unsynced_rows), **compact_records(sample_telemetry(unsynced_rows, log_sample_times))}, 'alignment': alignment, 'evidence': refs, 'coverage_limitations': limitations, **(extra or {})}
-        content = [{'type': 'text', 'text': json.dumps(context, ensure_ascii=False)}, *[{'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + base64.b64encode(a.path.read_bytes()).decode()}} for a in images]]
-        payload = {'model': settings.qwen_ollama_model, 'temperature': 0, 'max_tokens': 4096, 'response_format': {'type': 'json_schema', 'json_schema': {'name': 'stage_' + stage, 'strict': True, 'schema': model.model_json_schema()}}, 'messages': [{'role': 'system', 'content': prompt + '\nMọi mô tả, tóm tắt, nguyên nhân và giới hạn phải viết bằng tiếng Việt có dấu. Không bỏ qua coverage_limitations; thêm vào unknowns hoặc data_quality.limitations.'}, {'role': 'user', 'content': content}]}
+        if temporal:
+            context['historical_evidence'] = historical
+        schema = model.model_json_schema()
+        if clock:
+            context = {key: value for key, value in context.items() if key not in {'frame_times_s', 'sample_rate_fps', 'extraction_fps', 'unsynchronized_log'}}
+            context = clock.encode(context)
+            context['input_mode'] = 'VIDEO_ONLY'
+            context['sampling'] = 'uniform sampled-frame order; global indices, not original MP4 frame numbers'
+            context['exclusive_end_frame_seq'] = len(clock.times) + 1
+            schema = clock.encode(schema)
+            prompt = clock.text(prompt) + '\nVIDEO_ONLY: all coordinates in this request and output are global frame_seq, NEVER seconds. total_frames is the source sampled-frame count. The exclusive end boundary total_frames+1 is not an image. Use actual evidence frame_seq for observations. No telemetry is required for a visually supported incident; never infer speed/acceleration from frame order.'
+        elif temporal:
+            context['input_mode'] = 'VIDEO_WITH_SYNCED_LOG' if rows else 'VIDEO_WITH_UNSYNCED_LOG'
+            for ref in context['evidence']:
+                ref['t_video_s'] = ref['time_s']
+        if temporal and stage == 'B':
+            timing_schema = schema['$defs'][schema['properties']['timing']['$ref'].split('/')[-1]]
+            for key, value in (('clip_start_s', start), ('clip_end_s', end)):
+                wire_key = clock.wire_key(key) if clock else key
+                timing_schema['properties'][wire_key]['const'] = clock.position(value) if clock else value
+        content = [{'type': 'text', 'text': json.dumps(context, ensure_ascii=False)}]
+        for image, ref in zip(images, context['evidence']):
+            if temporal:
+                content.append({'type': 'text', 'text': json.dumps(ref, ensure_ascii=False)})
+            content.append({'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + base64.b64encode(image.path.read_bytes()).decode()}})
+        if temporal:
+            content.append({'type': 'text', 'text': 'BẮT BUỘC: trả JSON đúng schema; mọi event_summary, observation, summary, unknowns và coverage_limitations phải viết bằng tiếng Việt có dấu. Ví dụ giới hạn: "Chỉ quan sát các ảnh được cung cấp; chưa rõ diễn biến giữa các ảnh." Không viết mô tả bằng tiếng Anh. Giữ nguyên keys, enum và evidence_id.'})
+        payload = {'model': settings.qwen_ollama_model, 'temperature': 0, 'max_tokens': 4096, 'response_format': {'type': 'json_schema', 'json_schema': {'name': 'stage_' + stage, 'strict': True, 'schema': schema}}, 'messages': [{'role': 'system', 'content': prompt + '\nMọi mô tả, tóm tắt, nguyên nhân và giới hạn phải viết bằng tiếng Việt có dấu. Không bỏ qua coverage_limitations; thêm vào unknowns hoặc data_quality.limitations.'}, {'role': 'user', 'content': content}]}
         req_dir = output / 'requests'
         req_dir.mkdir(exist_ok=True)
         service.write_json(req_dir / f'{request_id}.request.json', payload)
-        status('qwen', f'Model Qwen 7B đang phân tích Stage {stage}, {len(images)} frame.', request_id=request_id, frame_times_s=context['frame_times_s'], stage_name=stage)
+        status('qwen', f'Model Qwen 7B đang phân tích Stage {stage}, {len(images)} frame.', request_id=request_id, frame_times_s=[a.time_start_s for a in images], stage_name=stage)
         began = time.monotonic()
         raw = None
         response = None
@@ -229,7 +294,12 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
             raw = envelope['choices'][0]['message']['content']
             status('validation', f'Backend kiểm tra JSON, thời gian và evidence Stage {stage}.', usage=envelope.get('usage', {}), latency_s=time.monotonic()-began)
             allowed = {a.evidence_id: a for a in [*images, *[a for a in registry.values() if a.source == 'TELEMETRY']]}
-            parsed = validate_stage(json.loads(raw), model, allowed, duration)
+            if temporal:
+                allowed.update({eid: registry[eid] for eid in historical_ids if eid in registry})
+            decoded = json.loads(raw)
+            if clock:
+                decoded = clock.decode(decoded)
+            parsed = validate_stage(decoded, model, allowed, duration)
             if stage == 'A':
                 if abs(parsed['video_duration_s']-duration) > .01:
                     raise ValueError('model changed source duration')
@@ -243,7 +313,7 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
             summaries = [parsed['summary']] if 'summary' in parsed else [event['event_summary'] for event in parsed.get('incidents', [])]
             if not any(re.search('[À-ỹ]', item) for item in descriptions) or any(not re.search('[À-ỹ]', item) for item in summaries):
                 raise ValueError('Mô tả phải bằng tiếng Việt có dấu; bổ sung giới hạn coverage thật.')
-            record = {'request_id': request_id, 'stage': stage, 'prompt_sha256': prompt_hash, 'frame_times_s': context['frame_times_s'], 'usage': envelope.get('usage', {}), 'latency_s': time.monotonic()-began, 'output': parsed}
+            record = {'request_id': request_id, 'stage': stage, 'prompt_sha256': prompt_hash, 'frame_times_s': [a.time_start_s for a in images], 'usage': envelope.get('usage', {}), 'latency_s': time.monotonic()-began, 'output': parsed}
             calls.append(record)
             service.write_json(output / f'{job_id}.calls.json', calls)
             return parsed
@@ -260,16 +330,51 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
             append_output(settings.qwen_outputs_path, entry)
         status('validation', 'Output chưa đạt; yêu cầu Qwen sửa một lần, giữ nguyên raw output.', validation_error=failure)
         return call(stage, images, start, end, {**(extra or {}), 'validation_feedback': failure, 'previous_invalid_output': raw}, attempt+1)
+    def detection_call(images, start, end, extra):
+        cache_key = tuple(image.evidence_id for image in images)
+        if extra.get('decision_scope') == 'SUPPLIED_SEQUENCE' and cache_key in sequence_cache:
+            return sequence_cache[cache_key]
+        try:
+            result = call('A', images, start, end, extra)
+            if extra.get('decision_scope') == 'SUPPLIED_SEQUENCE':
+                sequence_cache[cache_key] = result
+            return result
+        except (ValueError, httpx.HTTPError) as exc:
+            message = f"{extra.get('sequence_id', extra.get('decision_scope'))}: chưa có kết quả hợp lệ ({type(exc).__name__}); phần này cần review."
+            failures.append(message)
+            return {'schema_version': 'incident_detection_v3', 'time_basis': 'video_seconds', 'review_status': 'DRAFT',
+                    'video_duration_s': duration, 'analyzed_intervals': [{'start_s': start, 'end_s': end}],
+                    'overall_status': 'INCONCLUSIVE', 'incidents': [], 'coverage_limitations': [message]}
     # Overlapping 8-second windows preserve temporal context on CPU.
     starts = [float(t) for t in range(0, max(1, math.ceil(duration-2)), 6)]
     if len(starts) > 30:
         raise InsufficientEvidence('Video exceeds 30 detection windows; segment it before analysis.')
+    if temporal:
+        minimum_calls = sum(max(1, math.ceil((len([at for at in sample_times if start <= at <= min(duration, start+8)])-2)/(settings.qwen_batch_frames-2)))+1 for start in starts)
+        if minimum_calls > 180:
+            raise InsufficientEvidence('Chronological scan exceeds request budget; segment this video before analysis.')
     seen_candidates, duplicate_candidates = {}, []
     for index, start in enumerate(starts):
         end = min(duration, start+8.)
+        if temporal:
+            # Quantize crop boundaries to the same global clock used by model output.
+            start = next((at for at in sample_times if at >= start), start)
+            end = duration if end == duration else max(at for at in sample_times if at <= end)
         status('backend', 'Backend trích frame theo thứ tự thời gian.', window=[start, end])
         images = frames(start, end, f'A{index}')
-        detection = call('A', images, start, end)
+        window_notes = []
+        if temporal:
+            for batch_index, batch in enumerate(temporal_batches(tuple(images), settings.qwen_batch_frames)):
+                batch_start, batch_end = batch[0].time_start_s, batch[-1].time_start_s
+                note = detection_call(batch, batch_start, batch_end,
+                            {'decision_scope': 'SUPPLIED_SEQUENCE', 'sequence_id': f'A{index}-{batch_index}'})
+                window_notes.append(note)
+                sequence_notes.append({'sequence_id': f'A{index}-{batch_index}', 'window_index': index, 'analysis': note})
+            overview = overview_frames(tuple(images), settings.qwen_batch_frames, (start+end)/2)
+            detection = detection_call(overview, start, end,
+                             {'decision_scope': 'FINAL_WINDOW', 'sequence_observations': window_notes})
+        else:
+            detection = call('A', images, start, end)
         if abs(detection['video_duration_s']-duration) > .01:
             raise ValueError('model changed source duration')
         detection['coverage_limitations'] = list(dict.fromkeys([*detection['coverage_limitations'], *limitations]))
@@ -288,6 +393,9 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
             onset, critical, finish = event['onset_s'], event['critical_s'], event['end_s']
             clip_start = max(0., onset-5) if onset is not None else start
             clip_end = min(duration, finish+3) if finish is not None else min(duration, end+3)
+            if temporal:
+                clip_start = min(sample_times, key=lambda at: abs(at-clip_start))
+                clip_end = duration if clip_end == duration else min(sample_times, key=lambda at: abs(at-clip_end))
             if clip_start >= clip_end:
                 raise ValueError('invalid model clip window')
             status('backend', 'Backend cắt clip và chuẩn bị Stage B.', window=[clip_start, clip_end])
@@ -296,7 +404,26 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
             asset = EvidenceAsset('CLIP-' + file_hash(clip)[:16], incident['incident_id'], 'B', clip, file_hash(clip), clip_start, clip_end, 'VIDEO', 'video/mp4')
             evidence.append(asset)
             images = frames(clip_start, clip_end, f'B{len(analyses)}', critical)
-            report = call('B', images, clip_start, clip_end, {'candidate': event})
+            if temporal:
+                candidate_notes = []
+                for batch_index, batch in enumerate(temporal_batches(tuple(images), settings.qwen_batch_frames)):
+                    note = detection_call(batch, batch[0].time_start_s, batch[-1].time_start_s,
+                                {'decision_scope': 'SUPPLIED_SEQUENCE', 'sequence_id': f'B{len(analyses)}-{batch_index}'})
+                    candidate_notes.append(note)
+                overview = overview_frames(tuple(images), settings.qwen_batch_frames, critical if critical is not None else (clip_start+clip_end)/2)
+                try:
+                    report = call('B', overview, clip_start, clip_end,
+                                  {'candidate': event, 'decision_scope': 'FINAL_CANDIDATE', 'sequence_observations': candidate_notes})
+                except (ValueError, httpx.HTTPError) as exc:
+                    message = f"Candidate chưa phân tích xong ({type(exc).__name__}); xem raw request/response."
+                    failures.append(message)
+                    failed_candidates.append({'candidate_id': f'FAILED-{index}-{len(failed_candidates)}',
+                        'status': 'INCONCLUSIVE', 'summary': message,
+                        'evidence_ids': [image.evidence_id for image in images],
+                        'sequence_observations': clock.encode(candidate_notes) if clock else candidate_notes})
+                    continue
+            else:
+                report = call('B', images, clip_start, clip_end, {'candidate': event})
             if abs(report['timing']['clip_start_s']-clip_start) > .001 or abs(report['timing']['clip_end_s']-clip_end) > .001:
                 raise ValueError('model changed extracted clip bounds')
             report['unknowns'] = list(dict.fromkeys([*report['unknowns'], *limitations]))
@@ -305,10 +432,41 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
             service.write_json(output / f'{job_id}.stage-b.json', analyses)
         if on_progress:
             on_progress(2, index+1, len(starts))
+    video_summary = None
+    if temporal:
+        summary_records = [{'candidate_id': f'ANALYSIS-{index}', 'status': report['analysis_status'],
+                            'event_type': report['event_type'], 'summary': report['summary'],
+                            'evidence_ids': [item['evidence_id'] for item in report['evidence']],
+                            'analysis': clock.encode(report) if clock else report}
+                           for index, report in enumerate(analyses)]
+        summary_records.extend({'candidate_id': note['sequence_id'], 'status': 'NO_INCIDENT' if note['analysis']['overall_status'] == 'NO_INCIDENT' else 'INCONCLUSIVE',
+                                'record_kind': 'SEQUENCE_OBSERVATION',
+                                'summary': ' '.join(event['event_summary'] for event in note['analysis']['incidents']) or 'Không tìm thấy sự cố trong chuỗi đã xem.',
+                                'evidence_ids': list(dict.fromkeys(item['evidence_id'] for event in note['analysis']['incidents'] for item in event['evidence'])),
+                                'analysis': clock.encode(note['analysis']) if clock else note['analysis']}
+                               for note in sequence_notes)
+        summary_records.extend(failed_candidates)
+        service.write_json(output / f'{job_id}.frame-map.json', [
+            {'frame_seq': clock.position(at) if clock else index+1, 't_video_s': at, 'evidence_id': asset.evidence_id}
+            for index, (at, asset) in enumerate(sorted(frame_cache.items()))])
+        status('qwen', 'Qwen tổng hợp toàn video sau các chuỗi và candidate.')
+        unresolved = [*failures, *(['Còn chuỗi nghi vấn chưa được xác nhận.'] if any(r['status']=='INCONCLUSIVE' for r in summary_records) and not analyses else [])]
+        video_summary = summarize_video(summary_records, evidence=evidence,
+                coverage={'sampled_entire_video': True, 'sampling_limitations': limitations, 'unresolved': unresolved},
+                settings=settings, output=output, job_id=job_id, clock=clock, request_budget=200-request_attempts)
+        limitations.extend(video_summary['unknowns'])
     confirmed = [a for a in analyses if a['analysis_status']=='CONFIRMED']
+    if video_summary:
+        confirmed_ids = {identity for event in video_summary['events'] if event['status']=='CONFIRMED' for identity in event['candidate_ids']}
+        confirmed = [a for index, a in enumerate(analyses) if a['analysis_status']=='CONFIRMED' and f'ANALYSIS-{index}' in confirmed_ids]
     service.write_json(output / f'{job_id}.stage-b.json', analyses)
     detection_state = 'CONFIRMED' if confirmed else 'INCONCLUSIVE' if analyses or any(d['overall_status'] != 'NO_INCIDENT' for d in detections) else 'NO_INCIDENT_IN_ANALYZED_COVERAGE'
     bundle = {'job_id': job_id, 'schema_version': 'incident_pipeline_v3', 'review_status': 'DRAFT', 'detection_state': detection_state, 'alignment': alignment, 'prompt_path': settings.qwen_prompt_path, 'prompt_sha256': prompt_hash, 'stage_a': detections, 'stage_b': analyses, 'calls': calls, 'unknowns': limitations, 'requires_engineer_review': True}
+    if video_summary:
+        bundle['video_summary'] = video_summary
+        bundle['sequence_observations'] = sequence_notes
+        if video_summary['overall_status'] == 'INCONCLUSIVE':
+            bundle['detection_state'] = detection_state = 'INCONCLUSIVE'
     bundle['evidence_registry'] = [{'evidence_id': a.evidence_id, 'uri': a.path.relative_to(root).as_posix(), 'sha256': a.sha256, 'start_s': a.time_start_s, 'end_s': a.time_end_s} for a in evidence]
     bundle['input_files'] = inputs
     bundle['consolidated_duplicates'] = duplicate_candidates
@@ -317,9 +475,13 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
     def legacy_asset(a):
         return EvidenceV1(evidence_id=a.evidence_id, kind='telemetry' if a.source=='TELEMETRY' else 'video' if a.media_type=='video/mp4' else 'frame', uri=a.path.relative_to(root).as_posix(), sha256=a.sha256, time_range_s=(a.time_start_s-offset,a.time_end_s-offset), bytes=a.path.stat().st_size, media_type=a.media_type)
     metadata = {'provider': 'ollama', 'model': settings.qwen_ollama_model, 'draft_v3': bundle, 'requires_engineer_review': True, 'video_offset_s': offset, 'detection_state': detection_state, 'unknowns': limitations}
+    if video_summary:
+        metadata['video_summary'] = video_summary
     kwargs = {}
     if confirmed:
         first = confirmed[0]
-        kwargs = {'incident_type': first['event_type'], 'incident_window': {'start': first['timing']['onset_s']-offset, 'critical': 0., 'end': (first['timing']['end_s'] if first['timing']['end_s'] is not None else first['timing']['clip_end_s'])-offset}, 'summary': '\n'.join(a['summary'] for a in analyses), 'timeline': [{**t, 'time_s': t['time_s']-offset} for a in analyses for t in a['timeline']], 'unknowns': limitations}
+        kwargs = {'incident_type': first['event_type'], 'incident_window': {'start': first['timing']['onset_s']-offset, 'critical': 0., 'end': (first['timing']['end_s'] if first['timing']['end_s'] is not None else first['timing']['clip_end_s'])-offset}, 'summary': '\n'.join(a['summary'] for a in confirmed), 'timeline': [{**t, 'time_s': t['time_s']-offset} for a in confirmed for t in a['timeline']], 'unknowns': limitations}
+        if video_summary:
+            kwargs['summary'] = video_summary['summary']
     status('database', 'Lưu draft đầy đủ và evidence vào database; chờ kỹ sư review.')
     return ProcessedResult(AnalysisResult(incident_detected=bool(confirmed), model_metadata=metadata, **kwargs), [legacy_asset(a) for a in {a.evidence_id:a for a in evidence}.values()] if confirmed else [], offset if confirmed else None)

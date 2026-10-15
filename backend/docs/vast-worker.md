@@ -83,6 +83,45 @@ chỉ dùng khi media đã được chép lại về storage API. Dừng worker 
 `supervisorctl stop incidentlens-gpu-worker` khi không có job đang chạy;
 không hủy job hoặc xóa file để rollback.
 
+## Chuỗi frame và kết luận toàn video
+
+Bật `QWEN_VIDEO_SUMMARY=true` trên GPU cùng temporal context/batch 6 đã nêu.
+Đặt `QWEN_SUMMARY_PROMPT_PATH=/workspace/incidentlens/backend/prompts/video_summary.txt`.
+Render tiếp tục chỉ chạy API; worker và inference vẫn chạy trên GPU.
+
+- Có log: mỗi ảnh có `t_video_s`. Giữ lấy mẫu 4 FPS, bổ sung 8 FPS quanh critical,
+  batch chồng 2 ảnh, kết luận candidate, rồi thêm lượt tổng hợp toàn video.
+- Không log: quét cửa sổ 8 giây, bước 6 giây; gửi toàn bộ mẫu 4 FPS qua batch 6 ảnh
+  chồng 2 ảnh. Mỗi ảnh có `frame_seq` toàn cục, không đánh số lại theo batch.
+  Các chuỗi giống hệt đã phân tích được tái sử dụng trong cùng job.
+- Video-only đổi cả schema/metadata/prompt sang tọa độ frame cho Qwen. Backend
+  giữ `*.frame-map.json` để đổi kết quả về giây cho API, player và cắt clip.
+  `total_frames+1` là biên kết thúc loại trừ, không phải ảnh có thể viện dẫn.
+- Stage A quan sát chuỗi và tổng hợp cửa sổ; Stage B kết luận từng candidate;
+  `FINAL_VIDEO` xem lại sổ kết quả của mọi chuỗi/candidate. Khi nhiều ghi chú,
+  `SUMMARY_GROUP` tổng hợp từng nhóm, giữ liên kết về candidate gốc.
+- `CONFIRMED`, `INCONCLUSIVE`, `NO_INCIDENT_IN_OBSERVED_COVERAGE` không được
+  đồng nhất với boolean của API cũ. Kết quả cuối và các phần chưa rõ được lưu
+  trong `model_metadata.video_summary` và `*.video-summary.json`.
+- Kết luận xác nhận phải viện dẫn bằng chứng của candidate đã được xác nhận
+  cho cùng loại sự kiện. Không được mượn riêng ảnh của candidate âm tính.
+  Bằng chứng được cung cấp qua ghi chú chuỗi vẫn phải kiểm tra ID/timestamp.
+- Lỗi JSON/schema, ngôn ngữ hoặc tọa độ được yêu cầu sửa một lần. Nếu vẫn lỗi,
+  giữ vùng đó chưa rõ để tổng hợp; không coi request lỗi là không có incident.
+  Giới hạn tổng request là 200, bao gồm các lượt sửa/tổng hợp. Quá ngân sách
+  hoặc thiếu context không được cắt ghi chú âm thầm để đưa ra âm tính.
+
+Prompt Stage A/B: `backend/data/promt.txt`; prompt có log:
+`backend/prompts/ollama_incident.txt`; prompt tổng hợp:
+`backend/prompts/video_summary.txt`. Xem thiết kế tại
+[qwen-temporal-prompt-design.md](qwen-temporal-prompt-design.md).
+
+Giới hạn: nhánh video-only hiện lấy mẫu đều 4 FPS, chưa tự thêm ảnh 8 FPS
+quanh nghi vấn như nhánh log. Sự cố ngắn giữa các mẫu vẫn có thể bị bỏ sót.
+Không coi kiểm tra tích hợp hoặc một kết quả Qwen là đánh giá precision/recall.
+Tắt `QWEN_VIDEO_SUMMARY` để quay lại chiến lược video-only cũ và bỏ lượt
+tổng hợp toàn video; khôi phục code/prompt từ bản backup nếu cần rollback đầy đủ.
+
 ## Kiểm chứng triển khai ngày 2026-10-15
 
 - Suite chạy với `DATABASE_CLOUD=false`: 406 passed, 4 skipped; Ruff đạt.

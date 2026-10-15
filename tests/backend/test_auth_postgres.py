@@ -18,6 +18,7 @@ def postgres_auth_database():
         pytest.fail("Refusing auth smoke on any database not named auth_test")
     from alembic import command
     from alembic.config import Config
+
     from backend.config import get_settings
     from backend.db import get_session_factory
     from backend.models.tables import Incident
@@ -97,7 +98,9 @@ def test_login_budget_shared_across_concurrent_connections(postgres_auth_databas
 
 def test_logout_and_password_reset_do_not_deadlock(postgres_auth_database):
     from threading import Event, Thread, current_thread
+
     from sqlalchemy import event
+
     from backend.db import get_session_factory, session_scope
     from backend.models.auth import User
     from backend.services.access import Principal

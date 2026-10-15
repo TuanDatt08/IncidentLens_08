@@ -50,8 +50,8 @@ def test_real_ffmpeg_seeks_blue_frame_and_clip_duration(tmp_path):
     assert pixels[2] > 200 and pixels[0] < 30
     assert VideoService().probe(bundle.clip.path).duration == pytest.approx(2.0, abs=0.1)
 def test_four_fps_sampling_clamps_to_decodable_frames():
-    from backend.services.evidence_extraction import window_sample_times
     from backend.services.candidate_detection import Candidate
+    from backend.services.evidence_extraction import window_sample_times
     candidate = Candidate("cnd", 5.0, 10.0, 13.0, ("fixture",), "PENDING")
     times = window_sample_times(candidate, {"duration": 20.0, "fps": 30.0})
     assert len(times) == 32

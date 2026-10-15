@@ -42,6 +42,7 @@ def test_missing_model_returns_false(monkeypatch):
 def test_text_only_model_cannot_be_ready(monkeypatch):
     import io
     import urllib.request
+
     import pytest
     monkeypatch.setattr(urllib.request, "urlopen", lambda *args, **kwargs: io.BytesIO(b'{"capabilities":["completion"]}'))
     with pytest.raises(RuntimeError, match="vision"):
