@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5vl:7b",
+  "created_at": "2026-10-15T13:55:47.095532817Z",
+  "message": {
+    "role": "assistant",
+    "content": "1. Tổng quan: Ảnh chụp từ trong một chiếc xe, hướng nhìn ra phía trước trên một con đường nhỏ. Có một người và một chiếc xe máy dừng lại ở bên phải đường, gần một ngôi nhà và một số cây cối.\n\n2. Danh sách đối tượng và vị trí:\n   - Người: Một người mặc áo khoác màu nâu, đang đứng bên cạnh chiếc xe máy.\n   - Xe máy: Một chiếc xe máy màu đỏ, dừng lại ở bên phải đường.\n   - Xe ô tô: Một chiếc xe ô tô màu trắng đang di chuyển từ xa, hướng về phía người và xe máy.\n   - Nhà: Một ngôi nhà nhỏ ở bên trái đường.\n   - Cây cối: Một số cây cối lớn ở bên phải đường, gần người và xe máy.\n\n3. Chi tiết bất thường nhìn thấy: Người đứng bên cạnh xe máy có vẻ như đang cố gắng làm gì đó hoặc đang chờ đợi. Không có dấu hiệu của tai nạn hoặc va chạm trong hình ảnh này.\n\n4. Điểm chưa chắc chắn: Không có thông tin cụ thể về nguyên nhân tại sao người này đứng ở đó hoặc tại sao xe máy dừng lại."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 11161857383,
+  "load_duration": 118853324,
+  "prompt_eval_count": 3048,
+  "prompt_eval_cached_count": 48,
+  "prompt_eval_duration": 4280499000,
+  "eval_count": 249,
+  "eval_duration": 6132540000
+}
