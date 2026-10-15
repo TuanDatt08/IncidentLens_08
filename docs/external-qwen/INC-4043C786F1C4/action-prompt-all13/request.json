@@ -1,0 +1,36 @@
+{
+  "model": "qwen2.5vl:7b",
+  "stream": false,
+  "keep_alive": -1,
+  "options": {
+    "temperature": 0,
+    "seed": 42,
+    "num_ctx": 49152,
+    "num_predict": 8192
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "Bạn phân tích diễn biến giao thông từ chuỗi ảnh theo thứ tự thời gian.\n\nINPUT:\n- Các ảnh theo thứ tự với evidence_id tương ứng.\n- Danh sách đối tượng có track_id.\n- Vị trí bounding box theo từng frame.\n- Nhãn nhận diện và trạng thái uncertain.\n- Telemetry chỉ khi đã được đồng bộ với video.\n\nNHIỆM VỤ:\nVới từng track_id, mô tả:\n1. Đối tượng xuất hiện ở đâu.\n2. Tư thế và quan hệ với mặt đường.\n3. Vị trí tương đối thay đổi như thế nào.\n4. Hành động có bằng chứng qua các frame.\n5. Tương tác với các đối tượng khác.\n6. Trạng thái cuối cùng quan sát được.\n\nQUY TẮC:\n- Không thêm đối tượng không thuộc dữ liệu hình ảnh.\n- Không mặc định mọi track đều được nhận diện đúng.\n- Không ghép hai đối tượng chỉ vì giống màu.\n- Phân biệt chuyển động của camera với chuyển động của đối tượng.\n- Không khẳng định vận tốc hay gia tốc từ bounding box đơn thuần.\n- Phân biệt: observed, inferred, uncertain.\n- Không suy ra va chạm chỉ vì hai bounding box chồng nhau.\n- Mỗi hành động động phải có bằng chứng từ ít nhất hai frame theo thứ tự.\n- Nếu một track bị che khuất, giữ trạng thái unknown trong khoảng thiếu dữ liệu.\n- Không kết luận không có incident khi chuỗi chưa đủ coverage.\n\nOUTPUT:\n{\n  \"tracks\": [\n    {\n      \"track_id\": \"T001\",\n      \"object_type\": \"unknown\",\n      \"actions\": [\n        {\n          \"action\": \"unknown\",\n          \"start_evidence_id\": \"F001\",\n          \"end_evidence_id\": \"F006\",\n          \"certainty\": \"uncertain\",\n          \"visual_evidence\": [],\n          \"unknowns\": []\n        }\n      ]\n    }\n  ],\n  \"interactions\": [],\n  \"incident_assessment\": {\n    \"status\": \"INCONCLUSIVE\",\n    \"event_type\": \"UNKNOWN\",\n    \"evidence_ids\": [],\n    \"reason\": \"\"\n  }\n}\n"
+    },
+    {
+      "role": "user",
+      "content": "Phân tích toàn bộ 13 ảnh đính kèm theo đúng thứ tự và system prompt được cung cấp. Metadata dưới đây do script test độc lập cung cấp. Không có telemetry, không có kết quả Stage 1 hoặc dự đoán trước.\n{\"sequence_id\": \"EXTERNAL-ALL13-8.3-13.5\", \"frame_seq_definition\": \"Ordinal position in this submitted sequence, not original video frame number.\", \"evidence_id_definition\": \"External test identifiers assigned by this script, not backend evidence IDs.\", \"image_order\": \"The attached images follow image_index_1based exactly.\", \"frames\": [{\"image_index_1based\": 1, \"frame_seq\": 1, \"evidence_id\": \"EXT-F01\", \"t_video_s\": 8.3, \"file\": \"frame_008_30.png\", \"sha256\": \"2fcc63a541e18d6048bf24a08180311941a125eac5be87339350bb098ee951ee\"}, {\"image_index_1based\": 2, \"frame_seq\": 2, \"evidence_id\": \"EXT-F02\", \"t_video_s\": 9.3, \"file\": \"frame_009_30.png\", \"sha256\": \"d9d297b179a0e085b5963ca1450bbf0886368124a656afc7f4bdb0c23174e768\"}, {\"image_index_1based\": 3, \"frame_seq\": 3, \"evidence_id\": \"EXT-F03\", \"t_video_s\": 9.5, \"file\": \"frame_009_50.png\", \"sha256\": \"8edf1ae5917f23b02f7feeb3d61cb458056a22d6da5baeb5eeb0f20ba89e2405\"}, {\"image_index_1based\": 4, \"frame_seq\": 4, \"evidence_id\": \"EXT-F04\", \"t_video_s\": 9.7, \"file\": \"frame_009_70.png\", \"sha256\": \"2a93fee53e99d7912391b05c218df4d6e5c0400a01918ea6e3bbae85f1e6bf1f\"}, {\"image_index_1based\": 5, \"frame_seq\": 5, \"evidence_id\": \"EXT-F05\", \"t_video_s\": 9.9, \"file\": \"frame_009_90.png\", \"sha256\": \"dd7550c3b6841bedfad4d29fd6e7dc21b436248c21dfaa16da6eb5ce4541aa04\"}, {\"image_index_1based\": 6, \"frame_seq\": 6, \"evidence_id\": \"EXT-F06\", \"t_video_s\": 10.0, \"file\": \"frame_010_00.png\", \"sha256\": \"9c34d8699515cfc4254cff460c027b54c57d50eeec95ce1edfa9d37649332485\"}, {\"image_index_1based\": 7, \"frame_seq\": 7, \"evidence_id\": \"EXT-F07\", \"t_video_s\": 10.1, \"file\": \"frame_010_10.png\", \"sha256\": \"1e5c720b257d941290a355eec32557c3cb28e55482fc8dd30b08e523bfb92bfe\"}, {\"image_index_1based\": 8, \"frame_seq\": 8, \"evidence_id\": \"EXT-F08\", \"t_video_s\": 10.2, \"file\": \"frame_010_20.png\", \"sha256\": \"6b3632e489dad1f4e28e02ccaa289b89a06706bc4fac0452cd9b9b751c231922\"}, {\"image_index_1based\": 9, \"frame_seq\": 9, \"evidence_id\": \"EXT-F09\", \"t_video_s\": 10.5, \"file\": \"frame_010_50.png\", \"sha256\": \"69dca750a1c84c5691c471ede9f81cf7c248494841b1d7d4d17a7f149265255e\"}, {\"image_index_1based\": 10, \"frame_seq\": 10, \"evidence_id\": \"EXT-F10\", \"t_video_s\": 10.9, \"file\": \"frame_010_90.png\", \"sha256\": \"e8d800666d202e5d58c62c387db070839019cae728c30d284974e900007e9311\"}, {\"image_index_1based\": 11, \"frame_seq\": 11, \"evidence_id\": \"EXT-F11\", \"t_video_s\": 11.5, \"file\": \"frame_011_50.png\", \"sha256\": \"f50bfc60503bc66ca4dbf4e053cb0704b644e455e2144a4ffb47c2fc2f0184b2\"}, {\"image_index_1based\": 12, \"frame_seq\": 12, \"evidence_id\": \"EXT-F12\", \"t_video_s\": 12.5, \"file\": \"frame_012_50.png\", \"sha256\": \"823e01e8ecc65309795db5e74b0a048bf32afb8c07ce47a37c2941235556324b\"}, {\"image_index_1based\": 13, \"frame_seq\": 13, \"evidence_id\": \"EXT-F13\", \"t_video_s\": 13.5, \"file\": \"frame_013_50.png\", \"sha256\": \"a64333de1a0b46d8ed2b3cc4c937f819c8210702e799d3bb23c5853a67391c86\"}], \"telemetry\": null, \"tracks\": null, \"bounding_boxes\": null, \"recognition_labels\": null, \"missing_inputs\": [\"No verified track IDs, bounding boxes, or recognition labels are available. These fields are missing, not evidence of no objects.\"], \"coverage\": \"Only these 13 images are supplied. Intervening video frames are not observed.\"}",
+      "images": [
+        "FILE:frame_008_30.png",
+        "FILE:frame_009_30.png",
+        "FILE:frame_009_50.png",
+        "FILE:frame_009_70.png",
+        "FILE:frame_009_90.png",
+        "FILE:frame_010_00.png",
+        "FILE:frame_010_10.png",
+        "FILE:frame_010_20.png",
+        "FILE:frame_010_50.png",
+        "FILE:frame_010_90.png",
+        "FILE:frame_011_50.png",
+        "FILE:frame_012_50.png",
+        "FILE:frame_013_50.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "sequence_id": "EXTERNAL-ALL13-8.3-13.5",
+  "frame_seq_definition": "Ordinal position in this submitted sequence, not original video frame number.",
+  "evidence_id_definition": "External test identifiers assigned by this script, not backend evidence IDs.",
+  "image_order": "The attached images follow image_index_1based exactly.",
+  "frames": [
+    {
+      "image_index_1based": 1,
+      "frame_seq": 1,
+      "evidence_id": "EXT-F01",
+      "t_video_s": 8.3,
+      "file": "frame_008_30.png",
+      "sha256": "2fcc63a541e18d6048bf24a08180311941a125eac5be87339350bb098ee951ee"
+    },
+    {
+      "image_index_1based": 2,
+      "frame_seq": 2,
+      "evidence_id": "EXT-F02",
+      "t_video_s": 9.3,
+      "file": "frame_009_30.png",
+      "sha256": "d9d297b179a0e085b5963ca1450bbf0886368124a656afc7f4bdb0c23174e768"
+    },
+    {
+      "image_index_1based": 3,
+      "frame_seq": 3,
+      "evidence_id": "EXT-F03",
+      "t_video_s": 9.5,
+      "file": "frame_009_50.png",
+      "sha256": "8edf1ae5917f23b02f7feeb3d61cb458056a22d6da5baeb5eeb0f20ba89e2405"
+    },
+    {
+      "image_index_1based": 4,
+      "frame_seq": 4,
+      "evidence_id": "EXT-F04",
+      "t_video_s": 9.7,
+      "file": "frame_009_70.png",
+      "sha256": "2a93fee53e99d7912391b05c218df4d6e5c0400a01918ea6e3bbae85f1e6bf1f"
+    },
+    {
+      "image_index_1based": 5,
+      "frame_seq": 5,
+      "evidence_id": "EXT-F05",
+      "t_video_s": 9.9,
+      "file": "frame_009_90.png",
+      "sha256": "dd7550c3b6841bedfad4d29fd6e7dc21b436248c21dfaa16da6eb5ce4541aa04"
+    },
+    {
+      "image_index_1based": 6,
+      "frame_seq": 6,
+      "evidence_id": "EXT-F06",
+      "t_video_s": 10.0,
+      "file": "frame_010_00.png",
+      "sha256": "9c34d8699515cfc4254cff460c027b54c57d50eeec95ce1edfa9d37649332485"
+    },
+    {
+      "image_index_1based": 7,
+      "frame_seq": 7,
+      "evidence_id": "EXT-F07",
+      "t_video_s": 10.1,
+      "file": "frame_010_10.png",
+      "sha256": "1e5c720b257d941290a355eec32557c3cb28e55482fc8dd30b08e523bfb92bfe"
+    },
+    {
+      "image_index_1based": 8,
+      "frame_seq": 8,
+      "evidence_id": "EXT-F08",
+      "t_video_s": 10.2,
+      "file": "frame_010_20.png",
+      "sha256": "6b3632e489dad1f4e28e02ccaa289b89a06706bc4fac0452cd9b9b751c231922"
+    },
+    {
+      "image_index_1based": 9,
+      "frame_seq": 9,
+      "evidence_id": "EXT-F09",
+      "t_video_s": 10.5,
+      "file": "frame_010_50.png",
+      "sha256": "69dca750a1c84c5691c471ede9f81cf7c248494841b1d7d4d17a7f149265255e"
+    },
+    {
+      "image_index_1based": 10,
+      "frame_seq": 10,
+      "evidence_id": "EXT-F10",
+      "t_video_s": 10.9,
+      "file": "frame_010_90.png",
+      "sha256": "e8d800666d202e5d58c62c387db070839019cae728c30d284974e900007e9311"
+    },
+    {
+      "image_index_1based": 11,
+      "frame_seq": 11,
+      "evidence_id": "EXT-F11",
+      "t_video_s": 11.5,
+      "file": "frame_011_50.png",
+      "sha256": "f50bfc60503bc66ca4dbf4e053cb0704b644e455e2144a4ffb47c2fc2f0184b2"
+    },
+    {
+      "image_index_1based": 12,
+      "frame_seq": 12,
+      "evidence_id": "EXT-F12",
+      "t_video_s": 12.5,
+      "file": "frame_012_50.png",
+      "sha256": "823e01e8ecc65309795db5e74b0a048bf32afb8c07ce47a37c2941235556324b"
+    },
+    {
+      "image_index_1based": 13,
+      "frame_seq": 13,
+      "evidence_id": "EXT-F13",
+      "t_video_s": 13.5,
+      "file": "frame_013_50.png",
+      "sha256": "a64333de1a0b46d8ed2b3cc4c937f819c8210702e799d3bb23c5853a67391c86"
+    }
+  ],
+  "telemetry": null,
+  "tracks": null,
+  "bounding_boxes": null,
+  "recognition_labels": null,
+  "missing_inputs": [
+    "No verified track IDs, bounding boxes, or recognition labels are available. These fields are missing, not evidence of no objects."
+  ],
+  "coverage": "Only these 13 images are supplied. Intervening video frames are not observed."
+}

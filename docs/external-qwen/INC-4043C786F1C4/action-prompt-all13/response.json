@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5vl:7b",
+  "created_at": "2026-10-15T15:16:57.011667199Z",
+  "message": {
+    "role": "assistant",
+    "content": "Dựa trên chuỗi ảnh và thông tin đã được cung cấp, dưới đây là phân tích diễn biến giao thông:\n\n### Tracks và Actions:\n1. **Track ID: T001**\n   - **Object Type:** unknown\n   - **Actions:**\n     - **Action:** unknown\n     - **Start Evidence ID:** EXT-F01\n     - **End Evidence ID:** EXT-F13\n     - **Certainty:** uncertain\n     - **Visual Evidence:** \n       - EXT-F01: Đối tượng xuất hiện ở phía trước của xe máy.\n       - EXT-F02: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F03: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F04: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F05: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F06: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F07: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F08: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F09: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F10: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F11: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F12: Đối tượng vẫn ở vị trí tương tự.\n       - EXT-F13: Đối tượng vẫn ở vị trí tương tự.\n     - **Unknowns:** Đối tượng không được nhận diện rõ ràng.\n\n### Incident Assessment:\n- **Status:** INCONCLUSIVE\n- **Event Type:** UNKNOWN\n- **Evidence IDs:** []\n- **Reason:** Không có bằng chứng cụ thể từ các frame để xác định hành động cụ thể hoặc sự kiện nào đã xảy ra.\n\n### Kết luận:\n- Đối tượng T001 xuất hiện ở phía trước của xe máy trong suốt chuỗi ảnh.\n- Đối tượng không được nhận diện rõ ràng và không có bằng chứng cụ thể để xác định hành động cụ thể.\n- Không có bằng chứng để kết luận có sự kiện nào xảy ra trong chuỗi ảnh này.\n\n```json\n{\n  \"tracks\": [\n    {\n      \"track_id\": \"T001\",\n      \"object_type\": \"unknown\",\n      \"actions\": [\n        {\n          \"action\": \"unknown\",\n          \"start_evidence_id\": \"EXT-F01\",\n          \"end_evidence_id\": \"EXT-F13\",\n          \"certainty\": \"uncertain\",\n          \"visual_evidence\": [],\n          \"unknowns\": []\n        }\n      ]\n    }\n  ],\n  \"interactions\": [],\n  \"incident_assessment\": {\n    \"status\": \"INCONCLUSIVE\",\n    \"event_type\": \"UNKNOWN\",\n    \"evidence_ids\": [],\n    \"reason\": \"No specific actions or events can be determined from the frames.\"\n  }\n}\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 87254768840,
+  "load_duration": 1311082473,
+  "prompt_eval_count": 37228,
+  "prompt_eval_cached_count": 6,
+  "prompt_eval_duration": 62502148000,
+  "eval_count": 609,
+  "eval_duration": 15219501000
+}

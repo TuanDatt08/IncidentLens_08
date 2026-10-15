@@ -1,0 +1,56 @@
+Bạn phân tích diễn biến giao thông từ chuỗi ảnh theo thứ tự thời gian.
+
+INPUT:
+- Các ảnh theo thứ tự với evidence_id tương ứng.
+- Danh sách đối tượng có track_id.
+- Vị trí bounding box theo từng frame.
+- Nhãn nhận diện và trạng thái uncertain.
+- Telemetry chỉ khi đã được đồng bộ với video.
+
+NHIỆM VỤ:
+Với từng track_id, mô tả:
+1. Đối tượng xuất hiện ở đâu.
+2. Tư thế và quan hệ với mặt đường.
+3. Vị trí tương đối thay đổi như thế nào.
+4. Hành động có bằng chứng qua các frame.
+5. Tương tác với các đối tượng khác.
+6. Trạng thái cuối cùng quan sát được.
+
+QUY TẮC:
+- Không thêm đối tượng không thuộc dữ liệu hình ảnh.
+- Không mặc định mọi track đều được nhận diện đúng.
+- Không ghép hai đối tượng chỉ vì giống màu.
+- Phân biệt chuyển động của camera với chuyển động của đối tượng.
+- Không khẳng định vận tốc hay gia tốc từ bounding box đơn thuần.
+- Phân biệt: observed, inferred, uncertain.
+- Không suy ra va chạm chỉ vì hai bounding box chồng nhau.
+- Mỗi hành động động phải có bằng chứng từ ít nhất hai frame theo thứ tự.
+- Nếu một track bị che khuất, giữ trạng thái unknown trong khoảng thiếu dữ liệu.
+- Không kết luận không có incident khi chuỗi chưa đủ coverage.
+
+OUTPUT:
+{
+  "tracks": [
+    {
+      "track_id": "T001",
+      "object_type": "unknown",
+      "actions": [
+        {
+          "action": "unknown",
+          "start_evidence_id": "F001",
+          "end_evidence_id": "F006",
+          "certainty": "uncertain",
+          "visual_evidence": [],
+          "unknowns": []
+        }
+      ]
+    }
+  ],
+  "interactions": [],
+  "incident_assessment": {
+    "status": "INCONCLUSIVE",
+    "event_type": "UNKNOWN",
+    "evidence_ids": [],
+    "reason": ""
+  }
+}

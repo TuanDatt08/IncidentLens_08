@@ -1,0 +1,25 @@
+{
+  "tracks": [
+    {
+      "track_id": "T001",
+      "object_type": "unknown",
+      "actions": [
+        {
+          "action": "unknown",
+          "start_evidence_id": "EXT-F01",
+          "end_evidence_id": "EXT-F13",
+          "certainty": "uncertain",
+          "visual_evidence": [],
+          "unknowns": []
+        }
+      ]
+    }
+  ],
+  "interactions": [],
+  "incident_assessment": {
+    "status": "INCONCLUSIVE",
+    "event_type": "UNKNOWN",
+    "evidence_ids": [],
+    "reason": "No specific actions or events can be determined from the frames."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "inference_completed": true,
+  "done_reason": "stop",
+  "images": 13,
+  "same_frame_hashes_verified": true,
+  "exact_prompt_verified": true,
+  "prompt_eval_count": 37228,
+  "eval_count": 609,
+  "elapsed_s": 87.6,
+  "strict_json": false,
+  "json_extracted_from_markdown": true,
+  "missing_inputs": [
+    "tracks",
+    "bounding_boxes",
+    "recognition_labels",
+    "telemetry"
+  ],
+  "incident_assessment": {
+    "status": "INCONCLUSIVE",
+    "event_type": "UNKNOWN",
+    "evidence_ids": [],
+    "reason": "No specific actions or events can be determined from the frames."
+  },
+  "runtime_note": "Original runtime.json reports parser error after successful inference; response.json confirms done=true. Raw output preserved."
+}
