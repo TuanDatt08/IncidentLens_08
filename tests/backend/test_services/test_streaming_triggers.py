@@ -1,8 +1,53 @@
-from pathlib import Path
 
 import pytest
 
 from backend.services.log_normalization import normalize_log
+
+
+def test_confirmed_braking_filters_weak_spikes_but_preserves_collision(tmp_path):
+    from backend.services.trigger_detection import TriggerConfig, find_log_triggers
+    p = tmp_path/'braking.csv'
+    p.write_text('t_video_s,brake,accel_x,collision_intensity\n'
+                 '0,0,0,0\n1,.9,-19.5,0\n2,0,0,0\n'
+                 '4,.9,-27,0\n4.042,0,0,0\n6,0,0,0\n'
+                 '8,.902,-27,0\n8.042,.902,-26,0\n8.083,.902,-25,0\n9,0,0,0\n'
+                 '12,0,0,1\n')
+    result = find_log_triggers(normalize_log(p), config=TriggerConfig(deceleration=22, braking_confirmation_s=.08))
+    selected = [t for t in result['triggers'] if t['selection']['selected']]
+    assert len(selected) == 2
+    assert selected[0]['log_peak_s'] == 8
+    assert selected[1]['reasons'] == ['COLLISION_SENSOR']
+    assert len(result['triggers']) == 4
+
+
+def test_braking_confirmation_resets_after_timestamp_gap(tmp_path):
+    from backend.services.trigger_detection import TriggerConfig, find_log_triggers
+    p = tmp_path/'gap-braking.csv'
+    p.write_text('t_video_s,brake,accel_x\n0,.9,-27\n.5,.9,-27\n')
+    result = find_log_triggers(normalize_log(p), config=TriggerConfig(deceleration=22, braking_confirmation_s=.08))
+    assert not any(t['selection']['selected'] for t in result['triggers'])
+
+
+def test_high_deceleration_without_braking_is_not_confirmed(tmp_path):
+    from backend.services.trigger_detection import TriggerConfig, find_log_triggers
+    p = tmp_path/'no-brake.csv'
+    p.write_text('t_video_s,brake,accel_x\n0,0,-27\n.042,0,-27\n.083,0,-27\n')
+    result = find_log_triggers(normalize_log(p), config=TriggerConfig(deceleration=22, braking_confirmation_s=.08))
+    assert not any(t['selection']['selected'] for t in result['triggers'])
+
+
+def test_candidate_filter_does_not_submit_rejected_groups(tmp_path):
+    from backend.services.candidate_detection import DetectionConfig, detect_candidates
+    from backend.services.synchronization import align
+    p = tmp_path/'selection.csv'
+    p.write_text('t_video_s,brake,accel_x\n0,0,0\n1,.9,-19\n2,0,0\n'
+                 '5,.9,-27\n5.042,.9,-26\n5.083,.9,-25\n6,0,0\n')
+    log = normalize_log(p)
+    result = detect_candidates(log, align({'duration':6},log,[]),
+        DetectionConfig('INC-TEST',6,trigger_deceleration=22,braking_confirmation_s=.08))
+    assert len(result.log_trigger_data['triggers']) == 2
+    assert len(result.candidates) == 1
+    assert result.candidates[0].critical_s == 5
 
 
 def test_unsynced_log_still_finds_braking(tmp_path):
@@ -36,8 +81,8 @@ def test_turn_and_vertical_independent_of_longitudinal_acceleration(tmp_path, si
 
 
 def test_verified_mapping_uses_actual_fps_and_merges(tmp_path):
-    from backend.services.trigger_detection import find_log_triggers
     from backend.services.synchronization import TimeAnchor, align
+    from backend.services.trigger_detection import find_log_triggers
     p = tmp_path/'log.csv'
     p.write_text('sec_from_incident,brake\n-1,0\n-.5,.9\n0,0\n.5,.95\n1,0\n')
     log = normalize_log(p)

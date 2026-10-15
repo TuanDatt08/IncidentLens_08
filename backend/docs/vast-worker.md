@@ -51,6 +51,15 @@ Render không có worker. Không đặt `GPU_MEDIA_BASE_URL` trong env của GPU
 
 ## Giới hạn và khôi phục
 
+Bộ lọc phanh mạnh tùy chọn: `QWEN_TRIGGER_DECELERATION=22`,
+`QWEN_BRAKING_CONFIRMATION_S=0.08`, `QWEN_FLAG_ONLY=true`. Candidate cần
+phanh ≥ 0,8 đồng thời acceleration ≤ −22 trong ít nhất 0,08 giây;
+khoảng cách giữa mẫu không quá 0,125 giây. Flag sensor va chạm vẫn được giữ.
+Raw trigger không bị xóa; trường `selection` cho biết nhóm được chọn hoặc loại.
+Mặc định confirmation=0 giữ hành vi cũ. Đây là hiệu chỉnh cho recording đã cung cấp,
+chưa có đánh giá recall trên nhiều video; acceleration phải dùng cùng đơn vị với CSV.
+Giữ clip có ngữ cảnh trước/sau trigger; không dùng mốc thời gian hardcode.
+
 Đây là luồng V1. Worker V2 không được bật tự động.
 Stop/start Vast giữ filesystem; recycle/destroy có thể mất toàn bộ media nếu
 instance không có volume. Cần sao lưu media trước các thao tác này.

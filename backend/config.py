@@ -128,6 +128,7 @@ class Settings(BaseSettings):
     qwen_sampling_fps: float = Field(default=4, gt=0, le=30)
     qwen_trigger_min_priority: int = Field(default=1, ge=1, le=5)
     qwen_trigger_deceleration: float = Field(default=6, gt=0)
+    qwen_braking_confirmation_s: float = Field(default=0, ge=0, le=10)
     qwen_flag_only: bool = False
     qwen_two_stage: bool = False
     qwen_signal_thresholds: dict[str, float] = Field(default_factory=dict)

@@ -67,7 +67,7 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
     signal_thresholds = dict(settings.qwen_signal_thresholds)
     if settings.qwen_candidate_min_acceleration is not None:
         signal_thresholds.setdefault("acceleration", settings.qwen_candidate_min_acceleration)
-    detection = detect_candidates(log, alignment, DetectionConfig(identity, duration, signal_thresholds=signal_thresholds, delta_thresholds=settings.qwen_delta_thresholds, fps=metadata.get('fps',24.), trigger_min_priority=settings.qwen_trigger_min_priority, trigger_deceleration=settings.qwen_trigger_deceleration))
+    detection = detect_candidates(log, alignment, DetectionConfig(identity, duration, signal_thresholds=signal_thresholds, delta_thresholds=settings.qwen_delta_thresholds, fps=metadata.get('fps',24.), trigger_min_priority=settings.qwen_trigger_min_priority, trigger_deceleration=settings.qwen_trigger_deceleration, braking_confirmation_s=settings.qwen_braking_confirmation_s))
     candidates = list(detection.candidates)
     unknowns = list(detection.unknowns)
     if detection.log_trigger_data is not None:

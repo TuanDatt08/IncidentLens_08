@@ -15,6 +15,8 @@ class TriggerConfig:
     brake_threshold: float = .8
     brake_rate: float = 1.5
     deceleration: float = 6.
+    braking_confirmation_s: float = 0.
+    braking_max_gap_s: float = .125
     steering_rate: float = .8
     yaw_rate_deg_s: float = 20.
     lateral_acceleration: float = 2.
@@ -31,7 +33,7 @@ class TriggerConfig:
 
     def __post_init__(self):
         for key, value in vars(self).items():
-            if not math.isfinite(value) or value < 0 or (key not in {'pre_s','post_s','merge_gap_s','warmup_s'} and value == 0):
+            if not math.isfinite(value) or value < 0 or (key not in {'pre_s','post_s','merge_gap_s','warmup_s','braking_confirmation_s'} and value == 0):
                 raise ValueError(f'invalid trigger budget/threshold: {key}')
         if not isinstance(self.max_triggers,int) or not isinstance(self.max_flags,int):
             raise ValueError('trigger budgets must be integers')
@@ -55,6 +57,7 @@ def find_log_triggers(log, *, config=None, alignment=None, video_metadata=None, 
     current = previous = previous_velocity = None
     ewma = {}
     started = None
+    braking_start = None
     unknowns = []
     def finish():
         nonlocal current, dropped
@@ -62,6 +65,11 @@ def find_log_triggers(log, *, config=None, alignment=None, video_metadata=None, 
             return
         event = current
         event['reasons'] = sorted(event['reasons'])
+        if cfg.braking_confirmation_s:
+            collision = 'COLLISION_SENSOR' in event['reasons']
+            confirmed = event.get('confirmed_braking_s', 0.) + 1e-9 >= cfg.braking_confirmation_s
+            event['selection'] = {'selected': collision or confirmed,
+                                  'reason': 'COLLISION_SENSOR' if collision else 'CONFIRMED_BRAKING' if confirmed else 'BRAKING_NOT_CONFIRMED'}
         for part in ('start','peak','end'):
             at = alignment.to_video_seconds(event[f'log_{part}_s']) if synced else None
             event[f'video_{part}_s'] = at
@@ -108,6 +116,13 @@ def find_log_triggers(log, *, config=None, alignment=None, video_metadata=None, 
             if abs(values.get(signal,0.)) >= threshold:
                 flag('SIGNAL_THRESHOLD',signal,values[signal],threshold)
         dt = at-previous[0] if previous else None
+        braking = values.get('brake', 0.) >= cfg.brake_threshold and values.get('acceleration', 0.) <= -cfg.deceleration
+        if braking:
+            if braking_start is None or dt is None or not 1e-6 < dt <= min(cfg.max_derivative_gap_s, cfg.braking_max_gap_s):
+                braking_start = at
+        else:
+            braking_start = None
+        braking_duration = at - braking_start if braking_start is not None else 0.
         derivative_ok = dt is not None and 1e-6 < dt <= cfg.max_derivative_gap_s
         velocity = None
         if derivative_ok:
@@ -162,6 +177,8 @@ def find_log_triggers(log, *, config=None, alignment=None, video_metadata=None, 
             if current is None:
                 current = {'log_start_s':at,'log_peak_s':at,'log_end_s':at,'peak_score':best['score'],'peak_priority':best['priority'],'reasons':set(),'flags':[],'flag_count':0,'omitted_flags':0}
             current['log_end_s'] = at
+            if cfg.braking_confirmation_s:
+                current['confirmed_braking_s'] = max(current.get('confirmed_braking_s', 0.), braking_duration)
             current['reasons'].update(item['reason'] for item in flags)
             if (best['priority'],best['score']) > (current['peak_priority'],current['peak_score']):
                 current['peak_priority'],current['peak_score'],current['log_peak_s'] = best['priority'],best['score'],at
