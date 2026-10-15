@@ -63,3 +63,22 @@ async def test_gpu_offline_returns_service_unavailable_without_local_upload():
         assert r.status_code == 503
         assert r.headers['access-control-allow-origin'] == 'https://frontend.example'
         assert 'private endpoint' not in r.text
+
+
+@pytest.mark.asyncio
+async def test_gpu_offline_review_context_falls_back_to_authenticated_local_route():
+    def offline(request):
+        raise httpx.ConnectError('offline',request=request)
+    app=FastAPI()
+    @app.get('/api/v1/incidents/INC-ABC/review-context')
+    def review(request: Request):
+        from starlette.responses import JSONResponse
+        if request.headers.get('cookie')!='session=valid':
+            return JSONResponse({'error':'authentication required'},status_code=401)
+        return {'review_required':True,'telemetry_error':'Media offline'}
+    app.add_middleware(GpuMediaProxy,base_url='http://gpu',transport=httpx.MockTransport(offline))
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://render') as c:
+        r=await c.get('/api/v1/incidents/INC-ABC/review-context')
+        assert r.status_code==401
+        r=await c.get('/api/v1/incidents/INC-ABC/review-context',headers={'cookie':'session=valid'})
+        assert r.status_code==200 and r.json()['review_required'] is True

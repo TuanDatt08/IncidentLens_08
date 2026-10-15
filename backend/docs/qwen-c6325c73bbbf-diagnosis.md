@@ -137,3 +137,9 @@ Kiểm thử: full backend suite 416 passed/4 skipped trước bổ sung measure
 22 kiểm tra provider/telemetry/temporal sau bổ sung đều đạt. Frontend typecheck,
 lint, production build và 31 kiểm tra regression đã đạt; phần copy cuối được
 kiểm lại bằng typecheck, lint và regression AnalysisContext.
+
+Trong bước xác minh cuối, SSH tới instance cũ bị từ chối và Vast.ai console hiển thị
+0 instance. Không tự tạo/khởi động instance trả phí. Thêm fallback review-context
+về API Render để đọc metadata/summary từ Neon khi GPU không kết nối được; vẫn
+giữ xác thực. Video/CSV trên GPU không được giả lập khi offline. Bộ 37 kiểm tra
+proxy, review context, provider, telemetry và temporal đều đạt sau thay đổi này.

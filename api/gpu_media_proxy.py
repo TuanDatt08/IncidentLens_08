@@ -38,6 +38,9 @@ class GpuMediaProxy:
             upstream = await client.send(upstream_request, stream=True)
         except httpx.HTTPError:
             await client.aclose()
+            if request.method == 'GET' and request.url.path.endswith('/review-context'):
+                # SQL-backed review metadata remains readable while GPU media is offline.
+                return await self.app(scope, receive, send)
             response = JSONResponse({'error': {'code': 'GPU_UNAVAILABLE',
                 'message': 'GPU media service is unavailable. Try again when the GPU is online.',
                 'details': None}}, status_code=503, headers={'Retry-After': '30'})
