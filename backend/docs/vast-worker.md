@@ -60,3 +60,18 @@ Rollback routing: bỏ `GPU_MEDIA_BASE_URL` và các biến SSH trên Render, re
 chỉ dùng khi media đã được chép lại về storage API. Dừng worker bằng
 `supervisorctl stop incidentlens-gpu-worker` khi không có job đang chạy;
 không hủy job hoặc xóa file để rollback.
+
+## Kiểm chứng triển khai ngày 2026-10-15
+
+- Suite chạy với `DATABASE_CLOUD=false`: 406 passed, 4 skipped; Ruff đạt.
+- Supervisor chạy cả media adapter và worker trên host `19fa9d3b29ef`.
+- Request ảnh thật tới Qwen trả 200; `ollama ps`: `qwen2.5vl:7b`, 100% GPU.
+- Upload fixture qua Vercel → Render → SSH tạo `INC-A64CF2D6F122` trên GPU;
+  SHA-256 của file nhận trùng file gốc.
+- Diagnostics từ website đọc được `worker_host` và lịch sử pipeline trên GPU.
+- `JOB-924E0D244846` đã được worker xử lý, dừng `INSUFFICIENT_EVIDENCE`
+  vì thiếu đồng bộ thời gian CSV/video; không tự đoán offset.
+- 17 video cũ đã trả `MEDIA_NOT_FOUND` trên Render trước khi chuyển. MP4/CSV
+  của `INC-8870DFE54AE1` được di chuyển với SHA-256 giữ nguyên.
+- Instance hiện không có host volume (`workspace_is_volume=false`): cần backup
+  trước recycle/destroy. Kiểm tra trên không phải đánh giá chất lượng phát hiện incident.
