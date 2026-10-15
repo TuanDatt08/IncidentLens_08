@@ -25,6 +25,63 @@ def provider_response():
     return {"choices": [{"message": {"content": json.dumps(analysis)}}], "usage": {"prompt_tokens": 100, "completion_tokens": 20}}
 
 
+def test_trigger_memory_is_transmitted_without_switching_sequence_to_final(tmp_path):
+    module, context, config = context_and_config(tmp_path, 'self_hosted')
+    memory = {'context_id': 'rec:job:cnd', 'observations': [{'summary': 'Earlier actor approaching', 'frame_times_s': [1.0]}]}
+    previous_signature = module.batch_signature(context, config)
+    context = replace(context, trigger_memory=memory, decision_scope='SUPPLIED_SEQUENCE', frame_roles=('CORE',))
+    requests = []
+    def handler(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json=provider_response())
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        module.create_provider(config, client=client).analyze(context)
+    content = requests[0]['messages'][0]['content']
+    payload = json.loads(content[0]['text'].split('\n')[-1])
+    assert payload['trigger_memory'] == memory
+    assert payload['decision_scope'] == 'SUPPLIED_SEQUENCE'
+    assert 't_video_s=2.0 role=CORE' in content[1]['text']
+    assert module.batch_signature(context, config) != previous_signature
+
+
+def test_history_cannot_authorize_evidence_outside_current_candidate(tmp_path):
+    module, context, _ = context_and_config(tmp_path)
+    alien = replace(context.frames[0], evidence_id='EVD-ALIEN', candidate_id='another')
+    context = replace(context, registry=replace(context.registry, assets=(*context.frames, alien)), prior_evidence_ids=('EVD-ALIEN',))
+    from backend.services.evidence_validation import validate_analysis
+    with pytest.raises(ValueError, match='outside recording/candidate'):
+        validate_analysis(provider_response_analysis(), module.batch_registry(context), 10.)
+
+
+def provider_response_analysis():
+    return json.loads(provider_response()['choices'][0]['message']['content'])
+
+
+def test_new_visual_claim_about_unattached_history_is_rejected(tmp_path):
+    module, context, _ = context_and_config(tmp_path)
+    old = context.frames[0]
+    current = replace(old, evidence_id='EVD-2', time_start_s=3., time_end_s=3.)
+    context = replace(context, frames=(current,), registry=replace(context.registry, assets=(old,current)),
+                      prior_evidence_ids=(old.evidence_id,), trigger_memory={'observations': [{'timeline': []}]})
+    with pytest.raises(ValueError, match='historical'):
+        module.validate_context_analysis(provider_response_analysis(), context)
+    previous = provider_response_analysis()
+    previous['timeline'][0]['observation'] = 'Validated ' * 100
+    compacted = {**previous['timeline'][0], 'observation': 'Truncated replacement'}
+    context = replace(context, prior_observations=({'timeline': previous['timeline']},),
+                      trigger_memory={'observations': [{'timeline': [compacted]}]})
+    assert module.validate_context_analysis(previous, context).incident_detected
+    changed = {**previous, 'timeline': [compacted]}
+    with pytest.raises(ValueError, match='historical'):
+        module.validate_context_analysis(changed, context)
+
+
+def test_temporal_settings_reject_non_six_frame_budget_before_processing():
+    from backend.config import Settings
+    with pytest.raises(ValueError, match='six'):
+        Settings(_env_file=None, qwen_temporal_context=True, qwen_batch_frames=4)
+
+
 @pytest.mark.parametrize("kind", ["external_api", "self_hosted"])
 def test_both_adapters_share_schema_filter_telemetry_and_record_provenance(tmp_path, kind):
     module, context, config = context_and_config(tmp_path, kind)

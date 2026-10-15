@@ -7,7 +7,7 @@ from backend.services.video import VideoService
 from backend.services.vlm_provider import ProviderResult
 
 
-def run_candidate(tmp_path, monkeypatch, temporal, positive_first=False, invalid_final=False, video_summary=False):
+def run_candidate(tmp_path, monkeypatch, temporal, positive_first=False, invalid_final=False, video_summary=False, invalid_first=False):
     source = tmp_path/'INC-T/source'
     source.mkdir(parents=True)
     (source/'video.mp4').write_bytes(b'video')
@@ -24,7 +24,7 @@ def run_candidate(tmp_path, monkeypatch, temporal, positive_first=False, invalid
     class Provider:
         def analyze(self,context):
             calls.append(context)
-            if invalid_final and context.candidate_observations:
+            if (invalid_final and context.candidate_observations) or (invalid_first and len(calls)==1):
                 AIIncidentAnalysisV2.model_validate({'invalid':True})
             if positive_first and len(calls)==1:
                 telemetry=next(a for a in context.registry.assets if a.source=='TELEMETRY')
@@ -78,6 +78,65 @@ def test_temporal_batches_overlap_and_final_decision_has_candidate_context(tmp_p
     assert any(abs(f.time_start_s-2.125)<1e-6 for c in calls for f in c.frames)
     assert len(manifest['candidate_decisions'])==1
     assert result.analysis.model_metadata['detection_state']=='REVIEW_REQUIRED_TELEMETRY_CONFLICT'
+
+
+def test_trigger_memory_is_replayed_and_roles_advance_four_core_frames(tmp_path, monkeypatch):
+    _, calls, _ = run_candidate(tmp_path, monkeypatch, True)
+    assert calls[0].trigger_memory['observations'] == []
+    assert len(calls[1].trigger_memory['observations']) == 1
+    assert calls[1].decision_scope == 'SUPPLIED_SEQUENCE'
+    assert calls[-1].decision_scope == 'FINAL_CANDIDATE'
+    assert len(calls[-1].trigger_memory['observations']) == len(calls)-1
+    assert len({c.trigger_memory['context_id'] for c in calls}) == 1
+    assert calls[0].frame_roles == ('CORE',)*4 + ('AFTER',)
+    assert calls[1].frame_roles == ('BEFORE',) + ('CORE',)*4 + ('AFTER',)
+    assert calls[0].frames[-1] == calls[1].frames[1]
+    ledger = json.loads(next(tmp_path.glob('INC-T/trigger-context-*.json')).read_text())
+    assert len(ledger['observations']) == len(calls)
+
+
+def test_trigger_batches_do_not_duplicate_boundary_frames():
+    from backend.services.temporal_context import trigger_batches
+    batches = trigger_batches(tuple(range(9)), 6)
+    assert batches == [((0,1,2,3,4), ('CORE','CORE','CORE','CORE','AFTER')),
+                       ((3,4,5,6,7,8), ('BEFORE','CORE','CORE','CORE','CORE','AFTER')),
+                       ((7,8), ('BEFORE','CORE'))]
+
+
+def test_trigger_memory_compacts_text_without_losing_evidence_or_conflicts():
+    from backend.services.temporal_context import trigger_memory
+    notes = [{'summary': 'x'*5000, 'unknowns': ['conflict '*1000],
+              'evidence': [{'evidence_id': 'EVD-1', 't_video_s': 58.375}],
+              'timeline': [{'observation': 'y'*5000, 'time_s': 58.375}]}]*40
+    memory = trigger_memory('job:candidate', notes, max_chars=24000)
+    assert len(json.dumps(memory, ensure_ascii=False)) <= 24000
+    assert len(memory['observations']) == 40
+    assert all(n['evidence'][0]['t_video_s'] == 58.375 and n['unknowns'] for n in memory['observations'])
+    assert notes[0]['summary'] == 'x'*5000
+
+
+def test_invalid_sequence_is_replayed_as_gap_even_when_later_calls_succeed(tmp_path, monkeypatch):
+    result, calls, _ = run_candidate(tmp_path, monkeypatch, True, invalid_first=True)
+    assert calls[1].trigger_memory['observations'][0]['error']['code'] == 'INVALID_MODEL_OUTPUT'
+    assert calls[-1].trigger_memory['observations'][0]['unknowns']
+    assert result.analysis.model_metadata['requires_engineer_review']
+
+
+def test_each_trigger_starts_with_fresh_memory(tmp_path, monkeypatch):
+    from dataclasses import replace
+
+    from backend.services import qwen_processing
+    detect = qwen_processing.detect_candidates
+    def two_candidates(*args, **kwargs):
+        detected = detect(*args, **kwargs)
+        original = detected.candidates[0]
+        return replace(detected, candidates=(original, replace(original, candidate_id='CND-SECOND')))
+    monkeypatch.setattr(qwen_processing, 'detect_candidates', two_candidates)
+    _, calls, _ = run_candidate(tmp_path, monkeypatch, True)
+    second = [c for c in calls if c.registry.candidate_id == 'CND-SECOND']
+    assert second[0].trigger_memory['observations'] == []
+    assert second[0].prior_evidence_ids == ()
+    assert second[1].trigger_memory['context_id'] != calls[1].trigger_memory['context_id']
 
 
 def test_conflict_summary_preserves_independent_positive_finding():

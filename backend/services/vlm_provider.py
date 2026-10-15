@@ -60,14 +60,29 @@ def filtered_telemetry(rows: tuple[dict, ...]) -> list[dict]:
 
 
 def batch_registry(context: AnalysisContext) -> EvidenceRegistry:
-    sent_ids = {frame.evidence_id for frame in context.frames}
+    sent_ids = {frame.evidence_id for frame in context.frames} | set(context.prior_evidence_ids)
     assets = tuple(asset for asset in context.registry.assets if asset.evidence_id in sent_ids or (asset.source == "TELEMETRY" and context.telemetry_rows))
     return EvidenceRegistry(context.registry.recording_id, context.registry.candidate_id, assets)
+
+
+def validate_context_analysis(analysis, context: AnalysisContext):
+    result = validate_analysis(analysis, batch_registry(context), context.duration_s)
+    current_ids = {frame.evidence_id for frame in context.frames}
+    current_ids.update(asset.evidence_id for asset in context.registry.assets if asset.source == 'TELEMETRY' and context.telemetry_rows)
+    notes = context.prior_observations
+    for field in ('timeline', 'factors'):
+        previous = [item for note in notes if 'error' not in note for item in note.get(field, [])]
+        for item in getattr(result, field):
+            if set(item.evidence_ids) - current_ids and item.model_dump(mode='json') not in previous:
+                raise ValueError('new claim about historical evidence requires reattached images or exact validated prior claim')
+    return result
 
 
 def batch_signature(context: AnalysisContext, config: ProviderConfig | None) -> str:
     values = {"frames": [(frame.evidence_id, frame.sha256, frame.time_start_s) for frame in context.frames], "telemetry": context.telemetry_rows, "flags": context.flags, "window": context.candidate_window, "config": asdict(config) if config is not None else None, "prompt": read_prompt(config.prompt_path) if config is not None and config.prompt_path else None}
     values['candidate_observations'] = context.candidate_observations
+    values.update(trigger_memory=context.trigger_memory, decision_scope=context.decision_scope, frame_roles=context.frame_roles, prior_evidence_ids=context.prior_evidence_ids)
+    values['prior_observations'] = context.prior_observations
     return hashlib.sha256(json.dumps(values, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
@@ -95,6 +110,11 @@ class AnalysisContext:
     flags: tuple[dict, ...] = ()
     candidate_window: tuple[float, float, float] | None = None
     candidate_observations: tuple[dict, ...] = ()
+    trigger_memory: dict | None = None
+    decision_scope: str | None = None
+    frame_roles: tuple[str, ...] = ()
+    prior_evidence_ids: tuple[str, ...] = ()
+    prior_observations: tuple[dict, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -148,12 +168,14 @@ class HTTPVLMProvider:
         if not finite(context.duration_s) or context.duration_s <= 0 or not 0 < len(context.frames) <= config.max_frames or len(context.telemetry_rows) > config.max_telemetry_rows:
             raise ValueError("context exceeds frame/telemetry budget or invalid duration")
         timestamps = [frame.time_start_s for frame in context.frames]
+        if context.frame_roles and (len(context.frame_roles) != len(context.frames) or any(role not in {'BEFORE', 'CORE', 'AFTER', 'OVERVIEW'} for role in context.frame_roles)):
+            raise ValueError('frame roles must match supplied images')
         if timestamps != sorted(set(timestamps)) or any(not finite(t) or not 0 <= t < context.duration_s for t in timestamps):
             raise ValueError("frames must be unique and ordered in video seconds")
         refs = {asset.evidence_id: asset for asset in context.registry.assets}
         images = []
         byte_count = 0
-        for frame in context.frames:
+        for index, frame in enumerate(context.frames):
             if refs.get(frame.evidence_id) != frame or (frame.recording_id, frame.candidate_id) != (context.registry.recording_id, context.registry.candidate_id):
                 raise ValueError("frame must belong to scoped evidence registry")
             if config.kind == "external_api" and (frame.privacy_state, frame.privacy_validation) != ("MASKED", "PASSED"):
@@ -163,7 +185,8 @@ class HTTPVLMProvider:
             byte_count += frame.path.stat().st_size
             if byte_count > config.max_image_bytes:
                 raise ValueError("frame byte budget exceeded")
-            images.append({"type": "text", "text": f"{frame.evidence_id} t_video_s={frame.time_start_s}"})
+            role = context.frame_roles[index] if context.frame_roles else 'SUPPLIED'
+            images.append({"type": "text", "text": f"{frame.evidence_id} t_video_s={frame.time_start_s} role={role}"})
             images.append({"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + base64.b64encode(frame.path.read_bytes()).decode("ascii")}})
         telemetry = filtered_telemetry(context.telemetry_rows)
         measured = braking_measurements(telemetry, *context.candidate_window[::2]) if context.candidate_window else None
@@ -174,11 +197,12 @@ class HTTPVLMProvider:
         registry = batch_registry(context)
         if config.prompt_path:
             telemetry = sample_telemetry(telemetry, timestamps + [flag["time_s"] for flag in context.flags])
-        refs_payload = [{"evidence_id": item.evidence_id, "source": item.source, "t_video_s": item.time_start_s, "start_s": item.time_start_s, "end_s": item.time_end_s} for item in registry.assets]
+        attached_ids = {frame.evidence_id for frame in context.frames}
+        refs_payload = [{"evidence_id": item.evidence_id, "source": item.source, "t_video_s": item.time_start_s, "start_s": item.time_start_s, "end_s": item.time_end_s, "image_attached": item.evidence_id in attached_ids} for item in registry.assets]
         instructions = read_prompt(config.prompt_path) if config.prompt_path else "Analyze only supplied chronological evidence. Cite valid evidence IDs/time/source. Distinguish OBSERVED, SUPPORTED_INFERENCE, HYPOTHESIS, UNKNOWN. Internal causes without logs must remain UNKNOWN/HYPOTHESIS. Conflicts and missing coverage go in unknowns. Return only schema 2.0 JSON with DRAFT; never approve."
         if config.compact_context:
             instructions += "\nTelemetry/flags tables have ordered columns and rows of values in that column order; null means missing."
-        prompt = instructions + "\n" + json.dumps({"duration_s": context.duration_s, "candidate_window": context.candidate_window, "candidate_observations": context.candidate_observations, "decision_scope": "FINAL_CANDIDATE" if context.candidate_observations else "SUPPLIED_SEQUENCE", "flags": compact_records(context.flags) if config.compact_context else context.flags, "telemetry": compact_records(telemetry) if config.compact_context else telemetry, "telemetry_findings": telemetry_findings, "telemetry_units": {"time_s": "video_seconds", "speed": "m/s", "acceleration": "m/s²", "jerk": "m/s³", "brake": "0..1"}, "telemetry_sampling": "bracketing rows at supplied frames and flags" if config.prompt_path else "all supplied rows", "evidence": refs_payload, "output_schema": AIIncidentAnalysisV2.model_json_schema()}, ensure_ascii=False, separators=(",", ":"))
+        prompt = instructions + "\n" + json.dumps({"duration_s": context.duration_s, "candidate_window": context.candidate_window, "candidate_observations": () if context.trigger_memory is not None else context.candidate_observations, "trigger_memory": context.trigger_memory, "decision_scope": context.decision_scope or ("FINAL_CANDIDATE" if context.candidate_observations else "SUPPLIED_SEQUENCE"), "flags": compact_records(context.flags) if config.compact_context else context.flags, "telemetry": compact_records(telemetry) if config.compact_context else telemetry, "telemetry_findings": telemetry_findings, "telemetry_units": {"time_s": "video_seconds", "speed": "m/s", "acceleration": "m/s²", "jerk": "m/s³", "brake": "0..1"}, "telemetry_sampling": "bracketing rows at supplied frames and flags" if config.prompt_path else "all supplied rows", "evidence": refs_payload, "output_schema": AIIncidentAnalysisV2.model_json_schema()}, ensure_ascii=False, separators=(",", ":"))
         prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         output_schema = detection_output_schema() if config.compact_context or config.kind == "self_hosted" else AIIncidentAnalysisV2.model_json_schema()
         payload = {"model": config.model, "temperature": 0, "max_tokens": config.max_output_tokens, "response_format": {"type": "json_schema", "json_schema": {"name": "incident_analysis_v2", "strict": True, "schema": output_schema}}, "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, *images]}]}
@@ -227,7 +251,7 @@ class HTTPVLMProvider:
                     journal(raw, attempt, response.status_code, provider_response=decoded)
                     diagnostics('validation', 'Backend kiểm tra schema V2 và evidence của nhánh log.', usage=decoded.get('usage', {}), latency_s=time.monotonic()-start)
                     analysis = AIIncidentAnalysisV2.model_validate_json(raw, context={"video_duration_s": context.duration_s})
-                    validate_analysis(analysis, registry, context.duration_s)
+                    validate_context_analysis(analysis, context)
                     usage = decoded.get("usage", {})
                     input_tokens, output_tokens = usage.get("prompt_tokens"), usage.get("completion_tokens")
                     if any(value is not None and (isinstance(value, bool) or not isinstance(value, int) or value < 0) for value in (input_tokens, output_tokens)):

@@ -141,6 +141,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode='after')
     def validate_temporal_budget(self):
+        if self.qwen_temporal_context and self.qwen_batch_frames != 6:
+            raise ValueError('Temporal trigger context requires a six-frame batch budget')
         if self.qwen_temporal_context and (self.qwen_batch_frames < 4 or (self.qwen_inference_frame_limit is not None and self.qwen_inference_frame_limit < 4)):
             raise ValueError('Temporal context requires at least four frames per batch and inference budget')
         if self.qwen_temporal_context and self.qwen_two_stage:

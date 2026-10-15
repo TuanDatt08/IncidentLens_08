@@ -35,9 +35,9 @@ Thứ tự ảnh chỉ biểu diễn trước/sau. Muốn biểu diễn nhịp c
 
 1. Backend đọc và đồng bộ log; phát hiện các khoảng nghi vấn bằng logic số liệu. Flag chỉ chọn vùng để xem, chưa phải kết luận incident.
 2. Lấy frame nền trong cửa sổ candidate ở 4 FPS; thêm frame dày ở 8 FPS quanh critical ±1 giây. Sắp xếp theo thời gian, loại timestamp trùng và giữ giới hạn 256 frame/candidate hiện có.
-3. Chia batch 6 ảnh, chồng 2 ảnh: ảnh 1–6, 5–10, 9–14… Batch cuối có thể ít ảnh hơn. Chồng lấn giúp nhìn được chuyển động qua ranh giới batch, không biến hai batch thành hai sự cố.
-4. Gửi prompt quan sát chuỗi cùng timestamp từng ảnh, telemetry liên quan và số đo backend tính. Lưu kết quả có dẫn chứng.
-5. Hết candidate, gửi prompt kết luận candidate với tất cả ghi chú của candidate và bộ ảnh overview. Nếu các ghi chú mâu thuẫn, xem lại chuỗi liên quan trước khi kết luận.
+3. Chia theo 4 ảnh CORE liên tiếp, thêm 1 ảnh BEFORE và 1 ảnh AFTER thực tế nếu có: CORE 1–4 + AFTER 5; BEFORE 4 + CORE 5–8 + AFTER 9; BEFORE 8 + CORE 9–12 + AFTER 13… Batch ở biên có thể ít ảnh hơn. Chồng lấn giúp nhìn được chuyển động qua ranh giới batch, không biến hai batch thành hai sự cố.
+4. Mỗi request gửi lại bộ nhớ riêng của trigger (`trigger_memory`, khóa recording/job/candidate), timestamp `t_video_s`, vai trò từng ảnh, telemetry và số đo backend tính. API Qwen vẫn stateless; worker giữ và truyền lịch sử. Bộ nhớ không trộn giữa các trigger. Lưu kết quả có dẫn chứng, kể cả batch lỗi thành khoảng chưa biết.
+5. Hết trigger, gửi `FINAL_CANDIDATE` với toàn bộ lịch sử trigger và bộ ảnh OVERVIEW. Lịch sử được giới hạn 32.000 ký tự bằng rút gọn văn bản; giữ timestamp, ID bằng chứng, thứ tự, lỗi và unknowns. Nếu metadata vẫn vượt ngưỡng thì dừng rõ lỗi, không âm thầm bỏ lịch sử. Bản đầy đủ ở `trigger-context-CND-*.json` và journal request/response. Đây là giới hạn ký tự bảo thủ, không phải phép đếm token chính xác; cấu hình Qwen hiện tại vẫn 32.768 token. Nhận định mới cần ảnh đính kèm; nhận định dùng ảnh lịch sử phải khớp nguyên văn timeline/factor đã xác thực trước đó. Nếu các ghi chú mâu thuẫn, xem lại chuỗi liên quan trước khi kết luận.
 
 Ngưỡng chọn candidate hiện được hiệu chỉnh cho dữ liệu đã cung cấp; không tuyên bố phù hợp mọi nguồn log. Prompt không nên ép xác nhận một sự cố cụ thể bằng tên file hay đáp án mong đợi.
 

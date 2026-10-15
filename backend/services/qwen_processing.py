@@ -18,15 +18,15 @@ from backend.services.evidence_extraction import (
     file_hash,
     window_sample_times,
 )
-from backend.services.evidence_validation import EvidenceRegistry, validate_analysis
+from backend.services.evidence_validation import EvidenceRegistry
 from backend.services.log_normalization import normalize_log
 from backend.services.processing import InsufficientEvidence, ProcessedResult, pass1_sample_times
 from backend.services.synchronization import TimeAnchor, align
 from backend.services.telemetry_consistency import negative_telemetry_conflict
-from backend.services.temporal_context import overview_frames, temporal_batches, temporal_sample_times
+from backend.services.temporal_context import overview_frames, temporal_sample_times, trigger_batches, trigger_memory
 from backend.services.video import VideoService
 from backend.services.video_summary import summarize_video
-from backend.services.vlm_provider import AnalysisContext, batch_registry, filtered_telemetry
+from backend.services.vlm_provider import AnalysisContext, filtered_telemetry, validate_context_analysis
 
 
 class UnsupportedModelClaimError(ValueError):
@@ -107,7 +107,7 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
             on_progress(2, calls - 1, None)
         submitted_times.extend(frame.time_start_s for frame in context.frames)
         result = provider.analyze(context)
-        validate_analysis(result.analysis, batch_registry(context), duration)
+        validate_context_analysis(result.analysis, context)
         require_supported_collision(result.analysis)
         inspected_times.extend(frame.time_start_s for frame in context.frames)
         return result
@@ -185,34 +185,46 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
             unresolved_candidates.append(candidate.candidate_id)
             unknowns.append(f'{candidate.candidate_id}: insufficient frames for temporal comparison.')
             continue
-        batches = temporal_batches(inference_frames, batch_size) if settings.qwen_temporal_context else [inference_frames[start:start + batch_size] for start in range(0, len(inference_frames), batch_size)]
+        batches = trigger_batches(inference_frames, batch_size) if settings.qwen_temporal_context else [(inference_frames[start:start + batch_size], ()) for start in range(0, len(inference_frames), batch_size)]
         observations = []
         candidate_results = []
         if settings.qwen_temporal_context:
-            batches.append(overview_frames(inference_frames, batch_size, candidate.critical_s))
-        for batch_index, frames in enumerate(batches):
+            overview = overview_frames(inference_frames, batch_size, candidate.critical_s)
+            batches.append((overview, ('OVERVIEW',)*len(overview)))
+        context_id = f'{identity}:{job_id or "standalone"}:{candidate.candidate_id}'
+        ledger_path = directory / f'trigger-context-{candidate.candidate_id}.json'
+        for batch_index, (frames, roles) in enumerate(batches):
             final = settings.qwen_temporal_context and batch_index == len(batches) - 1
-            context = AnalysisContext(registry, duration, frames, tuple(rows), job_id, candidate.flags, (candidate.start_s, candidate.critical_s, candidate.end_s), tuple(observations) if final else ())
+            memory = trigger_memory(context_id, observations) if settings.qwen_temporal_context else None
+            prior_ids = tuple(dict.fromkeys(ref['evidence_id'] for note in observations if 'error' not in note for ref in note['evidence'])) if memory else ()
+            context = AnalysisContext(registry, duration, frames, tuple(rows), job_id, candidate.flags, (candidate.start_s, candidate.critical_s, candidate.end_s), tuple(observations) if final else (),
+                                      trigger_memory=memory, decision_scope='FINAL_CANDIDATE' if final else 'SUPPLIED_SEQUENCE', frame_roles=roles, prior_evidence_ids=prior_ids, prior_observations=tuple(observations) if memory else ())
             try:
                 result = analyze(context)
-            except (ValidationError, UnsupportedModelClaimError) as exc:
+            except (ValidationError, ValueError) as exc:
                 # Keep independent batches useful without treating malformed output as absence.
                 code = "UNSUPPORTED_MODEL_CLAIM" if isinstance(exc, UnsupportedModelClaimError) else "INVALID_MODEL_OUTPUT"
                 records.append({"candidate": asdict(candidate), "frame_times_s": [frame.time_start_s for frame in context.frames], "error": {"code": code, "message": str(exc)}})
                 unknowns.append(f"{candidate.candidate_id}: {code} for frame times {[frame.time_start_s for frame in context.frames]}; this batch remains unknown. See raw request/response journal.")
+                observations.append({'sequence_index': batch_index, 'frame_times_s': [f.time_start_s for f in frames],
+                                     'frame_roles': roles, 'incident_detected': False, 'error': {'code': code, 'message': str(exc)},
+                                     'unknowns': ['Invalid sequence output; temporal coverage unresolved.'], 'evidence': []})
+                service.write_json(ledger_path, {'context_id': context_id, 'observations': observations})
+                unresolved_candidates.append(candidate.candidate_id)
                 if final:
                     candidate_results = []
-                    unresolved_candidates.append(candidate.candidate_id)
                 continue
             if result.analysis.window and not candidate.start_s <= result.analysis.window.start_s < result.analysis.window.end_s <= candidate.end_s:
                 raise InsufficientEvidence("Local report window is outside candidate.")
             records.append({"candidate": asdict(candidate), "frame_times_s": [frame.time_start_s for frame in context.frames], "analysis": result.analysis.model_dump(mode="json"), "provenance": result.provenance, "usage": result.usage})
             unknowns.extend(result.analysis.unknowns)
-            observations.append({'frame_times_s': [f.time_start_s for f in frames], 'incident_detected': result.analysis.incident_detected,
-                                 'event_type': result.analysis.event_type, 'summary': result.analysis.summary[:500],
+            observations.append({'sequence_index': batch_index, 'frame_roles': roles, 'frame_times_s': [f.time_start_s for f in frames], 'incident_detected': result.analysis.incident_detected,
+                                 'event_type': result.analysis.event_type, 'summary': result.analysis.summary,
                                  'evidence': [{'evidence_id': f.evidence_id, 't_video_s': f.time_start_s} for f in frames],
                                  'timeline': [item.model_dump(mode='json') for item in result.analysis.timeline],
+                                 'factors': [item.model_dump(mode='json') for item in result.analysis.factors],
                                  'unknowns': result.analysis.unknowns})
+            service.write_json(ledger_path, {'context_id': context_id, 'observations': observations})
             if not settings.qwen_temporal_context or final:
                 candidate_results.append(result.analysis)
         candidate_positive = [item for item in candidate_results if item.incident_detected]
