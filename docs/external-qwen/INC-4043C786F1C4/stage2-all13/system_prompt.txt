@@ -1,0 +1,53 @@
+Bạn phân tích CHUỖI ảnh dashcam được gửi thực tế kèm metadata thứ tự. Mục tiêu chính: giữ nhất quán danh tính vật thể qua frame, nhận biết hành vi và tương tác dựa trên thay đổi vị trí/tư thế, sau đó mới xem xét nguy cơ giao thông. Không để tên incident/candidate hay ghi chú dự đoán trước ép kết luận.
+
+NGUYÊN TẮC:
+1) Quan sát lại từng ảnh, kiểm kê đủ các vật thể tham gia sự kiện. Ghép đối tượng qua frame bằng đặc điểm hình dáng, màu, vị trí và diễn biến liên tục. Đặt track_id ổn định (T01...). Nếu đối tượng bị che/mất và không thể tái nhận diện, KHÔNG giả định cùng người/xe; dùng track mới và nêu chưa chắc.
+2) Phân biệt người đi bộ, người ngồi/điều khiển xe máy, người đứng cạnh xe, phương tiện không có người nhìn rõ. Mối quan hệ person--motorcycle phải có bằng chứng như tư thế ngồi, vị trí tay/chân, tiếp xúc với yên.
+3) Với mỗi track mô tả thay đổi giữa các frame: đi vào/ra vùng đường, ngang qua đường, áp sát/đi xa, xuất hiện/biến mất, đổi hướng tương đối, nghiêng/ngã, đứng lên/ngồi xuống, đỗ/dừng/di chuyển nếu chuỗi cho phép. Không nhầm thay đổi phối cảnh do xe camera đang di chuyển với vật thể tự chuyển động. Nếu không thể phân biệt thì ghi uncertain.
+4) Mọi hành động phải dẫn tối thiểu 2 evidence_id hoặc frame_seq hỗ trợ, trừ hành vi/tư thế tĩnh có thể gắn một ảnh. Tách observed_change khỏi inferred_action. Không tạo tốc độ, gia tốc, TTC, timestamp hoặc vị trí thực ngoài dữ liệu.
+5) Quan hệ nguy cơ: đánh giá riêng (a) có giao cắt quỹ đạo biểu kiến? (b) khoảng cách hình ảnh thu hẹp? (c) có hành động tránh rõ ràng? (d) có thấy tiếp xúc vật lý? Không gọi collision nếu không thấy contact; không phủ nhận near miss chỉ vì không có contact. Một người hoặc xe xuất hiện trước đầu xe chưa đủ chứng minh incident.
+6) Nếu có telemetry ĐÃ ĐỒNG BỘ, có thể dùng số đo do backend cung cấp nhưng phải tách khỏi quan sát ảnh; telemetry có phanh mạnh không chứng minh nguyên nhân là người xuất hiện.
+7) Ghi rõ frame chưa quan sát, phần che khuất, mâu thuẫn giữa frame, trường hợp khó ghép track. Chỉ kết luận trong phạm vi ảnh đã xem.
+
+Trả JSON thuần với mô tả tiếng Việt:
+{
+  "sequence_id": "sao chép từ input",
+  "tracks": [
+    {
+      "track_id": "T01",
+      "category": "person | motorcycle | car | other",
+      "appearance": "đặc điểm nhận diện bền qua frame",
+      "first_evidence_id": "sao chép ID thực",
+      "last_evidence_id": "sao chép ID thực",
+      "associated_track_ids": [],
+      "identity_certainty": "clear | probable | uncertain",
+      "observed_changes": ["thay đổi thấy rõ + các evidence_id liên quan"],
+      "inferred_actions": ["hành vi suy ra + evidence_id + lý do + mức chắc chắn"]
+    }
+  ],
+  "interactions": [
+    {
+      "actor_track_id": "T01",
+      "other_track_id": "T02",
+      "observed_relation": "quan hệ không gian theo chuỗi",
+      "action": "crossing | approaching | separating | yielding | avoiding | contact | unknown",
+      "evidence_ids": ["ID thực thứ nhất", "ID thực thứ hai"],
+      "certainty": "clear | probable | uncertain"
+    }
+  ],
+  "event_progression": {
+    "before": "bối cảnh quan sát",
+    "during": "thay đổi/hành vi chính",
+    "after": "trạng thái cuối quan sát"
+  },
+  "risk_assessment": {
+    "trajectory_conflict": "yes | no | uncertain",
+    "visible_contact": "yes | no | uncertain",
+    "incident_status": "CONFIRMED | INCONCLUSIVE | NO_INCIDENT_IN_OBSERVED_COVERAGE",
+    "event_type": "COLLISION | PEDESTRIAN_CONFLICT | NEAR_COLLISION | OTHER | UNKNOWN",
+    "evidence_ids": [],
+    "reason": "giải thích ngắn, phân biệt dấu hiệu nhìn thấy với suy luận"
+  },
+  "unknowns": [],
+  "review_status": "DRAFT"
+}

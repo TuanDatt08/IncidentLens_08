@@ -1,0 +1,11 @@
+{
+  "started_at_utc": "2026-10-15T14:56:52.279384+00:00",
+  "attached_images": 13,
+  "gpu_before": "NAME            ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   \nqwen2.5vl:7b    5ced39dfa4ba    7.3 GB    100% GPU     32768      llamacpp    Forever    \n",
+  "hardware": "name, memory.used [MiB]\nNVIDIA GeForce RTX 2080 Ti, 8754 MiB\n",
+  "status": "error",
+  "error": "HTTP Error 400: Bad Request",
+  "elapsed_s": 7.71,
+  "completed_at_utc": "2026-10-15T14:57:00.068296+00:00",
+  "gpu_after": "NAME            ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   \nqwen2.5vl:7b    5ced39dfa4ba    7.3 GB    100% GPU     32768      llamacpp    Forever    \n"
+}

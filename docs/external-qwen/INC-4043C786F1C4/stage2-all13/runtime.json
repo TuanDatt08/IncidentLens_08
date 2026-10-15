@@ -1,0 +1,15 @@
+{
+  "started_at_utc": "2026-10-15T14:57:36.186564+00:00",
+  "attached_images": 13,
+  "gpu_before": "NAME            ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   \nqwen2.5vl:7b    5ced39dfa4ba    7.3 GB    100% GPU     32768      llamacpp    Forever    \n",
+  "hardware": "name, memory.used [MiB]\nNVIDIA GeForce RTX 2080 Ti, 8754 MiB\n",
+  "strict_json": false,
+  "sequence_id_matches": true,
+  "done_reason": "stop",
+  "prompt_eval_count": 37746,
+  "eval_count": 538,
+  "status": "ok",
+  "elapsed_s": 97.87,
+  "completed_at_utc": "2026-10-15T14:59:14.129758+00:00",
+  "gpu_after": "NAME            ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   \nqwen2.5vl:7b    5ced39dfa4ba    8.7 GB    100% GPU     49152      llamacpp    Forever    \n"
+}

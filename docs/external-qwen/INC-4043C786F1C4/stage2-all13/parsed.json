@@ -1,0 +1,61 @@
+{
+  "sequence_id": "EXTERNAL-ALL13-8.3-13.5",
+  "tracks": [
+    {
+      "track_id": "T01",
+      "category": "person",
+      "appearance": "person riding a motorcycle, wearing a yellow jacket and red pants",
+      "first_evidence_id": "EXT-F01",
+      "last_evidence_id": "EXT-F13",
+      "associated_track_ids": [],
+      "identity_certainty": "clear",
+      "observed_changes": [
+        "appears in frame 1, riding a motorcycle",
+        "continues to ride the motorcycle in frames 2-13"
+      ],
+      "inferred_actions": []
+    },
+    {
+      "track_id": "T02",
+      "category": "motorcycle",
+      "appearance": "motorcycle with a rider wearing a yellow jacket and red pants",
+      "first_evidence_id": "EXT-F01",
+      "last_evidence_id": "EXT-F13",
+      "associated_track_ids": [],
+      "identity_certainty": "clear",
+      "observed_changes": [
+        "appears in frame 1, ridden by a person",
+        "continues to be ridden by the same person in frames 2-13"
+      ],
+      "inferred_actions": []
+    }
+  ],
+  "interactions": [
+    {
+      "actor_track_id": "T01",
+      "other_track_id": "T02",
+      "observed_relation": "same person riding the motorcycle",
+      "action": "riding",
+      "evidence_ids": [
+        "EXT-F01",
+        "EXT-F13"
+      ],
+      "certainty": "clear"
+    }
+  ],
+  "event_progression": {
+    "before": "The scene shows a road with a motorcycle and a car in the distance.",
+    "during": "The motorcycle with a rider wearing a yellow jacket and red pants is seen riding on the road.",
+    "after": "The motorcycle continues to ride on the road."
+  },
+  "risk_assessment": {
+    "trajectory_conflict": "no",
+    "visible_contact": "no",
+    "incident_status": "NO_INCIDENT_IN_OBSERVED_COVERAGE",
+    "event_type": "UNKNOWN",
+    "evidence_ids": [],
+    "reason": "The video only shows the motorcycle and rider moving on the road without any interaction or collision with other vehicles or pedestrians."
+  },
+  "unknowns": [],
+  "review_status": "DRAFT"
+}

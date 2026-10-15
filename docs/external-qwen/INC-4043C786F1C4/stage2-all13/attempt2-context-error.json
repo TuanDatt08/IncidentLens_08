@@ -1,0 +1,12 @@
+{
+  "started_at_utc": "2026-10-15T14:57:14.325780+00:00",
+  "attached_images": 13,
+  "gpu_before": "NAME            ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   \nqwen2.5vl:7b    5ced39dfa4ba    7.3 GB    100% GPU     32768      llamacpp    Forever    \n",
+  "hardware": "name, memory.used [MiB]\nNVIDIA GeForce RTX 2080 Ti, 8754 MiB\n",
+  "status": "error",
+  "error": "HTTP Error 400: Bad Request",
+  "error_body": "{\"error\":\"{\\\"error\\\":{\\\"code\\\":400,\\\"message\\\":\\\"request (37746 tokens) exceeds the available context size (32768 tokens), try increasing it\\\",\\\"type\\\":\\\"exceed_context_size_error\\\",\\\"n_prompt_tokens\\\":37746,\\\"n_ctx\\\":32768}}\"}",
+  "elapsed_s": 7.22,
+  "completed_at_utc": "2026-10-15T14:57:21.609923+00:00",
+  "gpu_after": "NAME            ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   \nqwen2.5vl:7b    5ced39dfa4ba    7.3 GB    100% GPU     32768      llamacpp    Forever    \n"
+}

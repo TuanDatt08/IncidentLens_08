@@ -1,0 +1,13 @@
+{
+  "images": 13,
+  "same_frames_verified": true,
+  "exact_stage2_prompt": true,
+  "completed": true,
+  "prompt_eval_count": 37746,
+  "strict_json": false,
+  "invalid_interaction_actions": [
+    "riding"
+  ],
+  "sequence_id_matches": true,
+  "elapsed_s": 97.87
+}
