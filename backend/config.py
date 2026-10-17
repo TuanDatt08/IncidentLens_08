@@ -108,7 +108,11 @@ class Settings(BaseSettings):
     qwen_runtime: Literal["llama_cpp", "ollama"] = "llama_cpp"
     qwen_remote_ollama: bool = False
     worker_poll_s: float = Field(default=2, ge=1, le=300)
-    qwen_ollama_model: str = "qwen2.5vl:7b"
+    qwen_ollama_model: Literal["qwen2.5vl:7b", "qwen3.5:9b"] = "qwen2.5vl:7b"
+    # Ollama /v1 thinks by default for qwen3.5; "none" turns reasoning off. Unset = field not sent.
+    qwen_reasoning_effort: Literal["none", "low", "medium", "high"] | None = None
+    # MP4-only analysis: "stages" = Stage A/B prompt pipeline, "two_tier" = window scan + actor-crop check.
+    qwen_video_pipeline: Literal["stages", "two_tier"] = "stages"
     qwen_artifact_subdir: str = ""
     qwen_requests_dir: str | None = None
     qwen_inference_frame_limit: int | None = Field(default=None, ge=2, le=256)

@@ -1,0 +1,429 @@
+{
+  "windows": [
+    {
+      "start_s": 0.3,
+      "end_s": 2.1,
+      "choice": "A",
+      "description": "Three motorcycles are parked on the sidewalk to the right of the road. As the camera car moves forward, these motorcycles remain stationary and do not enter the roadway."
+    },
+    {
+      "start_s": 1.5,
+      "end_s": 3.3,
+      "choice": "A",
+      "description": "Two motorcycles are parked on the sidewalk to the right. Two cars are stationary along the curb ahead."
+    },
+    {
+      "start_s": 2.7,
+      "end_s": 4.5,
+      "choice": "A",
+      "description": "A red convertible and a brown sedan are parked on the right side of the road. As the camera car moves forward, these vehicles remain stationary. A pedestrian in a yellow shirt walks along the sidewalk, moving away from the road."
+    },
+    {
+      "start_s": 3.9,
+      "end_s": 5.7,
+      "choice": "A",
+      "description": "A red car and two pedestrians are initially visible on the right side of the road. As the camera car moves forward, these road users exit the frame."
+    },
+    {
+      "start_s": 5.1,
+      "end_s": 6.9,
+      "choice": "A",
+      "description": "A white bus remains stationary on the left side of the road. A single pedestrian walks along the sidewalk on the right, maintaining a safe distance from the vehicle's lane."
+    },
+    {
+      "start_s": 6.3,
+      "end_s": 8.1,
+      "choice": "A",
+      "description": "A pedestrian walks along the sidewalk on the right. A white bus and other vehicles travel in adjacent lanes ahead, maintaining their paths without sudden maneuvers."
+    },
+    {
+      "start_s": 7.5,
+      "end_s": 9.3,
+      "choice": "A",
+      "description": "A pedestrian walks along the sidewalk on the right. A white bus and a silver car travel ahead in their respective lanes without deviation."
+    },
+    {
+      "start_s": 8.7,
+      "end_s": 10.5,
+      "choice": "A",
+      "description": "An ambulance in the left lane moves forward and slightly right. A silver car ahead continues straight. A pedestrian walks on the sidewalk to the right."
+    },
+    {
+      "start_s": 9.9,
+      "end_s": 11.7,
+      "choice": "A",
+      "description": "An ambulance and silver car drive forward in adjacent lanes. The ambulance moves leftward while the silver car continues straight ahead."
+    },
+    {
+      "start_s": 11.1,
+      "end_s": 12.9,
+      "choice": "A",
+      "description": "A blue car in the left lane moves forward and turns right into an intersection. A white bus remains stationary ahead."
+    },
+    {
+      "start_s": 12.3,
+      "end_s": 14.1,
+      "choice": "A",
+      "description": "A dark blue sedan in the left lane moves forward and turns right into an intersection. A white bus remains stationary in the distance."
+    },
+    {
+      "start_s": 13.5,
+      "end_s": 15.3,
+      "choice": "D",
+      "description": "The road ahead remains clear of any vehicles or pedestrians in the immediate vicinity of the camera car."
+    },
+    {
+      "start_s": 14.7,
+      "end_s": 16.5,
+      "choice": "A",
+      "description": "The gray car remains stationary in the center lane. A white van and a green vehicle are visible further ahead on the road, maintaining their positions without any sudden movements or interactions with the camera car."
+    },
+    {
+      "start_s": 15.9,
+      "end_s": 17.7,
+      "choice": "D",
+      "description": "The road remains clear of any vehicles or pedestrians in the immediate vicinity of the camera car's path across all frames."
+    },
+    {
+      "start_s": 17.1,
+      "end_s": 18.9,
+      "choice": "D",
+      "description": "No road users are present on or near the camera car's path across all frames."
+    },
+    {
+      "start_s": 18.3,
+      "end_s": 20.1,
+      "choice": "D",
+      "description": "The road remains clear of any vehicles or pedestrians in the immediate vicinity of the camera car's path across all frames."
+    },
+    {
+      "start_s": 19.5,
+      "end_s": 21.3,
+      "choice": "D",
+      "description": "A green vehicle in the distance remains stationary. No other road users are present on or near the camera car's path."
+    },
+    {
+      "start_s": 20.7,
+      "end_s": 22.5,
+      "choice": "A",
+      "description": "A green vehicle in the distance remains stationary or moves slowly in its lane. No other road users enter the camera car's immediate path."
+    },
+    {
+      "start_s": 21.9,
+      "end_s": 23.7,
+      "choice": "A",
+      "description": "A green vehicle in the left lane moves forward and slightly right, while a yellow taxi remains stationary. Both stay within their lanes without interacting with the camera car."
+    },
+    {
+      "start_s": 23.1,
+      "end_s": 24.9,
+      "choice": "B",
+      "description": "A green SUV in the adjacent lane moves forward and turns left across the camera car's path.",
+      "confirm": "A",
+      "confirm_description": "A green SUV approaches from the opposite direction and passes safely in its lane, maintaining distance."
+    },
+    {
+      "start_s": 24.3,
+      "end_s": 26.1,
+      "choice": "B",
+      "description": "A green SUV moves from the left side of the frame into the lane directly ahead of the camera car, while a yellow taxi remains stationary in the distance.",
+      "confirm": "B",
+      "confirm_description": "A green SUV approaches from the left and moves into the camera car’s lane, reaching within about two car lengths ahead. The camera car must brake to avoid a collision."
+    },
+    {
+      "start_s": 25.5,
+      "end_s": 27.3,
+      "choice": "A",
+      "description": "A green SUV moves left and exits frame. A yellow car drives straight ahead in the distance."
+    },
+    {
+      "start_s": 26.7,
+      "end_s": 28.5,
+      "choice": "A",
+      "description": "A green SUV exits the frame left. A yellow sedan drives in the opposite lane, moving further away."
+    },
+    {
+      "start_s": 27.9,
+      "end_s": 29.7,
+      "choice": "A",
+      "description": "A yellow sedan moves from the left lane into the right lane, passing the stationary gray car ahead."
+    },
+    {
+      "start_s": 29.1,
+      "end_s": 30.9,
+      "choice": "A",
+      "description": "A yellow car exits the frame on the left. A distant vehicle remains stationary in the opposing lane."
+    },
+    {
+      "start_s": 30.3,
+      "end_s": 32.1,
+      "choice": "D",
+      "description": "No road users are present on or near the camera car's path in any of the frames."
+    },
+    {
+      "start_s": 31.5,
+      "end_s": 33.3,
+      "choice": "D",
+      "description": "No road users are present on or near the camera car's path in any of the frames."
+    },
+    {
+      "start_s": 32.7,
+      "end_s": 34.5,
+      "choice": "D",
+      "description": "The road remains clear of any vehicles or pedestrians in the immediate vicinity of the camera car's path across all frames."
+    },
+    {
+      "start_s": 33.9,
+      "end_s": 35.7,
+      "choice": "A",
+      "description": "The pedestrian on the left sidewalk walks away from the road. No other road users enter the camera car's path."
+    },
+    {
+      "start_s": 35.1,
+      "end_s": 36.9,
+      "choice": "A",
+      "description": "A pedestrian walks on the left sidewalk. A distant vehicle travels ahead in its lane. No road users enter or cross the camera car’s path."
+    },
+    {
+      "start_s": 36.3,
+      "end_s": 38.1,
+      "choice": "A",
+      "description": "The silver car ahead maintains its lane and speed. A distant red vehicle remains stationary in the opposite lane. No pedestrians or other road users enter the camera car's path."
+    },
+    {
+      "start_s": 37.5,
+      "end_s": 39.3,
+      "choice": "A",
+      "description": "The silver car ahead maintains its lane and speed. A red vehicle further down the road also continues straight without deviation."
+    },
+    {
+      "start_s": 38.7,
+      "end_s": 40.5,
+      "choice": "A",
+      "description": "The silver car ahead maintains its lane and speed. A dark red vehicle in the adjacent left lane also proceeds steadily forward without any sudden maneuvers."
+    },
+    {
+      "start_s": 39.9,
+      "end_s": 41.7,
+      "choice": "A",
+      "description": "The red van and white sedan maintain their lanes without deviation."
+    },
+    {
+      "start_s": 41.1,
+      "end_s": 42.9,
+      "choice": "A",
+      "description": "A maroon van and silver car drive forward in adjacent lanes. The van moves leftward across the frame, while the silver car continues straight ahead."
+    },
+    {
+      "start_s": 42.3,
+      "end_s": 44.1,
+      "choice": "A",
+      "description": "A maroon van exits from the left and moves forward. A silver car drives ahead in the same lane."
+    },
+    {
+      "start_s": 43.5,
+      "end_s": 45.3,
+      "choice": "B",
+      "description": "A silver car drives straight ahead in its lane. A dark-colored vehicle enters from the left and merges into the same lane as the silver car.",
+      "confirm": "A",
+      "confirm_description": "A silver sedan travels ahead in the same lane, maintaining a safe distance of several car lengths."
+    },
+    {
+      "start_s": 44.7,
+      "end_s": 46.5,
+      "choice": "A",
+      "description": "A gray car drives straight ahead on the curved road. Food carts are parked on the right sidewalk and remain stationary throughout all frames."
+    },
+    {
+      "start_s": 45.9,
+      "end_s": 47.7,
+      "choice": "A",
+      "description": "A single gray sedan travels in the right lane ahead of the camera car, maintaining its position and direction without any sudden movements or interactions."
+    },
+    {
+      "start_s": 47.1,
+      "end_s": 48.9,
+      "choice": "B",
+      "description": "A gray car drives forward in the right lane. A dark motorcycle enters from the left and moves into the opposing lane.",
+      "confirm": "A",
+      "confirm_description": "A gray sedan travels ahead in the same lane, maintaining a safe distance of approximately two to three car lengths throughout the sequence."
+    },
+    {
+      "start_s": 48.3,
+      "end_s": 50.1,
+      "choice": "A",
+      "description": "A gray car drives forward in its lane. A black car ahead maintains its position and direction."
+    },
+    {
+      "start_s": 49.5,
+      "end_s": 51.3,
+      "choice": "A",
+      "description": "A gray car in the right lane and a dark sedan in the left lane maintain their lanes and speeds without interaction."
+    },
+    {
+      "start_s": 50.7,
+      "end_s": 52.5,
+      "choice": "A",
+      "description": "The gray hatchback on the right remains stationary. The dark sedan in the left lane drives forward and moves out of view."
+    },
+    {
+      "start_s": 51.9,
+      "end_s": 53.7,
+      "choice": "A",
+      "description": "The gray car on the right remains stationary. Other vehicles ahead maintain their lanes without sudden movements."
+    },
+    {
+      "start_s": 53.1,
+      "end_s": 54.9,
+      "choice": "A",
+      "description": "A gray sedan in the right lane moves forward and slightly left. A black sedan ahead also advances straight. Distant vehicles maintain lanes; no sudden maneuvers occur."
+    },
+    {
+      "start_s": 54.3,
+      "end_s": 56.1,
+      "choice": "A",
+      "description": "A black sedan and red car are parked on the right side of the road. A white bus travels ahead in the same lane as the camera car."
+    },
+    {
+      "start_s": 55.5,
+      "end_s": 57.3,
+      "choice": "B",
+      "description": "A pedestrian walks from sidewalk to street and crosses toward red car. A black SUV drives left lane; motorcycle parked right.",
+      "confirm": "B",
+      "confirm_description": "A black SUV approaches from the left and moves into the camera car’s lane, reaching within about two car lengths ahead. The camera car must brake to avoid collision."
+    },
+    {
+      "start_s": 56.7,
+      "end_s": 58.5,
+      "choice": "B",
+      "description": "A pedestrian crosses the street from right to left in front of the camera car.",
+      "confirm": "B",
+      "confirm_description": "A pedestrian crosses from right to left in front of the camera car, reaching within about two car lengths directly ahead by t=58.50s."
+    },
+    {
+      "start_s": 57.9,
+      "end_s": 59.7,
+      "choice": "B",
+      "description": "A pedestrian crosses the street from right to left in front of the camera car. A red convertible is parked on the right side of the road.",
+      "confirm": "B",
+      "confirm_description": "A pedestrian in a blue jacket and beige pants crosses the street from right to left, approaching within about two car lengths of the camera car."
+    }
+  ],
+  "events": [
+    {
+      "start_s": 23.1,
+      "end_s": 26.1,
+      "windows": 2,
+      "tier1": "B",
+      "status": "EVENT",
+      "tier2": {
+        "actor": "car",
+        "choice": "A",
+        "description": "A green SUV approaches from the opposite lane and passes to the left of the camera car. A yellow taxi remains in the distance.",
+        "frames_s": [
+          23.1,
+          23.7,
+          24.3,
+          24.9,
+          25.5,
+          26.09
+        ]
+      },
+      "type": "NEAR_MISS"
+    },
+    {
+      "start_s": 43.5,
+      "end_s": 45.3,
+      "windows": 1,
+      "tier1": "B",
+      "status": "UNCONFIRMED"
+    },
+    {
+      "start_s": 47.1,
+      "end_s": 48.9,
+      "windows": 1,
+      "tier1": "B",
+      "status": "UNCONFIRMED"
+    },
+    {
+      "start_s": 55.5,
+      "end_s": 59.7,
+      "windows": 3,
+      "tier1": "B",
+      "status": "EVENT",
+      "tier2": {
+        "actor": "pedestrian",
+        "choice": "B",
+        "description": "A pedestrian walks across the street from left to right in front of a red car. A motorcycle is parked on the sidewalk nearby.",
+        "frames_s": [
+          55.5,
+          56.34,
+          57.18,
+          58.02,
+          58.86
+        ]
+      },
+      "type": "NEAR_MISS"
+    }
+  ],
+  "verdict": "INCIDENT",
+  "refined": {
+    "events": [
+      {
+        "start_s": 24.3,
+        "end_s": 26.1,
+        "windows": 1,
+        "tier1": "B",
+        "status": "UNCONFIRMED"
+      },
+      {
+        "start_s": 55.5,
+        "end_s": 59.7,
+        "windows": 3,
+        "tier1": "B",
+        "status": "EVENT",
+        "tier2": {
+          "actor": "pedestrian",
+          "choice": "B",
+          "description": "A pedestrian walks across the street from left to right in front of a red car. A motorcycle is parked on the sidewalk nearby.",
+          "frames_s": [
+            55.5,
+            56.34,
+            57.18,
+            58.02,
+            58.86
+          ]
+        },
+        "type": "NEAR_MISS"
+      }
+    ],
+    "verdict": "INCIDENT"
+  },
+  "tier2_cache": {
+    "23.10-26.10": {
+      "actor": "car",
+      "choice": "A",
+      "description": "A green SUV approaches from the opposite lane and passes to the left of the camera car. A yellow taxi remains in the distance.",
+      "frames_s": [
+        23.1,
+        23.7,
+        24.3,
+        24.9,
+        25.5,
+        26.09
+      ]
+    },
+    "55.50-59.70": {
+      "actor": "pedestrian",
+      "choice": "B",
+      "description": "A pedestrian walks across the street from left to right in front of a red car. A motorcycle is parked on the sidewalk nearby.",
+      "frames_s": [
+        55.5,
+        56.34,
+        57.18,
+        58.02,
+        58.86
+      ]
+    }
+  }
+}

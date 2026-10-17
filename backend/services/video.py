@@ -134,12 +134,15 @@ class VideoService:
             )
         return VideoProbeResult(duration=duration, fps=fps, width=width, height=height)
 
-    def extract_frame(self, video_path: Path, at_s: float, destination: Path) -> Path:
+    def extract_frame(self, video_path: Path, at_s: float, destination: Path, video_filter: str | None = None) -> Path:
+        """video_filter replaces the default width cap with an FFmpeg -vf chain (crop, drawbox, scale…)."""
         self.prepare_output()
         destination.parent.mkdir(parents=True, exist_ok=True)
-        scale = ["-vf", f"scale='min({self.frame_max_width},iw)':-2"] if self.frame_max_width else []
+        scale = ["-vf", video_filter] if video_filter else ["-vf", f"scale='min({self.frame_max_width},iw)':-2"] if self.frame_max_width else []
+        # No input seek at 0: seeking a still image (crop of a saved frame) skips its only frame.
+        seek = ["-ss", f"{at_s:.6f}"] if at_s > 0 else []
         self._run_ffmpeg([
-            "-y", "-ss", f"{at_s:.6f}", "-i", str(video_path),
+            "-y", *seek, "-i", str(video_path),
             "-frames:v", "1", *scale, str(destination),
         ])
         return destination

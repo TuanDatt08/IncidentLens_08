@@ -1,0 +1,438 @@
+{
+  "windows": [
+    {
+      "start_s": 0.3,
+      "end_s": 2.1,
+      "choice": "A",
+      "description": "A white SUV and another vehicle remain stationary on the right side of the road throughout all frames."
+    },
+    {
+      "start_s": 1.5,
+      "end_s": 3.3,
+      "choice": "A",
+      "description": "A white car and a dark SUV are parked on the right side of the road. A person on a motorcycle drives past them."
+    },
+    {
+      "start_s": 2.7,
+      "end_s": 4.5,
+      "choice": "A",
+      "description": "The camera car drives forward on a narrow road. A dark SUV and a white car are visible ahead in the opposite lane, maintaining their positions as the camera car passes them."
+    },
+    {
+      "start_s": 3.9,
+      "end_s": 5.7,
+      "choice": "A",
+      "description": "The camera car drives forward on a narrow road. A dark SUV is parked on an elevated section to the left, and a white SUV drives ahead in the same lane."
+    },
+    {
+      "start_s": 5.1,
+      "end_s": 6.9,
+      "choice": "A",
+      "description": "A white SUV drives away on a narrow road, passing a stone wall and trees. A dark SUV is parked nearby with scooters."
+    },
+    {
+      "start_s": 6.3,
+      "end_s": 8.1,
+      "choice": "B",
+      "description": "A white SUV drives ahead on a narrow, winding rural road. As the camera car approaches, a motorcycle appears from the left side of the road and overtakes the SUV, moving into the lane between the two vehicles.",
+      "confirm": "A",
+      "confirm_description": "A white SUV ahead on a narrow winding road, maintaining distance as it navigates curves."
+    },
+    {
+      "start_s": 7.5,
+      "end_s": 9.3,
+      "choice": "B",
+      "description": "A white SUV and a motorcycle are visible ahead on the narrow road. The motorcycle overtakes the SUV from behind, moving into the lane directly in front of the camera car.",
+      "confirm": "A",
+      "confirm_description": "A motorcycle approaches from behind and passes on the left of a white SUV ahead. It gets close to the camera car but maintains safe distance."
+    },
+    {
+      "start_s": 8.7,
+      "end_s": 10.5,
+      "choice": "B",
+      "description": "A person on a scooter overtakes a white SUV from the left side of the narrow road.",
+      "confirm": "A",
+      "confirm_description": "A person on a red motorcycle approaches from behind and passes closely to the right of the camera car, staying within about two car lengths."
+    },
+    {
+      "start_s": 9.9,
+      "end_s": 11.7,
+      "choice": "C",
+      "description": "A person on a red motorcycle is riding alongside the camera car. In the subsequent frames, the motorcyclist loses balance and falls off their bike onto the side of the road.",
+      "confirm": "B",
+      "confirm_description": "A person on a red motorcycle with a large beige bag approaches from the right side of the road and passes very close to the camera car’s front-left, nearly entering its lane."
+    },
+    {
+      "start_s": 11.1,
+      "end_s": 12.9,
+      "choice": "A",
+      "description": "A white SUV drives away on a narrow rural road, maintaining its lane without sudden movements."
+    },
+    {
+      "start_s": 12.3,
+      "end_s": 14.1,
+      "choice": "A",
+      "description": "A white SUV drives away on a narrow rural road, maintaining its lane with no sudden movements or hazards."
+    },
+    {
+      "start_s": 13.5,
+      "end_s": 15.3,
+      "choice": "A",
+      "description": "A white SUV drives away on a narrow rural road, maintaining its lane with no sudden movements or hazards."
+    },
+    {
+      "start_s": 14.7,
+      "end_s": 16.5,
+      "choice": "B",
+      "description": "A white SUV is driving away on a narrow road. In the later frames, its right-side rear door opens.",
+      "confirm": "A",
+      "confirm_description": "A white SUV is ahead on the narrow road, maintaining a safe distance and not approaching closely."
+    },
+    {
+      "start_s": 15.9,
+      "end_s": 17.7,
+      "choice": "A",
+      "description": "A white SUV is stopped on the side of a narrow road with its driver-side door open. A person exits the vehicle and stands beside it, remaining stationary throughout the sequence."
+    },
+    {
+      "start_s": 17.1,
+      "end_s": 18.9,
+      "choice": "A",
+      "description": "A white SUV is stopped on the side of a narrow road with its doors open. A person exits the vehicle and stands beside it. Another individual appears in the foreground, walking along the left edge of the road."
+    },
+    {
+      "start_s": 18.3,
+      "end_s": 20.1,
+      "choice": "B",
+      "description": "A man in a dark jacket walks from the left side of the frame towards the center, moving into the camera car's potential path. In the background, another person stands by a white SUV with its doors open on the road.",
+      "confirm": "B",
+      "confirm_description": "A man in a dark jacket walks from left to right across the camera car’s front view, passing within about two car lengths of the vehicle."
+    },
+    {
+      "start_s": 19.5,
+      "end_s": 21.3,
+      "choice": "A",
+      "description": "A man in a dark jacket walks from the left side of the frame towards the right, moving away from the camera. In the background, people are standing near a white SUV parked on the road."
+    },
+    {
+      "start_s": 20.7,
+      "end_s": 22.5,
+      "choice": "A",
+      "description": "A white SUV is parked on the left side of the road with its doors open. Two people are standing near it and then begin to walk towards the camera car along the right edge of the road."
+    },
+    {
+      "start_s": 21.9,
+      "end_s": 23.7,
+      "choice": "A",
+      "description": "A person in a beige coat enters from the left side of the frame and walks along the road edge. Simultaneously, two other individuals walk away from a white SUV parked on the right side of the road."
+    },
+    {
+      "start_s": 23.1,
+      "end_s": 24.9,
+      "choice": "A",
+      "description": "A person in a beige coat walks from the left side of the frame towards the center. In the background, three people walk along the road away from the camera, and another person stands by a white SUV with its doors open."
+    },
+    {
+      "start_s": 24.3,
+      "end_s": 26.1,
+      "choice": "A",
+      "description": "A group of pedestrians walks along the side of the road. A white SUV is parked on the left shoulder with its doors open."
+    },
+    {
+      "start_s": 25.5,
+      "end_s": 27.3,
+      "choice": "A",
+      "description": "A group of pedestrians walk along the side of the road and on the shoulder. A white SUV is parked with its doors open further up the road, but it remains stationary throughout the sequence."
+    },
+    {
+      "start_s": 26.7,
+      "end_s": 28.5,
+      "choice": "A",
+      "description": "A group of pedestrians walk along the side of the road and on the shoulder. A man in a beige coat walks towards the camera from the background, while others are stationary or walking slowly near the roadside vegetation."
+    },
+    {
+      "start_s": 27.9,
+      "end_s": 29.7,
+      "choice": "A",
+      "description": "A group of pedestrians walks along the side of the road. A white SUV is parked with its doors open further up the road."
+    },
+    {
+      "start_s": 29.1,
+      "end_s": 30.9,
+      "choice": "A",
+      "description": "A group of pedestrians walks along the right side of the road. A white SUV is parked on the left with its doors open, and two people walk away from it down the road."
+    },
+    {
+      "start_s": 30.3,
+      "end_s": 32.1,
+      "choice": "A",
+      "description": "A group of people stands on the right side of the road. Two individuals walk along the road from the background towards the foreground."
+    },
+    {
+      "start_s": 31.5,
+      "end_s": 33.3,
+      "choice": "A",
+      "description": "A group of people stands on the right roadside. Two pedestrians walk along the road towards the camera car."
+    },
+    {
+      "start_s": 32.7,
+      "end_s": 34.5,
+      "choice": "A",
+      "description": "A group of people are standing on the right side of the road. A person in a black coat walks towards the center of the road from the left, while another person in a beige coat stands on the far right."
+    },
+    {
+      "start_s": 33.9,
+      "end_s": 35.7,
+      "choice": "A",
+      "description": "A group of people are standing on the right side of the road. One person walks from the background towards the center of the frame and then turns to join the group."
+    },
+    {
+      "start_s": 35.1,
+      "end_s": 36.9,
+      "choice": "A",
+      "description": "A group of people are standing on the right side of the road. As time progresses, they shift their positions slightly but remain clustered together near the roadside vegetation."
+    },
+    {
+      "start_s": 36.3,
+      "end_s": 38.1,
+      "choice": "C",
+      "description": "A group of pedestrians stands on the right side of the road. One person walks away from the group and down the center of the road, moving towards the white SUV parked in the distance.",
+      "confirm": "A",
+      "confirm_description": "A group of pedestrians walk along the right side of the road, staying well clear of the camera car's lane."
+    },
+    {
+      "start_s": 37.5,
+      "end_s": 39.3,
+      "choice": "A",
+      "description": "A group of pedestrians stands on the right side of the road. A person in a green jacket walks away from the camera down the center of the road, moving towards a white SUV with its doors open."
+    },
+    {
+      "start_s": 38.7,
+      "end_s": 40.5,
+      "choice": "A",
+      "description": "A person in a green jacket walks away from the camera car, then turns to face it and stands still on the road."
+    },
+    {
+      "start_s": 39.9,
+      "end_s": 41.7,
+      "choice": "A",
+      "description": "A person in a grey and red jacket stands on the road, then walks towards the right side of the frame. A group of people are gathered on the right shoulder of the road."
+    },
+    {
+      "start_s": 41.1,
+      "end_s": 42.9,
+      "choice": "A",
+      "description": "A person in a green jacket walks along the side of the road towards the camera. A group of people stands on the right shoulder, and a white SUV is parked further up with its doors open."
+    },
+    {
+      "start_s": 42.3,
+      "end_s": 44.1,
+      "choice": "A",
+      "description": "A person in a green jacket walks along the right side of the road, moving away from the camera. A group of people stands on the roadside to the right."
+    },
+    {
+      "start_s": 43.5,
+      "end_s": 45.3,
+      "choice": "A",
+      "description": "A group of people standing on the right side of the road remain stationary. A man in a grey jacket walks from the center of the road towards the left, moving away from the camera car's path."
+    },
+    {
+      "start_s": 44.7,
+      "end_s": 46.5,
+      "choice": "A",
+      "description": "A group of people stand on the right side of the road, partially obscured by banana plants. They remain stationary throughout the frames, with no movement into the roadway."
+    },
+    {
+      "start_s": 45.9,
+      "end_s": 47.7,
+      "choice": "A",
+      "description": "A group of people standing on the right side of the road walk forward along the roadside."
+    },
+    {
+      "start_s": 47.1,
+      "end_s": 48.9,
+      "choice": "A",
+      "description": "A group of pedestrians stands on the right side of the road. One pedestrian in a beige jacket walks forward along the road's edge before turning to look back at the others."
+    },
+    {
+      "start_s": 48.3,
+      "end_s": 50.1,
+      "choice": "A",
+      "description": "A group of people are standing on the right side of the road. One person in a beige jacket turns their head to look back towards the camera car, while the others remain stationary."
+    },
+    {
+      "start_s": 49.5,
+      "end_s": 51.3,
+      "choice": "A",
+      "description": "A group of people are standing on the side of the road. One person in a beige jacket turns their head to look back towards the camera car, while the others remain stationary."
+    },
+    {
+      "start_s": 50.7,
+      "end_s": 52.5,
+      "choice": "A",
+      "description": "A group of people stand on the right side of the road, with one person in a beige jacket standing on the road and looking around. A white SUV is parked ahead with its doors open."
+    },
+    {
+      "start_s": 51.9,
+      "end_s": 53.7,
+      "choice": "A",
+      "description": "A group of people stands on the right side of the road. A man in a beige jacket walks away from the camera along the left edge of the road, then turns back to look at the camera."
+    },
+    {
+      "start_s": 53.1,
+      "end_s": 54.9,
+      "choice": "A",
+      "description": "A man in a beige jacket walks away from the camera on the left side of the road, then turns to face forward. Other pedestrians stand still on the right shoulder near banana plants."
+    },
+    {
+      "start_s": 54.3,
+      "end_s": 56.1,
+      "choice": "A",
+      "description": "A group of people are standing on the right side of the road. A man in a beige coat walks towards the center of the road from the left."
+    },
+    {
+      "start_s": 55.5,
+      "end_s": 57.3,
+      "choice": "A",
+      "description": "A group of people are standing on the side of the road and in the roadside vegetation. They remain stationary throughout the sequence, observing the scene without entering the vehicle's path."
+    },
+    {
+      "start_s": 56.7,
+      "end_s": 58.5,
+      "choice": "A",
+      "description": "A group of people standing on the side of the road are seen talking and smoking. One person in a beige jacket walks away from the group towards the left."
+    },
+    {
+      "start_s": 57.9,
+      "end_s": 59.7,
+      "choice": "A",
+      "description": "A group of people stand on the right side of the road, with one person walking towards the camera. A white SUV is parked ahead with doors open."
+    }
+  ],
+  "events": [
+    {
+      "start_s": 6.3,
+      "end_s": 11.7,
+      "windows": 4,
+      "tier1": "C",
+      "status": "EVENT",
+      "tier2": {
+        "actor": "car",
+        "choice": "B",
+        "description": "A white SUV drives along a narrow road. A person on a scooter appears from behind the SUV and passes it closely as the SUV continues forward.",
+        "frames_s": [
+          6.3,
+          7.38,
+          8.45,
+          9.53,
+          10.6,
+          11.68
+        ]
+      },
+      "type": "NEAR_MISS"
+    },
+    {
+      "start_s": 14.7,
+      "end_s": 16.5,
+      "windows": 1,
+      "tier1": "B",
+      "status": "UNCONFIRMED"
+    },
+    {
+      "start_s": 18.3,
+      "end_s": 20.1,
+      "windows": 1,
+      "tier1": "B",
+      "status": "UNCONFIRMED"
+    },
+    {
+      "start_s": 36.3,
+      "end_s": 38.1,
+      "windows": 1,
+      "tier1": "C",
+      "status": "UNCONFIRMED"
+    }
+  ],
+  "verdict": "INCIDENT",
+  "refined": {
+    "events": [
+      {
+        "start_s": 9.9,
+        "end_s": 11.7,
+        "windows": 1,
+        "tier1": "C",
+        "status": "EVENT",
+        "tier2": {
+          "actor": "motorcycle",
+          "choice": "C",
+          "description": "A person on a red motorcycle drives along the side of a road and then swerves sharply into a large plant, causing the bike to tip over.",
+          "frames_s": [
+            9.9,
+            10.26,
+            10.62,
+            10.98,
+            11.34,
+            11.7
+          ]
+        },
+        "type": "FALL_OR_COLLISION"
+      },
+      {
+        "start_s": 18.3,
+        "end_s": 20.1,
+        "windows": 1,
+        "tier1": "B",
+        "status": "UNCONFIRMED"
+      },
+      {
+        "start_s": 36.3,
+        "end_s": 38.1,
+        "windows": 1,
+        "tier1": "C",
+        "status": "UNCONFIRMED",
+        "tier2": {
+          "actor": "pedestrian",
+          "choice": "A",
+          "description": "A group of people are standing on the side of the road. One person walks away from the group along the edge of the paved surface.",
+          "frames_s": [
+            36.3,
+            36.66,
+            37.02,
+            37.38,
+            37.74,
+            38.1
+          ]
+        }
+      }
+    ],
+    "verdict": "INCIDENT"
+  },
+  "tier2_cache": {
+    "9.90-11.70": {
+      "actor": "motorcycle",
+      "choice": "C",
+      "description": "A person on a red motorcycle drives along the side of a road and then swerves sharply into a large plant, causing the bike to tip over.",
+      "frames_s": [
+        9.9,
+        10.26,
+        10.62,
+        10.98,
+        11.34,
+        11.7
+      ]
+    },
+    "36.30-38.10": {
+      "actor": "pedestrian",
+      "choice": "A",
+      "description": "A group of people are standing on the side of the road. One person walks away from the group along the edge of the paved surface.",
+      "frames_s": [
+        36.3,
+        36.66,
+        37.02,
+        37.38,
+        37.74,
+        38.1
+      ]
+    }
+  }
+}

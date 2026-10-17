@@ -66,6 +66,33 @@ def prompt_contracts(text: str) -> dict:
     return result
 
 
+def pin_evidence_ids(schema: dict, ids: list[str]) -> None:
+    """Restrict every evidence_id / evidence_ids slot to the IDs this request supplies, so the
+    JSON grammar cannot emit a mistyped or invented ID (validate_stage still re-checks)."""
+    allowed = list(dict.fromkeys(ids)) or ['NO_EVIDENCE_DO_NOT_CITE']
+
+    def restrict(node):
+        if isinstance(node, dict):
+            if node.get('type') == 'string':
+                node['enum'] = allowed
+            for branch in node.get('anyOf', []):
+                restrict(branch)
+
+    def walk(node):
+        if isinstance(node, dict):
+            props = node.get('properties', {})
+            restrict(props.get('evidence_id'))
+            ids_slot = props.get('evidence_ids') or {}
+            for slot in [ids_slot, *ids_slot.get('anyOf', [])]:
+                restrict(slot.get('items'))
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+    walk(schema)
+
+
 def validate_stage(data: dict, model, registry: dict, duration: float) -> dict:
     parsed = model.model_validate_json(json.dumps(data)).model_dump(mode='json')
     def walk(value):
@@ -269,6 +296,7 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
             for key, value in (('clip_start_s', start), ('clip_end_s', end)):
                 wire_key = clock.wire_key(key) if clock else key
                 timing_schema['properties'][wire_key]['const'] = clock.position(value) if clock else value
+        pin_evidence_ids(schema, [r['evidence_id'] for r in refs] + ([h['evidence_id'] for h in historical] if temporal else []))
         content = [{'type': 'text', 'text': json.dumps(context, ensure_ascii=False)}]
         for image, ref in zip(images, context['evidence']):
             if temporal:
@@ -276,7 +304,8 @@ def process_prompt_incident(incident, *, storage_root, settings, job_id, on_prog
             content.append({'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + base64.b64encode(image.path.read_bytes()).decode()}})
         if temporal:
             content.append({'type': 'text', 'text': 'BẮT BUỘC: trả JSON đúng schema; mọi event_summary, observation, summary, unknowns và coverage_limitations phải viết bằng tiếng Việt có dấu. Ví dụ giới hạn: "Chỉ quan sát các ảnh được cung cấp; chưa rõ diễn biến giữa các ảnh." Không viết mô tả bằng tiếng Anh. Giữ nguyên keys, enum và evidence_id.'})
-        payload = {'model': settings.qwen_ollama_model, 'temperature': 0, 'max_tokens': 4096, 'response_format': {'type': 'json_schema', 'json_schema': {'name': 'stage_' + stage, 'strict': True, 'schema': schema}}, 'messages': [{'role': 'system', 'content': prompt + '\nMọi mô tả, tóm tắt, nguyên nhân và giới hạn phải viết bằng tiếng Việt có dấu. Không bỏ qua coverage_limitations; thêm vào unknowns hoặc data_quality.limitations.'}, {'role': 'user', 'content': content}]}
+        payload = {'model': settings.qwen_ollama_model, 'temperature': 0, 'max_tokens': 4096, 'response_format': {'type': 'json_schema', 'json_schema': {'name': 'stage_' + stage, 'strict': True, 'schema': schema}}, 'messages': [{'role': 'system', 'content': prompt + '\nMọi mô tả, tóm tắt, nguyên nhân và giới hạn phải viết bằng tiếng Việt có dấu. Không bỏ qua coverage_limitations; thêm vào unknowns hoặc data_quality.limitations.'}, {'role': 'user', 'content': content}],
+                   **({'reasoning_effort': settings.qwen_reasoning_effort} if settings.qwen_reasoning_effort else {})}
         req_dir = output / 'requests'
         req_dir.mkdir(exist_ok=True)
         service.write_json(req_dir / f'{request_id}.request.json', payload)

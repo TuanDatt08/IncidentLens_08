@@ -1,0 +1,621 @@
+{
+  "keypoints": {
+    "009_30": {
+      "a_handlebar_center": [
+        462,
+        308
+      ],
+      "b_front_wheel_bottom": [
+        455,
+        598
+      ],
+      "c_rider_head": [
+        470,
+        190
+      ],
+      "d_seat_center": [
+        462,
+        360
+      ],
+      "lean_deg": 1.4,
+      "head_height_over_bar_height": 1.41,
+      "wall_s": 62.8
+    },
+    "009_50": {
+      "a_handlebar_center": [
+        502,
+        288
+      ],
+      "b_front_wheel_bottom": [
+        402,
+        596
+      ],
+      "c_rider_head": [
+        518,
+        178
+      ],
+      "d_seat_center": [
+        502,
+        378
+      ],
+      "lean_deg": 18.0,
+      "head_height_over_bar_height": 1.36,
+      "wall_s": 20.7
+    },
+    "009_70": {
+      "a_handlebar_center": [
+        488,
+        208
+      ],
+      "b_front_wheel_bottom": [
+        300,
+        588
+      ],
+      "c_rider_head": [
+        512,
+        100
+      ],
+      "d_seat_center": [
+        490,
+        348
+      ],
+      "lean_deg": 26.3,
+      "head_height_over_bar_height": 1.28,
+      "wall_s": 20.7
+    },
+    "009_90": {
+      "a_handlebar_center": [
+        450,
+        208
+      ],
+      "b_front_wheel_bottom": [
+        250,
+        608
+      ],
+      "c_rider_head": [
+        450,
+        100
+      ],
+      "d_seat_center": [
+        450,
+        320
+      ],
+      "lean_deg": 26.6,
+      "head_height_over_bar_height": 1.27,
+      "wall_s": 20.9
+    },
+    "010_00": {
+      "a_handlebar_center": [
+        458,
+        280
+      ],
+      "b_front_wheel_bottom": [
+        252,
+        598
+      ],
+      "c_rider_head": [
+        428,
+        168
+      ],
+      "d_seat_center": [
+        458,
+        360
+      ],
+      "lean_deg": 32.9,
+      "head_height_over_bar_height": 1.35,
+      "wall_s": 20.8
+    },
+    "010_10": {
+      "a_handlebar_center": [
+        542,
+        248
+      ],
+      "b_front_wheel_bottom": [
+        258,
+        562
+      ],
+      "c_rider_head": [
+        378,
+        120
+      ],
+      "d_seat_center": [
+        462,
+        298
+      ],
+      "lean_deg": 42.1,
+      "head_height_over_bar_height": 1.41,
+      "wall_s": 20.3
+    },
+    "010_20": {
+      "a_handlebar_center": [
+        302,
+        288
+      ],
+      "b_front_wheel_bottom": [
+        302,
+        558
+      ],
+      "c_rider_head": [
+        360,
+        142
+      ],
+      "d_seat_center": [
+        302,
+        340
+      ],
+      "lean_deg": 0.0,
+      "head_height_over_bar_height": 1.54,
+      "wall_s": 20.5
+    },
+    "010_50": {
+      "a_handlebar_center": [
+        315,
+        408
+      ],
+      "b_front_wheel_bottom": [
+        315,
+        658
+      ],
+      "c_rider_head": [
+        402,
+        228
+      ],
+      "d_seat_center": [
+        482,
+        458
+      ],
+      "lean_deg": 0.0,
+      "head_height_over_bar_height": 1.72,
+      "wall_s": 20.5
+    }
+  },
+  "angle": {
+    "009_30": {
+      "a_observation": "The motorcycle is leaning significantly to the left, almost to the point of falling.",
+      "b_tilt_deg": 85,
+      "wall_s": 16.2
+    },
+    "009_50": {
+      "a_observation": "The motorcycle is leaning significantly to the right, almost to the point of falling.",
+      "b_tilt_deg": 80,
+      "wall_s": 14.2
+    },
+    "009_70": {
+      "a_observation": "The motorcycle is leaning significantly to the right, indicating a substantial tilt.",
+      "b_tilt_deg": 60,
+      "wall_s": 13.7
+    },
+    "009_90": {
+      "a_observation": "The motorcycle is tilted significantly to the right, indicating a large angle of lean.",
+      "b_tilt_deg": 60,
+      "wall_s": 14.3
+    },
+    "010_00": {
+      "a_observation": "The motorcycle is leaning significantly to the right, indicating a substantial tilt.",
+      "b_tilt_deg": 60,
+      "wall_s": 13.8
+    },
+    "010_10": {
+      "a_observation": "The motorcycle is leaning significantly to the right, indicating a substantial tilt.",
+      "b_tilt_deg": 60,
+      "wall_s": 13.8
+    },
+    "010_20": {
+      "a_observation": "The motorcycle is tilted significantly to the right, indicating a dangerous angle.",
+      "b_tilt_deg": 60,
+      "wall_s": 14.0
+    },
+    "010_50": {
+      "a_observation": "The motorcycle is leaning significantly to the right, with the front wheel almost touching the ground.",
+      "b_tilt_deg": 80,
+      "wall_s": 15.0
+    }
+  },
+  "redbox": {
+    "009_30": {
+      "a_observation": "Motorcycle and rider in red box, leaning slightly to the left, on a narrow road.",
+      "b_state": "fallen_on_its_side",
+      "c_location": "roadside_dirt_or_vegetation",
+      "wall_s": 23.0
+    },
+    "009_50": {
+      "a_observation": "Motorcycle and rider in red box: leaning slightly, on road, near car.",
+      "b_state": "fallen_on_its_side",
+      "c_location": "roadside_dirt_or_vegetation",
+      "wall_s": 21.5
+    },
+    "009_70": {
+      "a_observation": "Motorcycle and rider in red box: upright, riding on road. State: moving. Location: rural road, near trees and buildings.",
+      "b_state": "upright_riding",
+      "c_location": "roadside_dirt_or_vegetation",
+      "wall_s": 23.3
+    },
+    "009_90": {
+      "a_observation": "The motorcycle and rider are in a red box, leaning slightly to the left, on a road with a car behind them.",
+      "b_state": "fallen_on_its_side",
+      "c_location": "roadside_dirt_or_vegetation",
+      "wall_s": 22.9
+    },
+    "010_00": {
+      "a_observation": "The motorcycle and rider are stationary, positioned on the side of a road, facing forward.",
+      "b_state": "fallen_on_its_side",
+      "c_location": "roadside_dirt_or_vegetation",
+      "wall_s": 21.0
+    },
+    "010_10": {
+      "a_observation": "The motorcycle and rider are in a red box, positioned on a road with a car approaching from behind. The rider is upright, holding the handlebars.",
+      "b_state": "fallen_on_its_side",
+      "c_location": "roadside_dirt_or_vegetation",
+      "wall_s": 23.9
+    },
+    "010_20": {
+      "a_observation": "Motorcycle and rider in red box: upright, on paved road, near trees.",
+      "b_state": "fallen_on_its_side",
+      "c_location": "paved_road",
+      "wall_s": 18.8
+    },
+    "010_50": {
+      "a_observation": "The motorcycle and rider are in a red box, leaning slightly to the left, on a rural road bordered by trees and vegetation.",
+      "b_state": "leaning_or_turning",
+      "c_location": "roadside_dirt_or_vegetation",
+      "wall_s": 22.3
+    }
+  },
+  "debate": {
+    "009_30->009_50": {
+      "a_evidence_still_upright": "Both wheels are on the ground, rider's posture is stable.",
+      "b_evidence_falling_or_fallen": "Rider leans forward, front wheel lifts off the ground, suggesting a fall.",
+      "c_verdict": "falling_or_fallen",
+      "wall_s": 29.9
+    },
+    "009_30->009_70": {
+      "a_evidence_still_upright": "Both wheels are on the ground, rider's posture is stable.",
+      "b_evidence_falling_or_fallen": "Rider leans forward, front wheel is lifted off the ground.",
+      "c_verdict": "falling_or_fallen",
+      "wall_s": 22.4
+    },
+    "009_50->009_70": {
+      "a_evidence_still_upright": "Both wheels are on the ground, rider's posture is stable.",
+      "b_evidence_falling_or_fallen": "Rider leans forward, front wheel is lifted off the ground.",
+      "c_verdict": "falling_or_fallen",
+      "wall_s": 26.0
+    },
+    "009_50->009_90": {
+      "a_evidence_still_upright": "Both wheels are on the ground, rider's posture is stable.",
+      "b_evidence_falling_or_fallen": "Rider leans back, rear wheel lifts off the ground, front wheel tilts.",
+      "c_verdict": "falling_or_fallen",
+      "wall_s": 22.3
+    },
+    "009_50->010_00": {
+      "a_evidence_still_upright": "Both wheels are on the ground, rider's posture is stable.",
+      "b_evidence_falling_or_fallen": "Rider leans forward, front wheel is lifted off the ground.",
+      "c_verdict": "falling_or_fallen",
+      "wall_s": 21.2
+    },
+    "009_50->010_20": {
+      "a_evidence_still_upright": "Both wheels are on the ground, rider's posture is stable.",
+      "b_evidence_falling_or_fallen": "Rider leans back, motorcycle leans forward, front wheel is off the ground.",
+      "c_verdict": "falling_or_fallen",
+      "wall_s": 21.6
+    },
+    "009_50->010_50": {
+      "a_evidence_still_upright": "Motorcycle wheels are on the ground, rider is upright.",
+      "b_evidence_falling_or_fallen": "Rider is leaning forward, motorcycle is tilted.",
+      "c_verdict": "falling_or_fallen",
+      "wall_s": 21.1
+    }
+  },
+  "panel": {
+    "009_30->009_50": {
+      "a_difference": "Motorcycle is leaning to the left, rider is leaning forward, and appears to be in a turn.",
+      "b_state_after": "leaning_or_turning",
+      "wall_s": 17.4
+    },
+    "009_50->009_70": {
+      "a_difference": "Motorcycle is tilted, rider leans back, hand on handlebar.",
+      "b_state_after": "fallen_on_its_side",
+      "wall_s": 14.9
+    },
+    "009_50->009_90": {
+      "a_difference": "Motorcycle is tilted, rider leans back, appears to have lost balance.",
+      "b_state_after": "fallen_on_its_side",
+      "wall_s": 15.9
+    },
+    "009_50->010_20": {
+      "a_difference": "Motorcycle is tilted, rider leans back, appears to have lost balance.",
+      "b_state_after": "fallen_on_its_side",
+      "wall_s": 15.0
+    },
+    "009_50->010_50": {
+      "a_difference": "Motorcycle is tilted, rider leans back, appears to have lost balance.",
+      "b_state_after": "fallen_on_its_side",
+      "wall_s": 14.9
+    }
+  },
+  "fewshot": {
+    "009_50": {
+      "a_observation": "A motorcycle is upright on a road, with a person sitting on it, and a car behind it.",
+      "b_state_image_3": "upright",
+      "wall_s": 30.1
+    },
+    "009_70": {
+      "a_observation": "A motorcycle is upright, with a person sitting on it, and a car behind it on a road.",
+      "b_state_image_3": "upright",
+      "wall_s": 18.9
+    },
+    "009_90": {
+      "a_observation": "A person riding a red scooter with a large bag on the back, upright on a road.",
+      "b_state_image_3": "upright",
+      "wall_s": 18.2
+    },
+    "010_00": {
+      "a_observation": "A person riding a red scooter with a sidecar on a road, upright.",
+      "b_state_image_3": "upright",
+      "wall_s": 20.7
+    },
+    "010_20": {
+      "a_observation": "A person riding a motorcycle on a road, leaning slightly to the side.",
+      "b_state_image_3": "upright",
+      "wall_s": 17.0
+    },
+    "010_50": {
+      "a_observation": "A person riding a motorcycle with a rear rack, surrounded by foliage.",
+      "b_state_image_3": "upright",
+      "wall_s": 17.9
+    }
+  },
+  "persona": {
+    "control": {
+      "a_change": "The motorcycle swerves to the roadside but stays upright and in control.",
+      "b_choice": "B",
+      "wall_s": 31.0
+    },
+    "event": {
+      "a_change": "The motorcycle swerves to the roadside but stays upright and in control.",
+      "b_choice": "B",
+      "wall_s": 36.0
+    }
+  },
+  "vote": {
+    "control": {
+      "choices": [
+        "B",
+        "A",
+        "C",
+        "B",
+        "A"
+      ]
+    },
+    "event": {
+      "choices": [
+        "B",
+        "B",
+        "B",
+        "B",
+        "C"
+      ]
+    }
+  },
+  "judge": {
+    "G_labeled_reference 009_30->009_70": {
+      "text": "The motorcycle in Image 2 is leaning to the right, indicating a turn or a change in direction. The rider's posture suggests they are actively steering the motorcycle, which is different from the upright position in Image 1 where the motorcycle appears to be stationary or moving straight ahead without a turn. The rear wheel is also closer to the ground, which is consistent with the motorcycle being in motion and leaning during a turn. The front wheel is still upright, but the angle of the motorcycle as a whole is tilted to the right, indicating a turn in progress or a recent turn. The rider's body is angled in the direction of the turn, which is typical for maintaining balance and control during a turn on a motorcycle. The background and the position of the car behind the motorcycle remain unchanged, suggesting that the motorcycle is the moving object in this scene. The gray boxes in the image are likely used for image processing or analysis and do not affect the state of the motorcycle itself. The motorcycle in Image 2 is in a dynamic state, leaning and in motion, as opposed to the stationary or straight-ahead position in Image 1.",
+      "a_reason": "The motorcycle is leaning to the right, indicating a controlled turn, not a fall or tipping over.",
+      "b_says_fallen": false
+    },
+    "G_labeled_reference 009_50->010_20": {
+      "text": "The motorcycle in Image 2 is now on its side, indicating it has fallen over. The rider is still on the motorcycle, but the vehicle is no longer upright as it was in Image 1.",
+      "a_reason": "The motorcycle is on its side, indicating it has fallen over.",
+      "b_says_fallen": true
+    },
+    "G2_reference_reason_first 009_30->009_70": {
+      "text": "The motorcycle is now leaning to the right, and the rider's posture has changed slightly.",
+      "a_reason": "The motorcycle is leaning to the right, but not tipped over or lying on its side.",
+      "b_says_fallen": false
+    },
+    "G2_reference_reason_first 009_30->009_90": {
+      "text": "The rider is leaning more to the right, and the motorcycle appears to be slightly tilted.",
+      "a_reason": "The motorcycle is not fallen or overturned; it is merely leaning and tilted.",
+      "b_says_fallen": false
+    },
+    "G2_reference_reason_first 009_50->010_00": {
+      "text": "The rider's posture changes, and the motorcycle leans slightly to the right.",
+      "a_reason": "The motorcycle is still upright, just leaning slightly to the right.",
+      "b_says_fallen": false
+    },
+    "G2_reference_reason_first 009_50->010_20": {
+      "text": "The rider is leaning further to the right, and the motorcycle is now tilted more to the left.",
+      "a_reason": "The motorcycle is still upright, just tilted more to the left.",
+      "b_says_fallen": false
+    },
+    "G2_reference_reason_first 009_50->010_50": {
+      "text": "The motorcycle is now on its side, and the rider is off the bike.",
+      "a_reason": "The motorcycle is now on its side, indicating a fall or tipping over, not merely a turn or lean.",
+      "b_says_fallen": true
+    },
+    "G3_free_text 009_30->009_50": {
+      "text": "The motorcycle is now leaning to the left, and the rider's posture has changed, indicating a turn or maneuver.",
+      "a_reason": "The motorcycle is leaning to the left, indicating a controlled turn, not a fall or tipping over.",
+      "b_says_fallen": false
+    },
+    "G3_free_text 009_30->009_70": {
+      "text": "Motorcycle is leaning to the right, rider is leaning forward, and the rear wheel is lifted off the ground.",
+      "a_reason": "The rear wheel is lifted off the ground, indicating a significant tilt, not a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "G3_free_text 009_50->009_90": {
+      "text": "Motorcycle leans to the right, rider leans forward, and the rear wheel is lifted off the ground.",
+      "a_reason": "The rear wheel is lifted off the ground, indicating a significant tilt, not a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "G3_free_text 009_50->010_00": {
+      "text": "The motorcycle is now tilted, and the rider is off the seat, indicating a fall.",
+      "a_reason": "The rider is off the seat, indicating a fall, not just a tilt or lean.",
+      "b_says_fallen": true
+    },
+    "G3_free_text 009_50->010_20": {
+      "text": "Motorcycle is tilted, rider leans back, and appears to be in motion.",
+      "a_reason": "The rider is in motion, indicating the motorcycle is not stationary or lying down.",
+      "b_says_fallen": false
+    },
+    "G3_free_text 009_50->010_50": {
+      "text": "Motorcycle is now on its side, rider is off the bike.",
+      "a_reason": "Motorcycle is now on its side, rider is off the bike.",
+      "b_says_fallen": true
+    },
+    "G3_free_text 009_30->010_50": {
+      "text": "Motorcycle is tilted, rider leans back, and car is no longer visible.",
+      "a_reason": "The motorcycle is tilted, rider leans back, and car is no longer visible, indicating a fall or tipping over.",
+      "b_says_fallen": true
+    },
+    "G3_free_text 009_70->010_20": {
+      "text": "Motorcycle leans left, rider leans right, and appears to be in motion.",
+      "a_reason": "The rider's position indicates controlled movement, not a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_30->009_50 #0": {
+      "text": "In Image 2, the motorcycle and rider are moving forward, the rider's head is lowered, and the motorcycle appears to be leaning slightly forward.",
+      "a_reason": "The motorcycle is leaning forward, indicating controlled movement, not a fall or tipping over.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_30->009_50 #1": {
+      "text": "Motorcycle leans backward, rider leans forward, rear wheel is off the ground.",
+      "a_reason": "The rear wheel is off the ground, indicating the motorcycle is not upright.",
+      "b_says_fallen": true
+    },
+    "auto_labeled 009_30->009_50 #2": {
+      "text": "Motorcycle is slightly tilted back, rider leans forward, and a white car has appeared behind.",
+      "a_reason": "The motorcycle is slightly tilted back, rider leans forward, and a white car has appeared behind, indicating a potential fall or loss of control.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_30->009_70 #0": {
+      "text": "Motorcycle appears to be in a more stationary position with rider leaning slightly forward in image 2.",
+      "a_reason": "The rider is leaning forward, indicating a controlled position, not a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_30->009_70 #1": {
+      "text": "The motorcycle is now tilted to the left, suggesting a turn, and the rider's body posture has changed to lean into the turn.",
+      "a_reason": "The motorcycle is tilted left, indicating a controlled turn, not a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_30->009_70 #2": {
+      "text": "Motorcycle leans right, rider leans back, both appear to have fallen.",
+      "a_reason": "The rider and motorcycle are described as having fallen, indicating a complete loss of balance and stability.",
+      "b_says_fallen": true
+    },
+    "auto_labeled 009_50->009_70 #0": {
+      "text": "In Image 2, the motorcycle leans slightly to the right, indicating a turn or loss of balance, while the rider's posture appears more alert.",
+      "a_reason": "The motorcycle is not described as fallen or overturned; it is only leaning slightly to the right.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->009_70 #1": {
+      "text": "The motorcycle is no longer upright; it is leaning to the side, and the rider appears to be shifting their weight. ",
+      "a_reason": "The motorcycle is leaning to the side, indicating a significant tilt but not a complete fall or overturn.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->009_70 #2": {
+      "text": "Motorcycle is on its side, rider is falling off.",
+      "a_reason": "The motorcycle is described as 'on its side,' indicating a complete tipping over or overturning, not merely a fall or lean.",
+      "b_says_fallen": true
+    },
+    "auto_labeled 009_50->009_90 #0": {
+      "text": "In image 2, the motorcycle is now on its side, with the rider falling off and the rear wheel lifted off the ground.",
+      "a_reason": "The motorcycle is on its side with the rider falling off, indicating a significant change from upright to a side position.",
+      "b_says_fallen": true
+    },
+    "auto_labeled 009_50->009_90 #1": {
+      "text": "Motorcycle tips forward, rider leans more, front wheel lifts off ground.",
+      "a_reason": "The motorcycle tips forward, indicating a loss of balance but not necessarily a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->009_90 #2": {
+      "text": "Motorcycle tips over, rider falls off.",
+      "a_reason": "The description explicitly mentions the motorcycle tipping over and the rider falling off, indicating a complete loss of balance and rider safety.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_00 #0": {
+      "text": "In image 2, the motorcycle is now tilted sideways, and the rider appears to be leaning to maintain balance.",
+      "a_reason": "The rider is leaning to maintain balance, indicating a controlled tilt, not a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_00 #1": {
+      "text": "Motorcycle leans to the left, rider leans forward, and front wheel is lifted off the ground.",
+      "a_reason": "The motorcycle is not lying on its side or the rider is not off the bike.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_00 #2": {
+      "text": "Motorcycle leans right, rider leans back, approaching a parked car.",
+      "a_reason": "The rider is leaning back, indicating a controlled maneuver, not a fall or tip-over.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_10 #0": {
+      "text": "The motorcycle is now leaning to the right, and the rider has their left hand extended.",
+      "a_reason": "The rider's hand extended suggests they are still on the motorcycle, not fallen or overturned.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_10 #1": {
+      "text": "Motorcycle is no longer upright; rider is leaning back, possibly after a fall.",
+      "a_reason": "The rider is leaning back, suggesting a fall, not just a fall off.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_10 #2": {
+      "text": "Motorcycle leans right, rider leans forward, and the car is behind in Image 2.",
+      "a_reason": "The rider's forward lean and the motorcycle's right lean suggest controlled movement, not a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_20 #0": {
+      "text": "In image 2, the motorcycle is leaning, and the rider is leaning forward, indicating a turn or maneuver.",
+      "a_reason": "The rider is leaning forward, suggesting a controlled turn, not a fall or tipping over.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_20 #1": {
+      "text": "In image 2, the motorcycle is tilted to the side, and the rider is leaning forward, contrasting with the upright position in image 1.",
+      "a_reason": "The rider is leaning forward, not falling or lying, indicating a controlled tilt, not a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_20 #2": {
+      "text": "Motorcycle leans sideways, rider leans back, front wheel lifts off the ground.",
+      "a_reason": "The motorcycle is not lying on its side or the rider is not off the bike.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_50 #0": {
+      "text": "Motorcycle is overturned, rider sits upright on seat.",
+      "a_reason": "The rider is upright on the seat, indicating the motorcycle is overturned, not the rider.",
+      "b_says_fallen": false
+    },
+    "auto_labeled 009_50->010_50 #1": {
+      "text": "The motorcycle is sideways in image 2, while in image 1 it is upright.",
+      "a_reason": "The motorcycle is described as 'sideways' in image 2, indicating a significant change in its orientation, suggesting it has fallen or tipped over.",
+      "b_says_fallen": true
+    },
+    "auto_labeled 009_50->010_50 #2": {
+      "text": "Motorcycle is overturned, rider is dismounted and appears to be standing.",
+      "a_reason": "The motorcycle is overturned, indicating it has fallen and is lying on its side.",
+      "b_says_fallen": true
+    },
+    "round5_panel 009_30->009_50": {
+      "text": "Motorcycle is leaning to the left, rider is leaning forward, and appears to be in a turn.",
+      "a_reason": "The rider is leaning forward, indicating controlled movement, not a fall or tip-over.",
+      "b_says_fallen": false
+    },
+    "round5_panel 009_50->009_70": {
+      "text": "Motorcycle is tilted, rider leans back, hand on handlebar.",
+      "a_reason": "The rider's position and the motorcycle's tilt suggest a fall, not a controlled turn.",
+      "b_says_fallen": true
+    },
+    "round5_panel 009_50->009_90": {
+      "text": "Motorcycle is tilted, rider leans back, appears to have lost balance.",
+      "a_reason": "The rider's position and the motorcycle's tilt suggest a loss of balance, not a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "round5_panel 009_50->010_20": {
+      "text": "Motorcycle is tilted, rider leans back, appears to have lost balance.",
+      "a_reason": "The rider's position and the motorcycle's tilt suggest a loss of balance, not a fall or overturning.",
+      "b_says_fallen": false
+    },
+    "round5_panel 009_50->010_50": {
+      "text": "Motorcycle is tilted, rider leans back, appears to have lost balance.",
+      "a_reason": "The rider's position and the motorcycle's tilt suggest a loss of balance, not a fall or overturning.",
+      "b_says_fallen": false
+    }
+  }
+}

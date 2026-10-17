@@ -1,0 +1,4 @@
+# Import the local GGUF pair as the model name the backend requires:
+#   ollama create qwen2.5vl:7b -f backend/models/Modelfile.qwen2.5vl-q8
+FROM ./Qwen2.5-VL-7B-Instruct-Q8_0.gguf
+FROM ./mmproj-Qwen2.5-VL-7B-Instruct-f16.gguf

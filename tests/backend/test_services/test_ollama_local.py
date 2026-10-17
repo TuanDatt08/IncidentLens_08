@@ -15,6 +15,18 @@ def test_ollama_uses_local_vision_model_without_llama_launch(monkeypatch):
     ensure_ollama_runtime(settings)
 
 
+def test_qwen35_sends_reasoning_off_only_when_configured():
+    from backend.services.qwen_local import create_local_provider
+
+    base = {"_env_file": None, "qwen_runtime": "ollama", "qwen_endpoint": "http://127.0.0.1:11434/v1/chat/completions"}
+    assert create_local_provider(Settings(**base)).config.extra_body() == {}
+    provider = create_local_provider(Settings(**base, qwen_ollama_model="qwen3.5:9b", qwen_reasoning_effort="none"))
+    assert provider.config.model == "qwen3.5:9b"
+    assert provider.config.extra_body() == {"reasoning_effort": "none"}
+    with pytest.raises(ValueError):
+        Settings(**base, qwen_ollama_model="llava:7b")
+
+
 def test_text_only_model_is_rejected(monkeypatch):
     from backend.services.qwen_local import ensure_ollama_runtime
 

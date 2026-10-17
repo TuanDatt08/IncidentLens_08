@@ -1,0 +1,32 @@
+{
+  "event": {
+    "frames": [
+      "frame_009_50",
+      "frame_010_00",
+      "frame_010_20"
+    ],
+    "question": "These are consecutive crops from the same forward dashcam, in time order: Image 1 = 9.5s, Image 2 = 10.0s, Image 3 = 10.2s.\nGray boxes are masks; ignore them. Focus on any motorcycle and its rider.\nWhich option best describes what happens to the motorcycle across the images?\nA) it rides past normally, staying upright on the road\nB) it swerves to the roadside but stays upright and in control\nC) it loses balance and tips over or falls\nD) it collides with the camera car\nE) no motorcycle is visible\nAnswer with the option letter and at most 25 words of evidence citing image numbers.",
+    "answer": {
+      "choice": "B",
+      "evidence": "The motorcycle swerves to the roadside but remains upright and in control."
+    },
+    "wall_s": 71.2,
+    "prompt_tokens": 3388,
+    "output_tokens": 35
+  },
+  "control": {
+    "frames": [
+      "frame_011_50",
+      "frame_012_50",
+      "frame_013_50"
+    ],
+    "question": "These are consecutive crops from the same forward dashcam, in time order: Image 1 = 11.5s, Image 2 = 12.5s, Image 3 = 13.5s.\nGray boxes are masks; ignore them. Focus on any motorcycle and its rider.\nWhich option best describes what happens to the motorcycle across the images?\nA) it rides past normally, staying upright on the road\nB) it swerves to the roadside but stays upright and in control\nC) it loses balance and tips over or falls\nD) it collides with the camera car\nE) no motorcycle is visible\nAnswer with the option letter and at most 25 words of evidence citing image numbers.",
+    "answer": {
+      "choice": "E",
+      "evidence": "No motorcycle is visible in any of the images."
+    },
+    "wall_s": 27.5,
+    "prompt_tokens": 3389,
+    "output_tokens": 30
+  }
+}

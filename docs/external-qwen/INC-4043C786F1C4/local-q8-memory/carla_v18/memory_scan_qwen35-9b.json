@@ -1,0 +1,400 @@
+{
+  "windows": [
+    {
+      "start_s": 0.3,
+      "end_s": 2.1,
+      "choice": "A",
+      "description": "The orange van and other vehicles maintain their lanes without deviation."
+    },
+    {
+      "start_s": 1.5,
+      "end_s": 3.3,
+      "choice": "A",
+      "description": "The orange van and other vehicles maintain their lanes without deviation."
+    },
+    {
+      "start_s": 2.7,
+      "end_s": 4.5,
+      "choice": "A",
+      "description": "The orange van and red car maintain their positions in adjacent lanes ahead. No other road users enter or cross the camera car’s path."
+    },
+    {
+      "start_s": 3.9,
+      "end_s": 5.7,
+      "choice": "A",
+      "description": "The orange van and red car maintain their positions in the left lane ahead. No other road users enter or cross the camera car’s path."
+    },
+    {
+      "start_s": 5.1,
+      "end_s": 6.9,
+      "choice": "A",
+      "description": "The red car and orange van remain stationary in the left lane throughout all frames. A distant vehicle ahead continues moving forward without deviation."
+    },
+    {
+      "start_s": 6.3,
+      "end_s": 8.1,
+      "choice": "A",
+      "description": "A red car and orange Coca-Cola truck are positioned on the left side of the road. As the camera car advances, they remain stationary in their lanes without any sudden movements or interactions."
+    },
+    {
+      "start_s": 7.5,
+      "end_s": 9.3,
+      "choice": "A",
+      "description": "A red car and orange Coca-Cola truck are positioned on the left side of the road. A fire truck follows behind them. As the camera car moves forward, these vehicles remain stationary or move slowly along their respective lanes without any sudden maneuvers."
+    },
+    {
+      "start_s": 8.7,
+      "end_s": 10.5,
+      "choice": "A",
+      "description": "A red fire truck and orange delivery van are initially visible on the left. As the camera car moves forward, these vehicles exit the frame. Further ahead, a red pickup truck and motorcycle remain stationary in the right lane throughout all frames."
+    },
+    {
+      "start_s": 9.9,
+      "end_s": 11.7,
+      "choice": "A",
+      "description": "A red fire truck is initially visible on the left. Further ahead, a red pickup truck and a black convertible are parked on the right side of the road. A motorcycle is also parked on the right curb."
+    },
+    {
+      "start_s": 11.1,
+      "end_s": 12.9,
+      "choice": "A",
+      "description": "The motorcycle and black car are initially parked on the right. As the camera car moves forward, it passes them. The red SUV remains stationary in its lane."
+    },
+    {
+      "start_s": 12.3,
+      "end_s": 14.1,
+      "choice": "A",
+      "description": "The black convertible and red SUV are initially parked on the right. The camera car passes them as they remain stationary."
+    },
+    {
+      "start_s": 13.5,
+      "end_s": 15.3,
+      "choice": "A",
+      "description": "A black car travels in the opposite lane. A red vehicle is initially on the right but disappears from view."
+    },
+    {
+      "start_s": 14.7,
+      "end_s": 16.5,
+      "choice": "A",
+      "description": "A black car drives away in the left lane. A pedestrian walks on the right sidewalk."
+    },
+    {
+      "start_s": 15.9,
+      "end_s": 17.7,
+      "choice": "A",
+      "description": "A pedestrian on the right sidewalk walks away from the camera. A second pedestrian is visible further down the left sidewalk."
+    },
+    {
+      "start_s": 17.1,
+      "end_s": 18.9,
+      "choice": "A",
+      "description": "A pedestrian walks along the sidewalk on the right side of the road. A red car and two motorcycles are visible further ahead in the distance, remaining stationary or moving slowly without interacting with the camera car."
+    },
+    {
+      "start_s": 18.3,
+      "end_s": 20.1,
+      "choice": "A",
+      "description": "A pedestrian walks along the sidewalk on the right. A police officer stands still on the curb. Two motorcycles are parked further down the street."
+    },
+    {
+      "start_s": 19.5,
+      "end_s": 21.3,
+      "choice": "A",
+      "description": "A police officer stands on the sidewalk. Two motorcycles are parked on the sidewalk. A red car and a black car drive away in the distance."
+    },
+    {
+      "start_s": 20.7,
+      "end_s": 22.5,
+      "choice": "A",
+      "description": "The motorcycles and pedestrians remain stationary or move independently along the sidewalk, maintaining their positions relative to the road."
+    },
+    {
+      "start_s": 21.9,
+      "end_s": 23.7,
+      "choice": "A",
+      "description": "The motorcycles and pedestrians on the sidewalk remain stationary or walk along their designated paths without entering the vehicle's lane."
+    },
+    {
+      "start_s": 23.1,
+      "end_s": 24.9,
+      "choice": "A",
+      "description": "The red convertible and pedestrians on the sidewalk remain stationary. The red sedan ahead continues driving forward in its lane without changing direction or speed."
+    },
+    {
+      "start_s": 24.3,
+      "end_s": 26.1,
+      "choice": "A",
+      "description": "The red sports car ahead moves forward and exits the frame to the right. The maroon convertible in the foreground also moves forward and disappears from view."
+    },
+    {
+      "start_s": 25.5,
+      "end_s": 27.3,
+      "choice": "A",
+      "description": "Road users on the sidewalk walk away from the camera. Two pedestrians stand still and converse on the right sidewalk."
+    },
+    {
+      "start_s": 26.7,
+      "end_s": 28.5,
+      "choice": "A",
+      "description": "Road users on the sidewalk walk away from the camera. Two pedestrians stand still on the right curb before walking further ahead."
+    },
+    {
+      "start_s": 27.9,
+      "end_s": 29.7,
+      "choice": "A",
+      "description": "The pedestrians on the right sidewalk walk away from the camera. A green car drives ahead in the same lane."
+    },
+    {
+      "start_s": 29.1,
+      "end_s": 30.9,
+      "choice": "A",
+      "description": "A green car drives straight ahead in its lane. Two pedestrians walk away on the right sidewalk. A person stands at a bus stop."
+    },
+    {
+      "start_s": 30.3,
+      "end_s": 32.1,
+      "choice": "A",
+      "description": "A green car drives straight down the center of the road. Pedestrians walk along the sidewalks on both sides and cross at a distant intersection, maintaining their paths without interacting with the vehicle."
+    },
+    {
+      "start_s": 31.5,
+      "end_s": 33.3,
+      "choice": "B",
+      "description": "A pedestrian in orange pants crosses from right to left across the camera car's path. A second pedestrian walks on the sidewalk nearby.",
+      "confirm": "B",
+      "confirm_description": "A pedestrian in orange pants and red top crosses the street from right to left, approaching within ~2 car lengths of the camera car’s path."
+    },
+    {
+      "start_s": 32.7,
+      "end_s": 34.5,
+      "choice": "A",
+      "description": "A pedestrian in orange pants walks away on the right sidewalk. A man in grey crosses the street from left to right, moving into the crosswalk ahead of the car."
+    },
+    {
+      "start_s": 33.9,
+      "end_s": 35.7,
+      "choice": "A",
+      "description": "A pedestrian in a red jacket crosses the street from left to right between frames 1 and 2. A yellow taxi is visible further ahead in the distance, maintaining its lane."
+    },
+    {
+      "start_s": 35.1,
+      "end_s": 36.9,
+      "choice": "A",
+      "description": "A yellow taxi remains in the distance ahead. A pedestrian on the left sidewalk walks away from the road."
+    },
+    {
+      "start_s": 36.3,
+      "end_s": 38.1,
+      "choice": "B",
+      "description": "A pedestrian in a yellow jacket crosses the street from left to right ahead of the camera car. A yellow taxi remains stationary in the distance.",
+      "confirm": "A",
+      "confirm_description": "A green car directly ahead in the same lane, maintaining a safe distance of approximately two car lengths."
+    },
+    {
+      "start_s": 37.5,
+      "end_s": 39.3,
+      "choice": "B",
+      "description": "A pedestrian in a yellow jacket crosses the street from left to right across the camera car's path. A yellow taxi and a green car drive ahead in their respective lanes.",
+      "confirm": "A",
+      "confirm_description": "A pedestrian in a yellow jacket crosses the street from left to right, reaching about two car lengths ahead of the camera car."
+    },
+    {
+      "start_s": 38.7,
+      "end_s": 40.5,
+      "choice": "A",
+      "description": "A pedestrian in yellow crosses the street from left to right. A yellow taxi and green car drive forward along their lanes."
+    },
+    {
+      "start_s": 39.9,
+      "end_s": 41.7,
+      "choice": "A",
+      "description": "A yellow taxi moves left and exits frame. A green car ahead continues straight. Pedestrians walk along sidewalks; none enter the road."
+    },
+    {
+      "start_s": 41.1,
+      "end_s": 42.9,
+      "choice": "A",
+      "description": "A green and white vehicle drives forward on the road. Pedestrians walk along the sidewalk to the right, maintaining their paths without entering the roadway."
+    },
+    {
+      "start_s": 42.3,
+      "end_s": 44.1,
+      "choice": "A",
+      "description": "A pedestrian in red pants walks along the sidewalk. A person in a green top stands near a food cart, then moves away as the camera passes."
+    },
+    {
+      "start_s": 43.5,
+      "end_s": 45.3,
+      "choice": "A",
+      "description": "A pedestrian in red pants walks along the sidewalk. A food cart and another person are visible on the right but do not enter the roadway."
+    },
+    {
+      "start_s": 44.7,
+      "end_s": 46.5,
+      "choice": "A",
+      "description": "A pedestrian with a red umbrella walks on the sidewalk to the right. A green car drives ahead in the same lane."
+    },
+    {
+      "start_s": 45.9,
+      "end_s": 47.7,
+      "choice": "A",
+      "description": "The green car ahead maintains its lane and speed. A pedestrian on the sidewalk walks steadily away from the road, showing no interaction with traffic."
+    },
+    {
+      "start_s": 47.1,
+      "end_s": 48.9,
+      "choice": "A",
+      "description": "A pedestrian walks along the sidewalk on the right. A green car drives ahead in the same lane."
+    },
+    {
+      "start_s": 48.3,
+      "end_s": 50.1,
+      "choice": "A",
+      "description": "A pedestrian on the right sidewalk walks away from the camera. A black car ahead maintains its lane and speed."
+    },
+    {
+      "start_s": 49.5,
+      "end_s": 51.3,
+      "choice": "A",
+      "description": "The green car maintains its lane while a blue convertible approaches from the opposite direction and passes safely."
+    },
+    {
+      "start_s": 50.7,
+      "end_s": 52.5,
+      "choice": "A",
+      "description": "The green car maintains its lane while a dark sedan ahead continues forward. A blue convertible passes on the left, and a black sedan parked on the right remains stationary throughout the sequence."
+    },
+    {
+      "start_s": 51.9,
+      "end_s": 53.7,
+      "choice": "A",
+      "description": "The green and white car in the left lane maintains its position. A dark sedan on the right side of the road remains stationary or moves slowly along the curb."
+    },
+    {
+      "start_s": 53.1,
+      "end_s": 54.9,
+      "choice": "A",
+      "description": "A blue sedan and green compact car are initially visible ahead. The blue sedan moves out of view as the camera car advances. Further ahead, a black SUV and red sports car maintain their lanes. A motorcycle remains stationary on the right side of the road throughout the sequence."
+    },
+    {
+      "start_s": 54.3,
+      "end_s": 56.1,
+      "choice": "A",
+      "description": "A green and white car drives in the left lane. A red Mini Cooper and motorcycle are on the right side of the road, near the curb."
+    },
+    {
+      "start_s": 55.5,
+      "end_s": 57.3,
+      "choice": "B",
+      "description": "A pedestrian on the right sidewalk runs into the street and crosses in front of the red Mini Cooper.",
+      "confirm": "A",
+      "confirm_description": "A red Mini Cooper in the right lane moves slightly left and approaches within about two car lengths of the camera car’s front-right side."
+    },
+    {
+      "start_s": 56.7,
+      "end_s": 58.5,
+      "choice": "B",
+      "description": "A pedestrian on the right sidewalk walks toward the street and steps onto the road, moving into the camera car’s lane.",
+      "confirm": "A",
+      "confirm_description": "A pedestrian in light clothing walks along the right sidewalk, staying well clear of the camera car’s lane."
+    },
+    {
+      "start_s": 57.9,
+      "end_s": 59.7,
+      "choice": "A",
+      "description": "A small green and white car drives away in the left lane. A person stands on the sidewalk to the right."
+    }
+  ],
+  "events": [
+    {
+      "start_s": 31.5,
+      "end_s": 33.3,
+      "windows": 1,
+      "tier1": "B",
+      "status": "UNCONFIRMED"
+    },
+    {
+      "start_s": 36.3,
+      "end_s": 39.3,
+      "windows": 2,
+      "tier1": "B",
+      "status": "EVENT",
+      "tier2": {
+        "actor": "pedestrian",
+        "choice": "B",
+        "description": "A pedestrian in a yellow jacket crosses the street from right to left across the camera car's path. A yellow taxi appears on the right side of the road and drives forward.",
+        "frames_s": [
+          36.3,
+          36.9,
+          37.5,
+          38.1,
+          38.7,
+          39.29
+        ]
+      },
+      "type": "NEAR_MISS"
+    },
+    {
+      "start_s": 55.5,
+      "end_s": 58.5,
+      "windows": 2,
+      "tier1": "B",
+      "status": "EVENT",
+      "tier2": {
+        "actor": "pedestrian",
+        "choice": "B",
+        "description": "A pedestrian walks along the sidewalk and then steps onto the road, crossing in front of the camera car.",
+        "frames_s": [
+          55.5,
+          56.1,
+          56.7,
+          57.3,
+          57.9,
+          58.49
+        ]
+      },
+      "type": "NEAR_MISS"
+    }
+  ],
+  "verdict": "INCIDENT",
+  "refined": {
+    "events": [
+      {
+        "start_s": 31.5,
+        "end_s": 33.3,
+        "windows": 1,
+        "tier1": "B",
+        "status": "UNCONFIRMED"
+      }
+    ],
+    "verdict": "UNCERTAIN"
+  },
+  "tier2_cache": {
+    "36.30-39.30": {
+      "actor": "pedestrian",
+      "choice": "B",
+      "description": "A pedestrian in a yellow jacket crosses the street from right to left across the camera car's path. A yellow taxi appears on the right side of the road and drives forward.",
+      "frames_s": [
+        36.3,
+        36.9,
+        37.5,
+        38.1,
+        38.7,
+        39.29
+      ]
+    },
+    "55.50-58.50": {
+      "actor": "pedestrian",
+      "choice": "B",
+      "description": "A pedestrian walks along the sidewalk and then steps onto the road, crossing in front of the camera car.",
+      "frames_s": [
+        55.5,
+        56.1,
+        56.7,
+        57.3,
+        57.9,
+        58.49
+      ]
+    }
+  }
+}

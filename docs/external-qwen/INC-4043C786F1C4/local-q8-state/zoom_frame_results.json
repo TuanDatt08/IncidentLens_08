@@ -1,0 +1,186 @@
+[
+  {
+    "frame": "frame_009_30",
+    "objects": [
+      {
+        "distance": "near",
+        "note": "Motorcycle rider on road, upright, left",
+        "place": "road",
+        "position": "left",
+        "state": "upright",
+        "type": "motorcycle"
+      },
+      {
+        "distance": "near",
+        "note": "Car on road, upright, center",
+        "place": "road",
+        "position": "center",
+        "state": "upright",
+        "type": "car"
+      }
+    ],
+    "wall_s": 73.2,
+    "abnormal": false
+  },
+  {
+    "frame": "frame_009_50",
+    "objects": [
+      {
+        "distance": "near",
+        "note": "Person riding a motorcycle on the road.",
+        "place": "road",
+        "position": "left",
+        "state": "upright",
+        "type": "motorcycle"
+      },
+      {
+        "distance": "near",
+        "note": "White car parked on the roadside.",
+        "place": "roadside",
+        "position": "left",
+        "state": "upright",
+        "type": "car"
+      }
+    ],
+    "wall_s": 33.4,
+    "abnormal": false
+  },
+  {
+    "frame": "frame_009_70",
+    "objects": [
+      {
+        "distance": "near",
+        "note": "Man riding a motorcycle, upright, on the road, left side.",
+        "place": "road",
+        "position": "left",
+        "state": "upright",
+        "type": "motorcycle"
+      },
+      {
+        "distance": "near",
+        "note": "White car parked on the roadside, unclear if occupied.",
+        "place": "roadside",
+        "position": "left",
+        "state": "unclear",
+        "type": "car"
+      }
+    ],
+    "wall_s": 34.6,
+    "abnormal": false
+  },
+  {
+    "frame": "frame_009_90",
+    "objects": [
+      {
+        "distance": "near",
+        "note": "Person riding a motorcycle, upright, on the road, center.",
+        "place": "road",
+        "position": "center",
+        "state": "upright",
+        "type": "motorcycle"
+      },
+      {
+        "distance": "near",
+        "note": "White car parked on the road, left.",
+        "place": "road",
+        "position": "left",
+        "state": "upright",
+        "type": "car"
+      }
+    ],
+    "wall_s": 33.4,
+    "abnormal": false
+  },
+  {
+    "frame": "frame_010_00",
+    "objects": [
+      {
+        "distance": "near",
+        "note": "Person on a motorcycle, upright, on the road, center.",
+        "place": "road",
+        "position": "center",
+        "state": "upright",
+        "type": "motorcycle"
+      },
+      {
+        "distance": "near",
+        "note": "White car, parked, left side.",
+        "place": "road",
+        "position": "left",
+        "state": "upright",
+        "type": "car"
+      }
+    ],
+    "wall_s": 33.2,
+    "abnormal": false
+  },
+  {
+    "frame": "frame_010_10",
+    "objects": [
+      {
+        "distance": "near",
+        "note": "Person riding a scooter, upright, on the road, center.",
+        "place": "road",
+        "position": "center",
+        "state": "upright",
+        "type": "motorcycle"
+      },
+      {
+        "distance": "near",
+        "note": "White car parked on the roadside, left.",
+        "place": "roadside",
+        "position": "left",
+        "state": "upright",
+        "type": "car"
+      }
+    ],
+    "wall_s": 34.2,
+    "abnormal": false
+  },
+  {
+    "frame": "frame_010_20",
+    "objects": [
+      {
+        "distance": "near",
+        "note": "Man riding a scooter, leaning slightly to the right.",
+        "place": "road",
+        "position": "center",
+        "state": "tilted",
+        "type": "motorcycle"
+      },
+      {
+        "distance": "near",
+        "note": "White car parked on the left side of the road.",
+        "place": "road",
+        "position": "left",
+        "state": "upright",
+        "type": "car"
+      }
+    ],
+    "wall_s": 34.2,
+    "abnormal": true
+  },
+  {
+    "frame": "frame_010_50",
+    "objects": [
+      {
+        "distance": "near",
+        "note": "Person riding a motorcycle, upright, on the road, right side.",
+        "place": "road",
+        "position": "right",
+        "state": "upright",
+        "type": "motorcycle"
+      },
+      {
+        "distance": "near",
+        "note": "White car parked on the left side of the road.",
+        "place": "road",
+        "position": "left",
+        "state": "upright",
+        "type": "car"
+      }
+    ],
+    "wall_s": 34.8,
+    "abnormal": false
+  }
+]

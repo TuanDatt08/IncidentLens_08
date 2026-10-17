@@ -55,7 +55,7 @@ class FrameThenDecisionProvider(LocalQwenProvider):
         request_id = uuid4().hex
         payload = {'model': config.model, 'temperature': 0, 'max_tokens': 768 if stage == 'frame_observation' else config.max_output_tokens,
                    'response_format': {'type': 'json_schema', 'json_schema': {'name': stage, 'strict': True, 'schema': schema}},
-                   'messages': [{'role': 'user', 'content': content}]}
+                   'messages': [{'role': 'user', 'content': content}], **config.extra_body()}
         directory = Path(config.requests_dir) if config.requests_dir else None
         if directory:
             directory.mkdir(parents=True, exist_ok=True)

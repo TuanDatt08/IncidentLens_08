@@ -1,0 +1,77 @@
+{
+  "moto/win_event": {
+    "actor": "motorcycle",
+    "choice": "A",
+    "description": "A motorcyclist rides past the camera car, swerving slightly to the left and then continuing straight. A pedestrian walks on the sidewalk beside the road, maintaining a safe distance from the motorcyclist. The pedestrian appears to be walking at a steady pace, and there is no indication of any sudden movements or interactions between the motorcyclist and the pedestrian."
+  },
+  "moto/win_normal02": {
+    "actor": "car",
+    "choice": "?",
+    "description": "{\n    \"a_description\": \"A white car drives past the camera car. A black car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car drives past the camera car. A white car"
+  },
+  "moto/win_normal05": {
+    "actor": "car",
+    "choice": "?",
+    "description": "{\n    \"a_description\": \"A white car drives down a narrow road. A silver car follows behind. The road is lined with trees and a stone wall. The road curves to the right. The silver car continues to follow the white car down the road. The road curves to the left. The silver car continues to follow the white car down the road. The road curves to the right. The silver car continues to follow the white car down the road. The road curves to the left. The silver car continues to follow the white car down the road. The road curves to the right. The silver car continues to follow the white car down the road. The road curves to the left. The silver car continues to follow the white car down the road. The road curves"
+  },
+  "carla_v16/win_event": {
+    "actor": "pedestrian",
+    "choice": "A",
+    "description": "A person rides a skateboard, then walks across the road. Another person walks across the road. A third person walks across the road. A fourth person walks across the road."
+  },
+  "carla_v16/win_normal12": {
+    "actor": "car",
+    "choice": "A",
+    "description": "A car is driving on the road. The car is moving forward. The car is moving forward. The car is moving forward. The car is moving forward."
+  },
+  "carla_v16/win_normal28": {
+    "actor": "car",
+    "choice": "?",
+    "description": "{\n    \"a_description\": \"A pedestrian walks on the sidewalk, a cyclist rides past, and a car approaches from the opposite direction. The pedestrian continues walking, and the car passes by. The cyclist continues riding, and the pedestrian continues walking. The car continues driving, and the pedestrian continues walking. The cyclist continues riding, and the pedestrian continues walking. The car continues driving, and the pedestrian continues walking. The cyclist continues riding, and the pedestrian continues walking. The car continues driving, and the pedestrian continues walking. The cyclist continues riding, and the pedestrian continues walking. The car continues driving, and the pedestrian continues walking. The cyclist continues riding, and the pedestrian continues walking. The car continues driving, and the pedestrian continues walking. The cyclist continues riding,"
+  },
+  "carla_v16/win_normal42": {
+    "actor": "motorcycle",
+    "choice": "A",
+    "description": "A car in the left lane moves forward, while a motorcycle in the right lane remains stationary. The car in the left lane continues to move forward, and the motorcycle remains stationary. The car in the left lane continues to move forward, and the motorcycle remains stationary."
+  },
+  "carla_v17/win_event": {
+    "actor": "motorcycle",
+    "choice": "?",
+    "description": "{\n    \"a_description\": \"A man crosses the road in front of a red car. The car stops and the man continues walking. The car then drives away. A motorcycle rider is seen in the background. The man continues walking across the road. The car is seen driving away. The motorcycle rider is seen in the background. The man continues walking across the road. The car is seen driving away. The motorcycle rider is seen in the background. The man continues walking across the road. The car is seen driving away. The motorcycle rider is seen in the background. The man continues walking across the road. The car is seen driving away. The motorcycle rider is seen in the background. The man continues walking across the road. The car is seen driving away."
+  },
+  "carla_v17/win_normal12": {
+    "actor": "car",
+    "choice": "?",
+    "description": "{\n    \"a_description\": \"A car in the left lane is turning right. A truck in the right lane is moving forward. A car in the right lane is moving forward. A car in the left lane is moving forward. A car in the left lane is turning right. A truck in the right lane is moving forward. A car in the right lane is moving forward. A car in the left lane is moving forward. A car in the left lane is turning right. A truck in the right lane is moving forward. A car in the right lane is moving forward. A car in the left lane is moving forward. A car in the left lane is turning right. A truck in the right lane is moving forward. A car in the right lane is"
+  },
+  "carla_v17/win_normal28": {
+    "actor": "car",
+    "choice": "D",
+    "description": "A red car is driving on the road ahead, maintaining a steady pace. No other vehicles or pedestrians are visible near the camera car's path."
+  },
+  "carla_v17/win_normal42": {
+    "actor": "car",
+    "choice": "D",
+    "description": "A car is driving on the road. There are no other vehicles or pedestrians near the camera car's path. The road is clear and there are no obstacles in the way."
+  },
+  "carla_v18/win_event": {
+    "actor": "pedestrian",
+    "choice": "?",
+    "description": "{\n    \"a_description\": \"A woman runs across the road in front of the camera car, then stops and looks back. A black car is parked on the side of the road. A red car is parked on the side of the road. A black car is parked on the side of the road. A black car is parked on the side of the road. A black car is parked on the side of the road. A black car is parked on the side of the road. A black car is parked on the side of the road. A black car is parked on the side of the road. A black car is parked on the side of the road. A black car is parked on the side of the road. A black car is parked on the side"
+  },
+  "carla_v18/win_normal12": {
+    "actor": "car",
+    "choice": "D",
+    "description": "A red SUV drives past the camera car, followed by a black car. The red SUV then stops, and the black car continues driving. A pedestrian walks on the sidewalk to the right of the camera car."
+  },
+  "carla_v18/win_normal28": {
+    "actor": "motorcycle",
+    "choice": "?",
+    "description": "{\n    \"a_description\": \"A car in the left lane stops, a pedestrian crosses the road, and a car in the right lane continues driving. A person in an orange outfit stands on the sidewalk, and a person in a yellow outfit walks on the sidewalk. A person in a red outfit stands on the sidewalk. A person in a green outfit walks on the sidewalk. A person in a black outfit walks on the sidewalk. A person in a white outfit walks on the sidewalk. A person in a blue outfit walks on the sidewalk. A person in a brown outfit walks on the sidewalk. A person in a gray outfit walks on the sidewalk. A person in a white outfit walks on the sidewalk. A person in a black outfit walks on the sidewalk. A"
+  },
+  "carla_v18/win_normal42": {
+    "actor": "motorcycle",
+    "choice": "D",
+    "description": "Pedestrians walk along the sidewalk, maintaining a safe distance from the camera car. No road users enter or cross the camera car's path, and there is no indication of a collision or near miss."
+  }
+}

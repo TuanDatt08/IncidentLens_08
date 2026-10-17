@@ -1,0 +1,182 @@
+{
+  "moto/win_event": {
+    "choices": [
+      "B",
+      "B",
+      "B"
+    ],
+    "descriptions": [
+      "A motorcyclist traveling on a narrow, winding road begins to swerve sharply to the right, moving off the paved surface and into the vegetation along the roadside while maintaining control of the motorcycle.",
+      "A person on a motorcycle rides toward and slightly to the right of the camera car’s path, while a white SUV remains ahead in the same lane.",
+      "A motorcyclist with a passenger and a white SUV are on a narrow, winding rural road. The motorcycle swerves sharply to the right, off the paved surface, into the vegetation alongside the road."
+    ]
+  },
+  "moto/win_normal02": {
+    "choices": [
+      "A",
+      "A",
+      "A"
+    ],
+    "descriptions": [
+      "A dark SUV and a white car are seen on an elevated road ahead. The dark SUV moves forward along its lane, while the white car follows behind it.",
+      "A white SUV and a dark-colored sedan are stationary on the narrow, winding road ahead. The camera car approaches them.",
+      "The camera car proceeds along a narrow country road. Ahead, a dark SUV and a white car are positioned on the roadway. The dark SUV remains stationary while the white car drives past it in the opposite lane."
+    ]
+  },
+  "moto/win_normal05": {
+    "choices": [
+      "A",
+      "A",
+      "A"
+    ],
+    "descriptions": [
+      "A white SUV drives ahead on a narrow rural road, staying in its lane and moving away from the camera car without any sudden maneuvers or proximity issues.",
+      "A white SUV drives ahead on a narrow road and continues straight.",
+      "A white SUV drives ahead on a narrow country road, passing a stone wall and through a wooded area."
+    ]
+  },
+  "carla_v16/win_event": {
+    "choices": [
+      "B",
+      "B",
+      "B"
+    ],
+    "descriptions": [
+      "A dark car drives away in the left lane. A pedestrian in green crosses the street from right to left directly ahead of the camera car.",
+      "A dark car drives away in the left lane. A pedestrian crosses the street from right to left directly ahead of the camera car's path.",
+      "A dark car crosses from left to right across the camera car’s path, then disappears. A pedestrian in green and pink walks across the road from right to left, stepping into the lane ahead of the camera car."
+    ]
+  },
+  "carla_v16/win_normal12": {
+    "choices": [
+      "A",
+      "A",
+      "A"
+    ],
+    "descriptions": [
+      "The maroon sedan in front maintains its lane position. A dark SUV ahead continues straight. No pedestrians or other vehicles enter the camera car’s path.",
+      "A maroon sedan and a dark SUV are driving ahead in adjacent lanes. A white bus appears further down the road on the left side.",
+      "Across the frames, a maroon sedan labeled 'CARLA' remains in the left lane ahead of the camera car. A dark SUV stays further ahead in the same direction. No other road users enter or cross the camera car’s path."
+    ]
+  },
+  "carla_v16/win_normal28": {
+    "choices": [
+      "A",
+      "A",
+      "A"
+    ],
+    "descriptions": [
+      "A black classic car in the left lane moves slightly forward and then exits the frame. A dark sedan ahead continues straight in its lane. Pedestrians on the sidewalk remain stationary.",
+      "The black muscle car passes on the left and exits the frame. The gray sedan ahead maintains its lane and speed.",
+      "Across the frames, a black classic car initially on the left lane merges right into the center lane ahead of the camera car. A dark sedan remains in the center lane. Both vehicles continue forward without abrupt maneuvers or collisions."
+    ]
+  },
+  "carla_v16/win_normal42": {
+    "choices": [
+      "A",
+      "A",
+      "A"
+    ],
+    "descriptions": [
+      "The gray car on the right remains stationary. Distant vehicles in the left lane continue forward without deviation.",
+      "The gray car in the foreground remains stationary on the right. Distant vehicles ahead maintain their lanes and positions throughout the sequence.",
+      "No road users are present on or near the camera car’s path in any frame. Traffic ahead remains distant and stationary; no vehicles enter, cross, or swerve toward the camera car."
+    ]
+  },
+  "carla_v17/win_event": {
+    "choices": [
+      "B",
+      "B",
+      "B"
+    ],
+    "descriptions": [
+      "A black SUV drives toward the camera in the left lane. A pedestrian crosses from right to left across the center of the road.",
+      "A black SUV approaches from the opposite direction. A pedestrian walks across the right lane, moving toward the center of the road ahead of the camera car.",
+      "A pedestrian crosses from right to left in front of the camera car. A red Mini Cooper is parked on the right side of the road."
+    ]
+  },
+  "carla_v17/win_normal12": {
+    "choices": [
+      "A",
+      "A",
+      "A"
+    ],
+    "descriptions": [
+      "A blue car in the distance remains stationary. No other road users are present near the camera car's path.",
+      "A blue car maintains its lane and speed ahead. A white bus remains stationary in the distance.",
+      "Across the frames, a blue car in the adjacent lane moves forward normally, maintaining its trajectory without any sudden maneuvers. No other road users interact with the camera car’s immediate path."
+    ]
+  },
+  "carla_v17/win_normal28": {
+    "choices": [
+      "C",
+      "B",
+      "A"
+    ],
+    "descriptions": [
+      "A yellow sedan crosses the camera car's lane from left to right and exits the frame. A silver car remains stationary in the center lane.",
+      "A yellow sedan crosses from left to right in front of the camera car between t=28.50s and t=29.12s, then exits frame left by t=29.75s.",
+      "A yellow sedan moves out of view to the left. A silver car remains stationary ahead in the same lane throughout all frames, maintaining its position without any movement."
+    ]
+  },
+  "carla_v17/win_normal42": {
+    "choices": [
+      "A",
+      "A",
+      "A"
+    ],
+    "descriptions": [
+      "A maroon van drives on the left lane and exits the scene. A silver car travels ahead in the same lane, maintaining its path throughout the frames.\n",
+      "The maroon van initially visible to the left exits the frame as the camera car proceeds forward. The silver car ahead maintains its lane and position, continuing straight without deviation.",
+      "The maroon van exits from the left lane and merges into the right lane ahead of the camera car. The silver sedan continues straight in its lane."
+    ]
+  },
+  "carla_v18/win_event": {
+    "choices": [
+      "C",
+      "B",
+      "B"
+    ],
+    "descriptions": [
+      "A pedestrian runs from the sidewalk into the street and stands on the right side of the road.",
+      "A person runs from the sidewalk onto the road in front of the camera car and then stands still on the right side.",
+      "A pedestrian runs from the right sidewalk into the street, crossing in front of the camera car before stopping on the right side of the road."
+    ]
+  },
+  "carla_v18/win_normal12": {
+    "choices": [
+      "A",
+      "B",
+      "A"
+    ],
+    "descriptions": [
+      "A black convertible and red SUV are initially visible on the right side of the road. The black convertible moves out of view, followed by the red SUV pulling over to the curb and parking.",
+      "The black convertible and red SUV, initially parked on the right, move forward into the traffic lane ahead of the camera car.",
+      "In the initial frames, a black convertible and red SUV are positioned in front of the camera car. As time progresses, both vehicles move forward along their respective lanes without abrupt maneuvers or interactions."
+    ]
+  },
+  "carla_v18/win_normal28": {
+    "choices": [
+      "A",
+      "B",
+      "A"
+    ],
+    "descriptions": [
+      "The pedestrians on the sidewalk to the right walk away from the camera. A green car drives ahead in the same lane, maintaining its course.",
+      "Pedestrians on the sidewalk walk along and toward the bus stop; a child in pink runs across the street from right to left near the curb.",
+      "Across the frames, pedestrians walk along the sidewalks on both sides of the street. A green car drives ahead in the same direction. No road users enter, cross, or swerve into the camera car’s path; all maintain their lanes and trajectories."
+    ]
+  },
+  "carla_v18/win_normal42": {
+    "choices": [
+      "A",
+      "A",
+      "A"
+    ],
+    "descriptions": [
+      "The green car drives straight. Pedestrians walk on the sidewalk to the right.",
+      "Pedestrians walk along the sidewalk, maintaining distance from the road. A food cart remains stationary. No road users enter the camera car’s path.",
+      "A pedestrian in red pants walks from left to right on the sidewalk. A pedestrian in a green top stands near a food cart."
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "event": {
+    "frames": [
+      "frame_009_90",
+      "frame_010_00",
+      "frame_010_10",
+      "frame_010_20",
+      "frame_010_50"
+    ],
+    "question": "These are consecutive crops from the same forward dashcam, in time order: Image 1 = 9.9s, Image 2 = 10.0s, Image 3 = 10.1s, Image 4 = 10.2s, Image 5 = 10.5s.\nGray boxes are masks; ignore them. Focus on any motorcycle and its rider.\nWhich option best describes what happens to the motorcycle across the images?\nA) it rides past normally, staying upright on the road\nB) it swerves to the roadside but stays upright and in control\nC) it loses balance and tips over or falls\nD) it collides with the camera car\nE) no motorcycle is visible\nAnswer with the option letter and at most 25 words of evidence citing image numbers.",
+    "answer": {
+      "choice": "B",
+      "evidence": "The motorcycle swerves to the roadside but remains upright and in control, as seen in Image 2 and Image 3."
+    },
+    "wall_s": 76.2,
+    "prompt_tokens": 5531,
+    "output_tokens": 46
+  },
+  "control": {
+    "frames": [
+      "frame_009_30",
+      "frame_009_50",
+      "frame_009_70"
+    ],
+    "question": "These are consecutive crops from the same forward dashcam, in time order: Image 1 = 9.3s, Image 2 = 9.5s, Image 3 = 9.7s.\nGray boxes are masks; ignore them. Focus on any motorcycle and its rider.\nWhich option best describes what happens to the motorcycle across the images?\nA) it rides past normally, staying upright on the road\nB) it swerves to the roadside but stays upright and in control\nC) it loses balance and tips over or falls\nD) it collides with the camera car\nE) no motorcycle is visible\nAnswer with the option letter and at most 25 words of evidence citing image numbers.",
+    "answer": {
+      "choice": "A",
+      "evidence": "The motorcycle and rider maintain a consistent position on the road across the images."
+    },
+    "wall_s": 26.8,
+    "prompt_tokens": 3371,
+    "output_tokens": 31
+  }
+}

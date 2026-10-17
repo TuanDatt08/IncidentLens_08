@@ -19,7 +19,7 @@ async def test_worker_routes_by_uploaded_log(db_client, monkeypatch, with_log):
         files['log'] = ('a.csv', b'sec_from_incident,speed_kmh\n0,20\n1,10\n', 'text/csv')
     iid = (await db_client.post('/api/v1/incidents/upload', files=files)).json()['incident_id']
     job = (await db_client.post(f'/api/v1/incidents/{iid}/analyze')).json()['job_id']
-    settings = get_settings().model_copy(update={'qwen_runtime':'ollama','qwen_prompt_path':'backend/data/promt.txt','qwen_artifact_subdir':'output'})
+    settings = get_settings().model_copy(update={'qwen_runtime':'ollama','qwen_prompt_path':'backend/data/promt.txt','qwen_artifact_subdir':'output','qwen_video_pipeline':'stages'})
     monkeypatch.setattr(worker, 'get_settings', lambda: settings)
     used = []
     def provider(config):
@@ -84,7 +84,7 @@ async def test_full_inconclusive_draft_sql_readback(db_client, monkeypatch):
     uploaded = await db_client.post('/api/v1/incidents/upload', files={'video':('a.mp4',b'video','video/mp4')})
     iid = uploaded.json()['incident_id']
     job_id = (await db_client.post(f'/api/v1/incidents/{iid}/analyze')).json()['job_id']
-    settings = get_settings().model_copy(update={'qwen_runtime':'ollama','qwen_prompt_path':'backend/data/promt.txt','qwen_artifact_subdir':'output'})
+    settings = get_settings().model_copy(update={'qwen_runtime':'ollama','qwen_prompt_path':'backend/data/promt.txt','qwen_artifact_subdir':'output','qwen_video_pipeline':'stages'})
     monkeypatch.setattr(worker,'get_settings',lambda:settings)
     draft = {'schema_version':'incident_pipeline_v3','review_status':'DRAFT','detection_state':'INCONCLUSIVE','stage_a':[],'stage_b':[],'unknowns':['Không đủ coverage.']}
     def process(incident, **kwargs):

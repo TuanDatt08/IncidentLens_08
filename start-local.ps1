@@ -21,6 +21,8 @@ foreach ($Service in $Services) {
             $env:OLLAMA_HOST = '127.0.0.1:11434'
             $env:OLLAMA_NO_CLOUD = '1'
             if (-not $env:OLLAMA_CONTEXT_LENGTH) { $env:OLLAMA_CONTEXT_LENGTH = '32768' }
+            # Keep imported GGUF blobs inside the repo's ignored data dir instead of the user profile.
+            if (-not $env:OLLAMA_MODELS) { $env:OLLAMA_MODELS = Join-Path $RepoRoot 'backend/data/runtime/ollama/models' }
             $Port = 11434
         }
         'api' {

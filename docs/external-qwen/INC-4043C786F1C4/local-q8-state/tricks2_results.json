@@ -1,0 +1,222 @@
+{
+  "G2_reference_reason_first": {
+    "009_30->009_70": {
+      "images": [
+        "frame_009_30_T_tight.png",
+        "frame_009_70_T_tight.png"
+      ],
+      "answer": {
+        "a_difference": "The motorcycle is now leaning to the right, and the rider's posture has changed slightly.",
+        "b_state_in_image_2": "leaning_or_turning"
+      },
+      "wall_s": 44.2
+    },
+    "009_30->009_90": {
+      "images": [
+        "frame_009_30_T_tight.png",
+        "frame_009_90_T_tight.png"
+      ],
+      "answer": {
+        "a_difference": "The rider is leaning more to the right, and the motorcycle appears to be slightly tilted.",
+        "b_state_in_image_2": "leaning_or_turning"
+      },
+      "wall_s": 17.0
+    },
+    "009_50->010_00": {
+      "images": [
+        "frame_009_50_T_tight.png",
+        "frame_010_00_T_tight.png"
+      ],
+      "answer": {
+        "a_difference": "The rider's posture changes, and the motorcycle leans slightly to the right.",
+        "b_state_in_image_2": "leaning_or_turning"
+      },
+      "wall_s": 22.2
+    },
+    "009_50->010_20": {
+      "images": [
+        "frame_009_50_T_tight.png",
+        "frame_010_20_T_tight.png"
+      ],
+      "answer": {
+        "a_difference": "The rider is leaning further to the right, and the motorcycle is now tilted more to the left.",
+        "b_state_in_image_2": "leaning_or_turning"
+      },
+      "wall_s": 17.5
+    },
+    "009_50->010_50": {
+      "images": [
+        "frame_009_50_T_tight.png",
+        "frame_010_50_T_tight.png"
+      ],
+      "answer": {
+        "a_difference": "The motorcycle is now on its side, and the rider is off the bike.",
+        "b_state_in_image_2": "upright_riding"
+      },
+      "wall_s": 16.0
+    }
+  },
+  "H2_strip_reason_first": {
+    "control": {
+      "images": [
+        "strip_control_H.png"
+      ],
+      "answer": {
+        "a_change": "The motorcycle tips over in panel 2, but the rider remains on the bike in panel 3.",
+        "b_choice": "C"
+      },
+      "wall_s": 20.3
+    },
+    "event": {
+      "images": [
+        "strip_event_H.png"
+      ],
+      "answer": {
+        "a_change": "The rider leans back in panel 2, then leans further back in panel 3, causing the motorcycle to tip over.",
+        "b_choice": "C"
+      },
+      "wall_s": 18.1
+    }
+  },
+  "S2_sequence_reason_first": {
+    "control": {
+      "images": [
+        "frame_009_30_C_zoom.png",
+        "frame_009_50_C_zoom.png",
+        "frame_009_70_C_zoom.png"
+      ],
+      "answer": {
+        "a_change": "The motorcycle and rider are riding normally. ",
+        "b_choice": "A"
+      },
+      "wall_s": 34.0
+    },
+    "event": {
+      "images": [
+        "frame_009_90_C_zoom.png",
+        "frame_010_00_C_zoom.png",
+        "frame_010_20_C_zoom.png",
+        "frame_010_50_C_zoom.png"
+      ],
+      "answer": {
+        "a_change": "The motorcycle swerves to the roadside but stays upright and in control.",
+        "b_choice": "B"
+      },
+      "wall_s": 40.8
+    }
+  },
+  "I_grounding_C": {
+    "009_30": {
+      "images": [
+        "frame_009_30_C_zoom.png"
+      ],
+      "answer": {
+        "bbox_2d": [
+          81,
+          268,
+          253,
+          450
+        ]
+      },
+      "wall_s": 21.5
+    },
+    "009_50": {
+      "images": [
+        "frame_009_50_C_zoom.png"
+      ],
+      "answer": {
+        "bbox_2d": [
+          92,
+          288,
+          263,
+          467
+        ]
+      },
+      "wall_s": 17.0
+    },
+    "009_70": {
+      "images": [
+        "frame_009_70_C_zoom.png"
+      ],
+      "answer": {
+        "bbox_2d": [
+          142,
+          282,
+          378,
+          508
+        ]
+      },
+      "wall_s": 16.4
+    },
+    "009_90": {
+      "images": [
+        "frame_009_90_C_zoom.png"
+      ],
+      "answer": {
+        "bbox_2d": [
+          222,
+          232,
+          562,
+          552
+        ]
+      },
+      "wall_s": 16.1
+    },
+    "010_00": {
+      "images": [
+        "frame_010_00_C_zoom.png"
+      ],
+      "answer": {
+        "bbox_2d": [
+          274,
+          225,
+          678,
+          598
+        ]
+      },
+      "wall_s": 16.0
+    },
+    "010_10": {
+      "images": [
+        "frame_010_10_C_zoom.png"
+      ],
+      "answer": {
+        "bbox_2d": [
+          340,
+          319,
+          762,
+          603
+        ]
+      },
+      "wall_s": 17.2
+    },
+    "010_20": {
+      "images": [
+        "frame_010_20_C_zoom.png"
+      ],
+      "answer": {
+        "bbox_2d": [
+          414,
+          320,
+          898,
+          625
+        ]
+      },
+      "wall_s": 17.9
+    },
+    "010_50": {
+      "images": [
+        "frame_010_50_C_zoom.png"
+      ],
+      "answer": {
+        "bbox_2d": [
+          678,
+          392,
+          993,
+          642
+        ]
+      },
+      "wall_s": 15.7
+    }
+  }
+}

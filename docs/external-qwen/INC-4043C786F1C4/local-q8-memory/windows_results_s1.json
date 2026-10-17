@@ -1,0 +1,122 @@
+{
+  "moto/win_event": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "A motorcyclist rides on the road, maintaining a steady pace. The motorcyclist appears to be in control and not interacting with other road users."
+    ]
+  },
+  "moto/win_normal02": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "A white car approaches from behind, maintaining a safe distance. The road appears clear with no other vehicles or pedestrians in sight."
+    ]
+  },
+  "moto/win_normal05": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "A white car is driving ahead on the road, maintaining a steady pace. No other vehicles or pedestrians are visible near the camera car's path."
+    ]
+  },
+  "carla_v16/win_event": {
+    "choices": [
+      "B"
+    ],
+    "descriptions": [
+      "A car drives past the camera car, then a pedestrian walks across the road in front of the camera car."
+    ]
+  },
+  "carla_v16/win_normal12": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "The camera car maintains a steady speed, with no other vehicles or pedestrians entering its path. The environment remains static, with no changes in the road users' behavior or the camera car's surroundings."
+    ]
+  },
+  "carla_v16/win_normal28": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "A car in the left lane moves slightly forward, while the car in the right lane remains stationary. A pedestrian walks on the sidewalk to the right. The road appears clear with no immediate threats to the camera car."
+    ]
+  },
+  "carla_v16/win_normal42": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "No road users near the camera car's path. The road appears clear and no vehicles are approaching or crossing the camera car's path."
+    ]
+  },
+  "carla_v17/win_event": {
+    "choices": [
+      "B"
+    ],
+    "descriptions": [
+      "A pedestrian crosses the road in front of the camera car, while a car approaches from the opposite direction."
+    ]
+  },
+  "carla_v17/win_normal12": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "A blue car is seen moving from left to right across the frames, maintaining a consistent speed and direction. No other road users are present near the camera car's path."
+    ]
+  },
+  "carla_v17/win_normal28": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "A yellow car drives past the camera car, then exits the frame. No other road users are present near the camera car's path."
+    ]
+  },
+  "carla_v17/win_normal42": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "The red van moves to the left, then the silver car continues straight. No other vehicles or pedestrians are visible near the camera car's path."
+    ]
+  },
+  "carla_v18/win_event": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "A pedestrian crosses the road in front of the camera car, then continues walking on the sidewalk. No other road users are present near the camera car's path."
+    ]
+  },
+  "carla_v18/win_normal12": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "The black car moves forward, the red SUV remains stationary, and the motorcycle rider stays on the sidewalk. No road users enter or cross the camera car's path, and there is no contact or collision."
+    ]
+  },
+  "carla_v18/win_normal28": {
+    "choices": [
+      "D"
+    ],
+    "descriptions": [
+      "Pedestrians walk along the sidewalk, maintaining a safe distance from the camera car's path. No road users enter or cross the camera car's path, and there is no indication of a collision or near miss. The scene remains calm and orderly throughout the frames."
+    ]
+  },
+  "carla_v18/win_normal42": {
+    "choices": [
+      "B"
+    ],
+    "descriptions": [
+      "A person in red pants walks from right to left across the camera car's path, while another person stands near the food cart on the sidewalk. The person in red pants continues walking past the food cart and out of the frame."
+    ]
+  }
+}

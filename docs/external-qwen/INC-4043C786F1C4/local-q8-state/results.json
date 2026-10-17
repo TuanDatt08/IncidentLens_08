@@ -1,0 +1,740 @@
+{
+  "model": "qwen2.5vl:7b (local Q8_0 GGUF + f16 mmproj)",
+  "system_prompt": "You inspect ONE dashcam image taken from the ego car looking forward.\nIgnore anything attached to the ego car: windshield ornaments, dashboard, hood, and gray masked boxes.\nList each motorcycle, bicycle, car, truck and person on or beside the road ahead. Report only what is visible in this single image:\n- state: upright (normal riding, driving or standing), tilted (clearly leaning or losing balance), fallen (lying on the ground or toppled), unclear\n- place: road, roadside, off_road, unclear\n- position: left, center or right of the image\n- distance: near, mid or far\n- note: at most 12 words of visible evidence\nDo not guess motion or speed. Use unclear when unsure. Return an empty list if no road user is visible.",
+  "schema": {
+    "type": "object",
+    "required": [
+      "objects"
+    ],
+    "properties": {
+      "objects": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "type",
+            "state",
+            "place",
+            "position",
+            "distance",
+            "note"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "motorcycle",
+                "bicycle",
+                "car",
+                "truck",
+                "person"
+              ]
+            },
+            "state": {
+              "enum": [
+                "upright",
+                "tilted",
+                "fallen",
+                "unclear"
+              ]
+            },
+            "place": {
+              "enum": [
+                "road",
+                "roadside",
+                "off_road",
+                "unclear"
+              ]
+            },
+            "position": {
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ]
+            },
+            "distance": {
+              "enum": [
+                "near",
+                "mid",
+                "far"
+              ]
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "runs": {
+    "B": {
+      "frames": [
+        {
+          "frame": "frame_008_30",
+          "time_s": 8.3,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "motorcycle, upright, center, road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "car, white, stopped, center, road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 77.7,
+          "prompt_tokens": 1259,
+          "output_tokens": 124,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"motorcycle, upright, center, road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"car, white, stopped, center, road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_009_30",
+          "time_s": 9.3,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "Motorcycle rider wearing helmet, upright, road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "near",
+              "note": "Car driving, upright, road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 32.0,
+          "prompt_tokens": 1259,
+          "output_tokens": 122,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"Motorcycle rider wearing helmet, upright, road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"near\",\n      \"note\": \"Car driving, upright, road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_009_50",
+          "time_s": 9.5,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "Motorcycle rider wearing helmet, upright, road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "near",
+              "note": "White car parked on roadside, unclear rider",
+              "place": "roadside",
+              "position": "center",
+              "state": "unclear",
+              "type": "car"
+            }
+          ],
+          "wall_s": 32.9,
+          "prompt_tokens": 1259,
+          "output_tokens": 125,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"Motorcycle rider wearing helmet, upright, road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"near\",\n      \"note\": \"White car parked on roadside, unclear rider\",\n      \"place\": \"roadside\",\n      \"position\": \"center\",\n      \"state\": \"unclear\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_009_70",
+          "time_s": 9.7,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "motorcycle, upright, on road, center",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "near",
+              "note": "car, white, on road, center",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            },
+            {
+              "distance": "near",
+              "note": "person, riding motorcycle, center",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "person"
+            }
+          ],
+          "wall_s": 43.7,
+          "prompt_tokens": 1259,
+          "output_tokens": 176,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"motorcycle, upright, on road, center\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"near\",\n      \"note\": \"car, white, on road, center\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    },\n    {\n      \"distance\": \"near\",\n      \"note\": \"person, riding motorcycle, center\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"person\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_009_90",
+          "time_s": 9.9,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "Person riding a red motorcycle, upright, on the road, center.",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "near",
+              "note": "White car driving on the road, left.",
+              "place": "road",
+              "position": "left",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 33.8,
+          "prompt_tokens": 1259,
+          "output_tokens": 128,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"Person riding a red motorcycle, upright, on the road, center.\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"near\",\n      \"note\": \"White car driving on the road, left.\",\n      \"place\": \"road\",\n      \"position\": \"left\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_010_00",
+          "time_s": 10.0,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "Person standing next to a motorcycle on the right side of the road.",
+              "place": "roadside",
+              "position": "right",
+              "state": "unclear",
+              "type": "person"
+            },
+            {
+              "distance": "near",
+              "note": "Motorcycle parked on the right side of the road.",
+              "place": "roadside",
+              "position": "right",
+              "state": "unclear",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "White car driving on the road.",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 45.4,
+          "prompt_tokens": 1259,
+          "output_tokens": 184,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"Person standing next to a motorcycle on the right side of the road.\",\n      \"place\": \"roadside\",\n      \"position\": \"right\",\n      \"state\": \"unclear\",\n      \"type\": \"person\"\n    },\n    {\n      \"distance\": \"near\",\n      \"note\": \"Motorcycle parked on the right side of the road.\",\n      \"place\": \"roadside\",\n      \"position\": \"right\",\n      \"state\": \"unclear\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"White car driving on the road.\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_010_10",
+          "time_s": 10.1,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "woman riding a scooter, upright, road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "white car driving, upright, road",
+              "place": "road",
+              "position": "left",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 32.2,
+          "prompt_tokens": 1259,
+          "output_tokens": 122,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"woman riding a scooter, upright, road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"white car driving, upright, road\",\n      \"place\": \"road\",\n      \"position\": \"left\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_010_20",
+          "time_s": 10.2,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "Motorcycle rider on road, upright, center",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "Car approaching on road, upright, left",
+              "place": "road",
+              "position": "left",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 32.3,
+          "prompt_tokens": 1259,
+          "output_tokens": 124,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"Motorcycle rider on road, upright, center\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"Car approaching on road, upright, left\",\n      \"place\": \"road\",\n      \"position\": \"left\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_010_50",
+          "time_s": 10.5,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "Motorcycle rider on the right side of the road.",
+              "place": "road",
+              "position": "right",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "White car driving on the road.",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 32.4,
+          "prompt_tokens": 1259,
+          "output_tokens": 123,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"Motorcycle rider on the right side of the road.\",\n      \"place\": \"road\",\n      \"position\": \"right\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"White car driving on the road.\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_010_90",
+          "time_s": 10.9,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "white car driving on road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            },
+            {
+              "distance": "near",
+              "note": "motorcycle parked on roadside",
+              "place": "roadside",
+              "position": "right",
+              "state": "upright",
+              "type": "motorcycle"
+            }
+          ],
+          "wall_s": 31.2,
+          "prompt_tokens": 1259,
+          "output_tokens": 118,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"white car driving on road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    },\n    {\n      \"distance\": \"near\",\n      \"note\": \"motorcycle parked on roadside\",\n      \"place\": \"roadside\",\n      \"position\": \"right\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_011_50",
+          "time_s": 11.5,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "white SUV driving on road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 19.7,
+          "prompt_tokens": 1259,
+          "output_tokens": 65,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"white SUV driving on road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_012_50",
+          "time_s": 12.5,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "white car driving on road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 20.8,
+          "prompt_tokens": 1259,
+          "output_tokens": 65,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"white car driving on road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_013_50",
+          "time_s": 13.5,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "white SUV driving on road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 19.9,
+          "prompt_tokens": 1259,
+          "output_tokens": 65,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"white SUV driving on road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        }
+      ],
+      "verdict": {
+        "flagged_frames_s": [],
+        "status": "NO_ABNORMAL_STATE_SEEN"
+      }
+    },
+    "A": {
+      "frames": [
+        {
+          "frame": "frame_008_30",
+          "time_s": 8.3,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "motorcycle, upright, center, person wearing helmet",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "car, upright, center, person inside",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            },
+            {
+              "distance": "far",
+              "note": "person, unclear, right, near roadside",
+              "place": "roadside",
+              "position": "right",
+              "state": "unclear",
+              "type": "person"
+            }
+          ],
+          "wall_s": 46.0,
+          "prompt_tokens": 1220,
+          "output_tokens": 180,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"motorcycle, upright, center, person wearing helmet\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"car, upright, center, person inside\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    },\n    {\n      \"distance\": \"far\",\n      \"note\": \"person, unclear, right, near roadside\",\n      \"place\": \"roadside\",\n      \"position\": \"right\",\n      \"state\": \"unclear\",\n      \"type\": \"person\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_009_30",
+          "time_s": 9.3,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "motorcycle, upright, center, rider wearing helmet",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "near",
+              "note": "car, white, parked, center",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            },
+            {
+              "distance": "near",
+              "note": "person, standing, center, near motorcycle",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "person"
+            }
+          ],
+          "wall_s": 45.9,
+          "prompt_tokens": 1220,
+          "output_tokens": 178,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"motorcycle, upright, center, rider wearing helmet\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"near\",\n      \"note\": \"car, white, parked, center\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    },\n    {\n      \"distance\": \"near\",\n      \"note\": \"person, standing, center, near motorcycle\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"person\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_009_50",
+          "time_s": 9.5,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "motorcycle, upright, center, person wearing helmet",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "car, white, parked, center",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 34.1,
+          "prompt_tokens": 1220,
+          "output_tokens": 124,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"motorcycle, upright, center, person wearing helmet\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"car, white, parked, center\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_009_70",
+          "time_s": 9.7,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "motorcycle, upright, center, person wearing helmet",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "car, white, parked, center",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 36.6,
+          "prompt_tokens": 1220,
+          "output_tokens": 124,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"motorcycle, upright, center, person wearing helmet\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"car, white, parked, center\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_009_90",
+          "time_s": 9.9,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "motorcycle, upright, center, person riding",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "car, white, driving, left",
+              "place": "road",
+              "position": "left",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 36.0,
+          "prompt_tokens": 1220,
+          "output_tokens": 123,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"motorcycle, upright, center, person riding\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"car, white, driving, left\",\n      \"place\": \"road\",\n      \"position\": \"left\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_010_00",
+          "time_s": 10.0,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "motorcycle, upright, center, person standing",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "car, white, driving, left",
+              "place": "road",
+              "position": "left",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 36.1,
+          "prompt_tokens": 1220,
+          "output_tokens": 123,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"motorcycle, upright, center, person standing\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"car, white, driving, left\",\n      \"place\": \"road\",\n      \"position\": \"left\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_010_10",
+          "time_s": 10.1,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "Person riding a motorcycle, upright, on the road, center.",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "Car driving, upright, on the road, left.",
+              "place": "road",
+              "position": "left",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 35.4,
+          "prompt_tokens": 1220,
+          "output_tokens": 129,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"Person riding a motorcycle, upright, on the road, center.\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"Car driving, upright, on the road, left.\",\n      \"place\": \"road\",\n      \"position\": \"left\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_010_20",
+          "time_s": 10.2,
+          "objects": [
+            {
+              "distance": "near",
+              "note": "Motorcycle with rider, upright, on road, center",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "motorcycle"
+            },
+            {
+              "distance": "mid",
+              "note": "Car, white, driving, far",
+              "place": "road",
+              "position": "right",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 33.6,
+          "prompt_tokens": 1220,
+          "output_tokens": 125,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"near\",\n      \"note\": \"Motorcycle with rider, upright, on road, center\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"motorcycle\"\n    },\n    {\n      \"distance\": \"mid\",\n      \"note\": \"Car, white, driving, far\",\n      \"place\": \"road\",\n      \"position\": \"right\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_010_50",
+          "time_s": 10.5,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "white SUV driving on road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            },
+            {
+              "distance": "near",
+              "note": "person sitting on motorcycle, wearing beige jacket",
+              "place": "roadside",
+              "position": "right",
+              "state": "upright",
+              "type": "person"
+            }
+          ],
+          "wall_s": 31.7,
+          "prompt_tokens": 1220,
+          "output_tokens": 120,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"white SUV driving on road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    },\n    {\n      \"distance\": \"near\",\n      \"note\": \"person sitting on motorcycle, wearing beige jacket\",\n      \"place\": \"roadside\",\n      \"position\": \"right\",\n      \"state\": \"upright\",\n      \"type\": \"person\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_010_90",
+          "time_s": 10.9,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "white car driving on road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 19.8,
+          "prompt_tokens": 1220,
+          "output_tokens": 65,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"white car driving on road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_011_50",
+          "time_s": 11.5,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "white car driving on road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 19.1,
+          "prompt_tokens": 1220,
+          "output_tokens": 65,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"white car driving on road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_012_50",
+          "time_s": 12.5,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "white car driving on road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 20.1,
+          "prompt_tokens": 1220,
+          "output_tokens": 65,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"white car driving on road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        },
+        {
+          "frame": "frame_013_50",
+          "time_s": 13.5,
+          "objects": [
+            {
+              "distance": "mid",
+              "note": "white car driving on road",
+              "place": "road",
+              "position": "center",
+              "state": "upright",
+              "type": "car"
+            }
+          ],
+          "wall_s": 19.7,
+          "prompt_tokens": 1220,
+          "output_tokens": 65,
+          "raw": "{\n  \"objects\": [\n    {\n      \"distance\": \"mid\",\n      \"note\": \"white car driving on road\",\n      \"place\": \"road\",\n      \"position\": \"center\",\n      \"state\": \"upright\",\n      \"type\": \"car\"\n    }\n  ]\n}"
+        }
+      ],
+      "verdict": {
+        "flagged_frames_s": [],
+        "status": "NO_ABNORMAL_STATE_SEEN"
+      }
+    }
+  }
+}
