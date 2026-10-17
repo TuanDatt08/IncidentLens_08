@@ -18,7 +18,7 @@ export function LandingDemo() {
     <div className="lp-demo-bar"><div className="lp-demo-window-dots" aria-hidden="true"><i /><i /><i /></div><span>INCIDENTLENS / REVIEW WORKSPACE</span><span className="lp-demo-badge">Demo minh họa</span></div>
     <div className="lp-demo-content">
       <div className="lp-demo-media">
-        <div className="lp-demo-video"><RoadIllustration selected={selected} /><div className="lp-demo-video-label"><Film className="lp-icon" /><span>VIDEO TỔNG HỢP</span></div><div className="lp-demo-time">00:{moment.time.toFixed(1).padStart(4, "0")}<span> / 00:10.0</span></div></div>
+        <div className="lp-demo-depth"><div className="lp-demo-depth-grid" aria-hidden="true" /><div className="lp-demo-video"><RoadIllustration selected={selected} /><div className="lp-demo-video-label"><Film className="lp-icon" /><span>VIDEO TỔNG HỢP</span></div><div className="lp-demo-time">00:{moment.time.toFixed(1).padStart(4, "0")}<span> / 00:10.0</span></div><div className="lp-demo-detection" aria-hidden="true"><span>EV-0{selected + 1}</span><i /></div></div><div className="lp-demo-depth-label"><span className="lp-dot" /> EVIDENCE LAYER <strong>{moment.evidence}</strong></div></div>
         <div className="lp-demo-timeline"><span>00:00</span><div className="lp-demo-track"><div style={{ width: `${position}%` }} /><i style={{ left: `${position}%` }} /></div><span>00:10</span></div>
         <div className="lp-demo-signal-heading"><span>TELEMETRY / DỮ LIỆU TỔNG HỢP</span><span><i /> Tốc độ <i /> Phanh</span></div>
         <svg className="lp-demo-chart" viewBox="0 0 640 108" fill="none" role="img" aria-label={`Giá trị demo tại ${moment.time} giây: tốc độ ${moment.speed} km/h, phanh ${moment.brake} phần trăm. Dữ liệu tổng hợp, không phải phân tích thực tế.`}>
@@ -34,7 +34,7 @@ export function LandingDemo() {
       </div>
       <div className="lp-demo-inspector">
         <div className="lp-demo-inspector-label"><span className="lp-dot" /> EVIDENCE INSPECTOR <span>0{selected + 1} / 03</span></div>
-        <div className="lp-demo-inspector-copy" aria-live="polite" aria-atomic="true"><span className="lp-demo-moment">{moment.time.toFixed(1)}<small>giây từ đầu video</small></span><h3>{moment.title}</h3><p>{moment.text}</p></div>
+        <div key={selected} className="lp-demo-inspector-copy" aria-live="polite" aria-atomic="true"><span className="lp-demo-moment">{moment.time.toFixed(1)}<small>giây từ đầu video</small></span><h3>{moment.title}</h3><p>{moment.text}</p></div>
         <div className="lp-demo-metrics"><div><span>Tốc độ demo</span><strong>{moment.speed}<small> km/h</small></strong></div><div><span>Phanh demo</span><strong>{moment.brake}<small> %</small></strong></div></div>
         <div className="lp-demo-evidence"><FileText className="lp-icon" /><span>{moment.evidence}</span><Check className="lp-icon" /></div>
         <div className="lp-demo-review"><span className="lp-dot" /> Bản nháp · cần kỹ sư review</div>

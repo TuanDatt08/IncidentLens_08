@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { DaylightClouds } from "@/components/layout/daylight-clouds";
+import "@/app/daylight-clouds.css";
 import { WorkspaceTheme } from "@/components/layout/workspace-theme";
 import { LensMark } from "@/components/landing/landing-visuals";
 import "@/app/auth-brand.css";
 
 export function AuthLayout({ children, compact = false }: { children: React.ReactNode; compact?: boolean }) {
   return <div className="auth-layout auth-observatory" data-compact={compact}>
+    <div className="auth-cosmos" aria-hidden="true"><DaylightClouds /></div>
     <header className="auth-brandbar"><Link href="/" className="auth-brand"><LensMark /><span>Incident<span>Lens</span></span></Link><div className="auth-header-tools"><WorkspaceTheme /><Link href="/" className="auth-home-link">Back to home <span aria-hidden="true">↗</span></Link></div></header>
     <main className="auth-main">
       {!compact && <section className="auth-introduction" aria-labelledby="auth-introduction-title">

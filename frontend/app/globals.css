@@ -651,3 +651,48 @@ html:has(.workspace-header-shell .report-workspace)::-webkit-scrollbar{display:n
 /* Fill the bounded player stage without stretching or off-centre positioning. */
 .video-player .video-player-stage{overflow:hidden}
 .video-player .video-player-stage>video{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
+/* Long filenames and upload status must not enlarge the summary grid column. */
+.upload-layout > * { min-width: 0; }
+.upload-summary { overflow-wrap: anywhere; }
+.upload-file-summary dd { align-items: flex-start; }
+.upload-file-summary dd span { min-width: 0; flex: 1; white-space: normal; overflow-wrap: anywhere; overflow: visible; text-overflow: clip; }
+.upload-file-summary dd svg { margin-top: 2px; }
+.upload-summary :is([role='status'],[role='alert']) { min-width: 0; overflow-wrap: anywhere; }
+/* History follows the review document scroll, including wheel input over its right edge. */
+.workspace-header-shell .review-analysis-column .review-history,
+.workspace-header-shell .report-workspace > .review-history {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  overscroll-behavior: auto;
+  touch-action: pan-y;
+}
+/* Report reading hierarchy; colors follow workspace light and dark tokens. */
+.workspace-header-shell .report-document {display:grid;gap:28px;max-width:100%;overflow-wrap:anywhere;}
+.report-document-heading {padding:28px 28px 24px;border:1px solid var(--workspace-border);border-top:3px solid var(--workspace-primary);border-radius:12px;background:var(--workspace-surface);}
+.report-document-heading > span,.report-document section > header > span {font-size:10px;letter-spacing:.12em;font-weight:700;color:var(--workspace-primary);}
+.report-document-heading h2 {font-size:26px;line-height:1.35;margin-top:12px;color:var(--workspace-ink);letter-spacing:-.035em;}
+.report-document-heading p,.report-document section > header p {font-size:13px;line-height:1.8;color:var(--workspace-muted);margin-top:8px;}
+.report-document-heading > div {display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:22px;padding-top:16px;border-top:1px solid var(--workspace-border);font-size:11px;color:var(--workspace-muted);}
+.report-document .report-editor-surface {padding:28px;border-color:var(--workspace-border);box-shadow:none;}
+.report-document .report-editor-surface h2 {font-size:17px;color:var(--workspace-ink);}
+.report-document .report-editor-surface .field-label {text-transform:none;letter-spacing:0;font-size:13px;color:var(--workspace-muted);}
+.report-document .report-editor-surface textarea {background:color-mix(in srgb,var(--workspace-bg) 55%,var(--workspace-surface));color:var(--workspace-ink);border-color:var(--workspace-border);font-size:14px;font-weight:400;line-height:1.85;border-radius:8px;padding:16px;}
+.report-document .report-editor-surface textarea:focus {border-color:var(--workspace-primary);box-shadow:0 0 0 3px var(--workspace-primary-soft);}
+.report-document .report-editor-surface textarea:disabled,.report-document .report-editor-surface textarea:read-only {color:var(--workspace-ink);opacity:1;}
+.report-document .report-editor-surface label[for='unknowns'] {color:#b98a44;}
+.report-document section > header {padding:0 4px 18px;}
+.report-document section > header h2 {font-size:21px;line-height:1.5;color:var(--workspace-ink);margin-top:8px;letter-spacing:-.025em;}
+.report-document .structured-analysis {gap:20px;}
+.report-document .structured-analysis > section {position:relative;padding:24px;border-color:var(--workspace-border);background:var(--workspace-surface);border-radius:10px;}
+.report-document .structured-analysis > section > h3 {font-size:16px;border-bottom:1px solid var(--workspace-border);padding-bottom:14px;margin-bottom:20px;color:var(--workspace-ink);}
+.report-document .structured-analysis > section:nth-of-type(2) ol {border-left:1px solid var(--workspace-border);padding-left:16px;}
+.report-document .structured-analysis > section:nth-of-type(2) li {background:var(--workspace-bg);border-color:var(--workspace-border);padding:16px;}
+.report-document .structured-analysis dt {font-size:11px;color:var(--workspace-muted);line-height:1.6;}
+.report-document .structured-analysis dd {font-size:14px;line-height:1.85;color:var(--workspace-ink);}
+.report-document .structured-analysis > dl {background:var(--workspace-primary-soft);border-color:var(--workspace-border);padding:20px;}
+.report-document .structured-analysis button {min-height:36px;color:var(--workspace-primary);}
+.report-document .report-evidence-output {padding-top:8px;}
+@media(max-width:650px){.report-document-heading,.report-document .report-editor-surface,.report-document .structured-analysis > section{padding:20px;}.report-document-heading h2{font-size:23px;}.report-document-heading > div{flex-direction:column;}.workspace-header-shell .report-document{gap:22px;}}

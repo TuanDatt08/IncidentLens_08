@@ -22,7 +22,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/";
   // The public product page never mounts workspace session or permission logic.
   if (pathname === "/") return <>{children}</>;
   return AUTH_ENABLED ? <AuthenticatedProvider>{children}</AuthenticatedProvider> : <InternalWorkspaceProvider>{children}</InternalWorkspaceProvider>;
@@ -37,7 +37,7 @@ const internalWorkspace: AuthState = {
 };
 
 function InternalWorkspaceProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/";
   const authPage = pathname === "/login" || pathname === "/change-password" || pathname === "/admin" || pathname.startsWith("/admin/");
   return <AuthContext.Provider value={internalWorkspace}><AppShell>{authPage ? <section className="section-card mx-auto max-w-xl space-y-4 p-6">
     <h1 className="text-xl font-bold">Authentication is not enabled</h1>
@@ -54,7 +54,7 @@ function AuthenticatedProvider({ children }: { children: React.ReactNode }) {
   const [epoch, setEpoch] = useState(0);
   const lastUser = useRef<string>();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/";
   const accept = useCallback((session: AuthSession) => {
     if (lastUser.current && lastUser.current !== session.user.id) setEpoch(value => value + 1);
     lastUser.current = session.user.id;
@@ -92,7 +92,7 @@ function AuthenticatedProvider({ children }: { children: React.ReactNode }) {
     return () => { active = false; window.removeEventListener("auth:expired", expire); };
   }, [accept]);
   useEffect(() => {
-    if (status === "loading" || expired || error) return;
+    if (status === "loading" || expired) return;
     if (status === "anonymous" && pathname !== "/login") router.replace(`/login?returnTo=${encodeURIComponent(pathname)}`);
     if (status === "password-change-required" && pathname !== "/change-password") router.replace("/change-password");
   }, [status, pathname, router, expired, error]);
@@ -112,7 +112,7 @@ function AuthenticatedProvider({ children }: { children: React.ReactNode }) {
   const publicPage = pathname === "/login" || pathname === "/change-password";
   const allowed = expired || (!(pathname.startsWith("/admin") && !hasPermission(user, "user:manage")) && !(pathname === "/incidents/new" && !hasPermission(user, "incident:create")));
   return <AuthContext.Provider value={value}>
-    {status === "loading" ? <AuthLayout compact><p role="status" className="flex items-center justify-center gap-3 py-12 text-sm font-semibold text-slate-500"><span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-100 border-t-vf-primary" /> Checking session…</p></AuthLayout> : error ? <AuthLayout compact><p role="alert" className="auth-error">{error}</p><button onClick={() => window.location.reload()} className="mt-5 text-sm font-extrabold text-vf-primary">Try again</button></AuthLayout> : publicPage ? children : status === "authenticated" || expired ? <>
+    {publicPage ? children : status === "loading" ? <AuthLayout compact><p role="status" className="flex items-center justify-center gap-3 py-12 text-sm font-semibold text-slate-500"><span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-100 border-t-vf-primary" /> Checking session…</p></AuthLayout> : error ? <AuthLayout compact><p role="alert" className="auth-error">{error}</p><button onClick={() => window.location.reload()} className="mt-5 text-sm font-extrabold text-vf-primary">Try again</button></AuthLayout> : status === "authenticated" || expired ? <>
       <div hidden={expired} key={epoch}><AppShell>{allowed ? children : <div className="section-card mx-auto mt-12 max-w-lg p-8 text-center"><Lock className="mx-auto h-8 w-8 text-slate-400" /><h1 className="mt-4 text-xl font-extrabold text-vf-navy">Access restricted</h1><p className="mt-3 text-sm leading-6 text-slate-500">You do not have permission to view this page.</p><p className="mt-1 text-xs leading-5 text-slate-400">Contact your administrator if you need access.</p></div>}</AppShell></div>
       {expired && <AuthLayout compact><p role="alert" className="mb-6 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs font-semibold leading-6 text-amber-800">Your session ended. Sign in again to continue. Your unsaved draft is kept in memory; saving still requires your action.</p><LoginForm reauthenticate /></AuthLayout>}
     </> : <AuthLayout compact><p role="status" className="text-center text-sm font-semibold text-slate-500">Opening sign in…</p></AuthLayout>}

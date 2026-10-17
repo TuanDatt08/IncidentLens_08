@@ -1,0 +1,27 @@
+.global-night-sky {display:none;position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;background:radial-gradient(ellipse at 12% 45%,#23448122,transparent 55%),radial-gradient(ellipse at 82% 20%,#5833982b,transparent 55%),#050611;}
+html[data-theme='dark'] .global-night-sky {display:block;}
+.site-content {position:relative;z-index:1;}
+.global-night-sky .auth-starfield,.global-night-sky .auth-debris-field {position:absolute;inset:0;}
+.global-night-sky .auth-starfield > i {position:absolute;border-radius:50%;background:#e7edff;box-shadow:0 0 5px #bfd7ff70;animation:global-star-pulse 7s ease-in-out infinite;}
+.global-night-sky .auth-starfield > i:nth-child(3n) {background:#d7bdff;animation-direction:reverse;}
+.global-night-sky .auth-debris-field > span {position:absolute;animation:global-debris-drift 25s ease-in-out infinite alternate;opacity:.75;scale:1.35;filter:drop-shadow(3px 8px 8px #0005) drop-shadow(0 0 6px #a69bd132);}
+.global-night-sky .auth-debris-field > span > i {display:block;width:100%;height:100%;clip-path:polygon(27% 0,73% 8%,100% 38%,82% 80%,41% 100%,3% 64%,0 28%);background:linear-gradient(135deg,#b5a7ca,#5c5378 32%,#29283c 34%,#5f5878 65%,#242234 67%);}
+.global-night-sky .auth-debris-field > span:nth-child(3n) > i {clip-path:polygon(45% 0,90% 25%,72% 83%,37% 100%,4% 51%);background:linear-gradient(120deg,#acd6de,#344d66 35%,#1d263c 36%,#75608d 72%,#222437 73%);}
+html[data-theme='dark'] :is(.workspace-shell,.workspace-header-shell,.auth-layout.auth-observatory,.landing.landing-galaxy) {background:transparent;}
+html[data-theme='dark'] .landing-galaxy .lp-twinkle-field {display:none;}
+html[data-theme='dark'] .auth-observatory .auth-brandbar {background:rgb(5 6 17 / .25);backdrop-filter:blur(8px);}
+html[data-theme='light'] .auth-observatory .auth-brandbar {background:rgb(245 249 253 / .25);backdrop-filter:blur(8px);}
+@keyframes global-star-pulse {0%,100%{opacity:.08;}23%{opacity:.2;}46%{opacity:.85;}64%{opacity:.16;}83%{opacity:.4;}}
+@keyframes global-debris-drift {0%{transform:translate3d(-22px,28px,0) rotate(-18deg);}47%{transform:translate3d(32px,-16px,0) rotate(20deg);}100%{transform:translate3d(-8px,-52px,0) rotate(55deg);}}
+@media(max-width:650px){.global-night-sky .auth-debris-field > span{opacity:.5;scale:1;}}
+@media(prefers-reduced-motion:reduce){.global-night-sky .auth-starfield > i,.global-night-sky .auth-debris-field > span{animation:none;}.global-night-sky .auth-starfield > i{opacity:.35;}}
+/* Global backgrounds must remain visible through every page-level canvas. */
+.global-day-sky {display:none;position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:linear-gradient(180deg,#e1edf8 0%,#edf1fa 30%,#f5f6fb 70%,#edf3fa 100%);}
+html[data-theme='light'] .global-day-sky {display:block;}
+html[data-theme] .site-content :is(.workspace-route,.workspace-shell,.workspace-header-shell,.workspace-main,.auth-layout.auth-observatory,.landing.landing-galaxy) {background:transparent!important;}
+html[data-theme] .site-content .auth-observatory .auth-brandbar {background:transparent!important;backdrop-filter:blur(5px);}
+html[data-theme='light'] .site-content .lp-space-backdrop > .daylight-clouds,
+html[data-theme='light'] .site-content .auth-cosmos > .daylight-clouds {display:none;}
+html[data-theme='light'] .global-day-sky .daylight-clouds-thin .daylight-cloud {opacity:.4;filter:blur(6px);height:calc(var(--cloud-height,100px) * .38);scale:.74;transform-origin:left center;}
+html[data-theme='light'] .global-day-sky .daylight-clouds-thin .daylight-cloud:nth-child(2n) {opacity:.28;filter:blur(8px);}
+html[data-theme='light'] .global-day-sky .daylight-clouds-thin .daylight-cloud > i {background:radial-gradient(ellipse at 40% 35%,#ffffffb3 0%,#cfc4ed73 36%,#b9dce84d 62%,transparent 88%);filter:blur(5px);}

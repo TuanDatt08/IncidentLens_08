@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { DaylightClouds } from "@/components/layout/daylight-clouds";
+import "@/app/daylight-clouds.css";
 import { WorkspaceTheme } from "@/components/layout/workspace-theme";
 import { useEffect, useRef } from "react";
 import { ArrowRight, Check, Film, FileText, Gauge, Lock } from "@/components/icons";
@@ -15,7 +17,15 @@ function scrollToSection(event: React.MouseEvent<HTMLAnchorElement>) {
   if (!target) return;
   event.preventDefault();
   history.replaceState(history.state, "", hash);
-  target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+  const content = target.querySelector<HTMLElement>(":scope > .lp-container") ?? target;
+  const nav = document.querySelector<HTMLElement>(".lp-nav");
+  const navBottom = nav?.getBoundingClientRect().bottom ?? 0;
+  // Align the content, excluding the section's generous decorative top padding.
+  const top = window.scrollY + content.getBoundingClientRect().top - navBottom - 24;
+  window.scrollTo({
+    top: Math.max(0, top),
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+  });
   target.focus({ preventScroll: true });
 }
 
@@ -88,7 +98,7 @@ export function LandingPage() {
     return () => { observer.disconnect(); spaceObserver?.disconnect(); document.removeEventListener("visibilitychange", visibility); };
   }, []);
   return <div ref={page} className="landing landing-galaxy" data-page-active="true" lang="vi" id="dau-trang" tabIndex={-1}>
-    <div className="lp-space-backdrop" aria-hidden="true"><div className="lp-stars-far" /><div className="lp-stars-near" /><div className="lp-nebula-page" /></div>
+    <div className="lp-space-backdrop" aria-hidden="true"><DaylightClouds thin /><div className="lp-twinkle-field">{Array.from({ length: 42 }, (_, index) => <i key={index} style={{ left: `${(index * 37.17 + 3) % 100}%`, top: `${(index * 23.43 + 7) % 100}%`, width: index % 7 === 0 ? "2px" : "1px", height: index % 7 === 0 ? "2px" : "1px", animationDuration: `${3.7 + (index * 1.73) % 8.9}s`, animationDelay: `${-(index * 2.37) % 15}s`, opacity: .15 + (index % 5) * .09 }} />)}</div><div className="lp-stars-far" /><div className="lp-stars-near" /><div className="lp-nebula-page" /></div>
     <a className="lp-skip" href="#noi-dung">Đến nội dung chính</a>
     <LandingNav />
     <main id="noi-dung" tabIndex={-1}>

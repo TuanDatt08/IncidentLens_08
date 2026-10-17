@@ -1,0 +1,27 @@
+/* Shared soft cumulus: irregular lobes, diffuse underside and directional daylight. */
+.daylight-clouds {display:none;position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+html[data-theme='light'] .daylight-clouds {display:block;}
+.daylight-cloud {position:absolute;left:0;height:var(--cloud-height,100px);animation:daylight-cloud-travel 120s linear infinite;opacity:.8;filter:blur(3px);will-change:transform;}
+.daylight-cloud > i {position:absolute;border-radius:48% 55% 46% 52%;background:radial-gradient(ellipse at 40% 27%,#ffffffed 0%,#ffffffcf 32%,#f2f6fac2 57%,#d9e5ee70 77%,transparent 100%);box-shadow:none;filter:blur(2px);}
+.daylight-cloud > i:nth-child(3n) {filter:blur(4px);opacity:.85;}
+.daylight-cloud > b {position:absolute;left:7%;right:3%;bottom:0;height:35%;border-radius:50%;background:radial-gradient(ellipse,#d5e2ed55,#eaf2f75c 45%,transparent 74%);filter:blur(7px);}
+.daylight-cloud:nth-child(2n) {opacity:.58;filter:blur(5px);}
+.daylight-cloud:nth-child(5) {opacity:.42;filter:blur(6px);}
+.landing-galaxy .daylight-clouds {position:fixed;}
+.daylight-clouds-thin .daylight-cloud {opacity:.27;filter:blur(7px);height:calc(var(--cloud-height,100px) * .6);}
+.daylight-clouds-thin .daylight-cloud:nth-child(2n) {opacity:.18;filter:blur(9px);}
+.daylight-clouds-thin .daylight-cloud > b {opacity:.35;}
+@keyframes daylight-cloud-travel {from{transform:translate3d(-550px,0,0);}to{transform:translate3d(calc(100vw + 550px),0,0);}}
+@media(max-width:650px){.daylight-cloud{scale:.72;transform-origin:left center;}}
+@media(prefers-reduced-motion:reduce){.daylight-cloud{animation:none;left:3%;will-change:auto;}.daylight-cloud:nth-child(2n){left:60%;}.daylight-cloud:nth-child(3n){left:30%;}}
+/* Give thin white clouds enough sky contrast and keep them above ambient star layers. */
+html[data-theme='light'] .landing-galaxy {background:linear-gradient(180deg,#e1edf8 0%,#edf1fa 24%,#f5f6fb 58%,#edf3fa 100%);}
+html[data-theme='light'] .landing-galaxy .daylight-clouds {z-index:1;}
+html[data-theme='light'] .landing-galaxy .daylight-clouds-thin .daylight-cloud {opacity:.68;filter:blur(3px);height:calc(var(--cloud-height,100px) * .72);}
+html[data-theme='light'] .landing-galaxy .daylight-clouds-thin .daylight-cloud:nth-child(2n) {opacity:.46;filter:blur(4px);}
+html[data-theme='light'] .landing-galaxy .daylight-clouds-thin .daylight-cloud > b {opacity:.55;}
+/* Landing daylight uses fine nebular wisps rather than large terrestrial clouds. */
+html[data-theme='light'] .landing-galaxy .daylight-clouds-thin .daylight-cloud {opacity:.4;filter:blur(6px);height:calc(var(--cloud-height,100px) * .38);scale:.74;transform-origin:left center;}
+html[data-theme='light'] .landing-galaxy .daylight-clouds-thin .daylight-cloud:nth-child(2n) {opacity:.28;filter:blur(8px);}
+html[data-theme='light'] .landing-galaxy .daylight-clouds-thin .daylight-cloud > i {background:radial-gradient(ellipse at 40% 35%,#ffffffb3 0%,#cfc4ed73 36%,#b9dce84d 62%,transparent 88%);filter:blur(5px);}
+html[data-theme='light'] .landing-galaxy .daylight-clouds-thin .daylight-cloud > b {background:radial-gradient(ellipse,#bdb0df40,#b9deeb26 45%,transparent 75%);opacity:.4;filter:blur(8px);}
