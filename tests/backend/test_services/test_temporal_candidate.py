@@ -7,7 +7,7 @@ from backend.services.video import VideoService
 from backend.services.vlm_provider import ProviderResult
 
 
-def run_candidate(tmp_path, monkeypatch, temporal, positive_first=False, invalid_final=False, video_summary=False, invalid_first=False):
+def run_candidate(tmp_path, monkeypatch, temporal, positive_first=False, invalid_final=False, video_summary=False, invalid_first=False, detailed_final=False):
     source = tmp_path/'INC-T/source'
     source.mkdir(parents=True)
     (source/'video.mp4').write_bytes(b'video')
@@ -37,7 +37,8 @@ def run_candidate(tmp_path, monkeypatch, temporal, positive_first=False, invalid
             return ProviderResult(AIIncidentAnalysisV2.model_validate({
                 'schema_version':'2.0','incident_detected':False,'event_type':'UNKNOWN',
                 'time_basis':'video_seconds','window':None,'summary':'Không thấy va chạm.',
-                'timeline':[],'factors':[],'unknowns':['Chưa rõ diễn biến.'],'review_status':'DRAFT'}),{}, {})
+                'timeline':[],'factors':[],'unknowns':['Chưa rõ diễn biến.'],'review_status':'DRAFT'}),{}, {},
+                {'scene_context': {'road_condition': 'Đường khô.'}} if detailed_final and context.decision_scope == 'FINAL_CANDIDATE' else None)
     settings=Settings(_env_file=None,qwen_flag_only=True,qwen_batch_frames=6 if temporal else 1,
                       qwen_temporal_context=temporal, qwen_video_summary=video_summary)
     incident={'incident_id':'INC-T','video_uri':'INC-T/source/video.mp4','telemetry_uri':'INC-T/source/log.csv',
@@ -66,6 +67,21 @@ def test_invalid_final_is_not_accepted_as_an_uncontested_negative(tmp_path,monke
     result,calls,manifest=run_candidate(tmp_path,monkeypatch,True,invalid_final=True)
     assert result.analysis.model_metadata['detection_state'].startswith('REVIEW_REQUIRED')
     assert manifest['candidate_decisions'][0]['analyses']==[]
+    view = result.analysis.model_metadata['structured_analyses'][0]
+    assert view['analysis_status'] == 'INCONCLUSIVE'
+    assert view['outcome']['collision_occurred'] is None
+    assert view['scene_context']['road_condition'] == 'UNKNOWN'
+
+
+def test_valid_final_details_are_persisted_without_promoting_negative_report(tmp_path, monkeypatch):
+    result, _, manifest = run_candidate(tmp_path, monkeypatch, True, detailed_final=True)
+    assert not result.analysis.incident_detected
+    view = result.analysis.model_metadata['structured_analyses'][0]
+    assert view['scene_context']['road_condition'] == 'Đường khô.'
+    assert view['data_quality']['telemetry_available'] is True
+    assert view['data_quality']['time_sync_reliable'] is True
+    assert view['analysis_status'] == 'INCONCLUSIVE'
+    assert manifest['structured_analyses'] == [view]
 
 
 def test_temporal_batches_overlap_and_final_decision_has_candidate_context(tmp_path,monkeypatch):

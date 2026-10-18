@@ -18,6 +18,7 @@ from uuid import uuid4
 
 import httpx
 
+from backend.models.analysis_details import AnalysisDetails, DetailedAIIncidentAnalysisV2
 from backend.models.analysis_v2 import AIIncidentAnalysisV2
 from backend.services.evidence_extraction import EvidenceAsset, file_hash
 from backend.services.evidence_validation import EvidenceRegistry, validate_analysis
@@ -28,9 +29,22 @@ from backend.services.telemetry_consistency import braking_measurements
 TELEMETRY_ALLOWLIST = frozenset({"time_s", "speed", "brake", "acceleration", "jerk", "collision_intensity", "mode"})
 
 
-def detection_output_schema() -> dict:
+def detection_output_schema(model=AIIncidentAnalysisV2) -> dict:
     """Expose detection invariants to local structured-output grammars."""
-    schema = AIIncidentAnalysisV2.model_json_schema()
+    schema = model.model_json_schema()
+    if model is DetailedAIIncidentAnalysisV2:
+        def require_fields(node):
+            if isinstance(node, dict):
+                node.pop('default', None)
+                if node.get('type') == 'object':
+                    node['required'] = list(node.get('properties', {}))
+                for value in node.values():
+                    require_fields(value)
+            elif isinstance(node, list):
+                for value in node:
+                    require_fields(value)
+        require_fields(schema)
+        schema['$defs']['AnalysisDetails']['properties']['evidence']['minItems'] = 1
     definitions = schema.pop("$defs")
     detected, absent = deepcopy(schema), deepcopy(schema)
     detected["properties"]["incident_detected"] = {"const": True}
@@ -141,6 +155,7 @@ class ProviderConfig:
     requests_dir: str | None = None
     compact_context: bool = False
     reasoning_effort: str | None = None
+    detailed_candidate_output: bool = False
 
     def extra_body(self) -> dict:
         return {"reasoning_effort": self.reasoning_effort} if self.reasoning_effort else {}
@@ -151,6 +166,7 @@ class ProviderResult:
     analysis: AIIncidentAnalysisV2
     provenance: dict
     usage: dict
+    details: dict | None = None
 
 
 class VLMProvider(Protocol):
@@ -206,9 +222,26 @@ class HTTPVLMProvider:
         instructions = read_prompt(config.prompt_path) if config.prompt_path else "Analyze only supplied chronological evidence. Cite valid evidence IDs/time/source. Distinguish OBSERVED, SUPPORTED_INFERENCE, HYPOTHESIS, UNKNOWN. Internal causes without logs must remain UNKNOWN/HYPOTHESIS. Conflicts and missing coverage go in unknowns. Return only schema 2.0 JSON with DRAFT; never approve."
         if config.compact_context:
             instructions += "\nTelemetry/flags tables have ordered columns and rows of values in that column order; null means missing."
-        prompt = instructions + "\n" + json.dumps({"duration_s": context.duration_s, "candidate_window": context.candidate_window, "candidate_observations": () if context.trigger_memory is not None else context.candidate_observations, "trigger_memory": context.trigger_memory, "decision_scope": context.decision_scope or ("FINAL_CANDIDATE" if context.candidate_observations else "SUPPLIED_SEQUENCE"), "flags": compact_records(context.flags) if config.compact_context else context.flags, "telemetry": compact_records(telemetry) if config.compact_context else telemetry, "telemetry_findings": telemetry_findings, "telemetry_units": {"time_s": "video_seconds", "speed": "m/s", "acceleration": "m/s²", "jerk": "m/s³", "brake": "0..1"}, "telemetry_sampling": "bracketing rows at supplied frames and flags" if config.prompt_path else "all supplied rows", "evidence": refs_payload, "output_schema": AIIncidentAnalysisV2.model_json_schema()}, ensure_ascii=False, separators=(",", ":"))
+        detailed = config.detailed_candidate_output and context.decision_scope == 'FINAL_CANDIDATE'
+        output_model = DetailedAIIncidentAnalysisV2 if detailed else AIIncidentAnalysisV2
+        if detailed:
+            instructions += (
+                '\nFINAL DETAIL ENVELOPE: fill details with concise Vietnamese scene_context, phase_summary, '
+                'event_details, causal_analysis, outcome, data_quality and evidence, matching output_schema. '
+                'Each factual section must be supported by the attached images or supplied synchronized telemetry. '
+                'Cite currently attached evidence in details.evidence with exact source and video timestamp. '
+                'details.evidence must contain at least one observation even when incident_detected is false; '
+                'use an evidence_id and timestamp exactly as listed in the supplied evidence table. '
+                'Do not create new claims about unattached historical images. Use UNKNOWN/null/[] for missing facts; '
+                'root cause, injury and damage must remain unknown without direct evidence. '
+                'Keep original incident_detected/window/timeline/factors rules even for a negative conclusion. '
+                'No candidate-only result establishes complete video coverage. '
+                'Use at most six timeline/evidence items, four factors and six unknowns; '
+                'one short sentence per descriptive field. Do not copy the memory ledger into the output.'
+            )
+        prompt = instructions + "\n" + json.dumps({"duration_s": context.duration_s, "candidate_window": context.candidate_window, "candidate_observations": () if context.trigger_memory is not None else context.candidate_observations, "trigger_memory": context.trigger_memory, "decision_scope": context.decision_scope or ("FINAL_CANDIDATE" if context.candidate_observations else "SUPPLIED_SEQUENCE"), "flags": compact_records(context.flags) if config.compact_context else context.flags, "telemetry": compact_records(telemetry) if config.compact_context else telemetry, "telemetry_findings": telemetry_findings, "telemetry_units": {"time_s": "video_seconds", "speed": "m/s", "acceleration": "m/s²", "jerk": "m/s³", "brake": "0..1"}, "telemetry_sampling": "bracketing rows at supplied frames and flags" if config.prompt_path else "all supplied rows", "evidence": refs_payload, "output_schema": output_model.model_json_schema()}, ensure_ascii=False, separators=(",", ":"))
         prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
-        output_schema = detection_output_schema() if config.compact_context or config.kind == "self_hosted" else AIIncidentAnalysisV2.model_json_schema()
+        output_schema = detection_output_schema(output_model) if config.compact_context or config.kind == "self_hosted" else output_model.model_json_schema()
         payload = {"model": config.model, "temperature": 0, "max_tokens": config.max_output_tokens, "response_format": {"type": "json_schema", "json_schema": {"name": "incident_analysis_v2", "strict": True, "schema": output_schema}}, "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, *images]}], **config.extra_body()}
         request_id = uuid4().hex
         if config.requests_dir:
@@ -254,8 +287,26 @@ class HTTPVLMProvider:
                         raise
                     journal(raw, attempt, response.status_code, provider_response=decoded)
                     diagnostics('validation', 'Backend kiểm tra schema V2 và evidence của nhánh log.', usage=decoded.get('usage', {}), latency_s=time.monotonic()-start)
-                    analysis = AIIncidentAnalysisV2.model_validate_json(raw, context={"video_duration_s": context.duration_s})
+                    parsed = output_model.model_validate_json(raw, context={"video_duration_s": context.duration_s})
+                    details = parsed.details.model_dump(mode='json') if detailed else None
+                    analysis = AIIncidentAnalysisV2.model_validate(parsed.model_dump(exclude={'details'}), context={"video_duration_s": context.duration_s})
                     validate_context_analysis(analysis, context)
+                    if detailed:
+                        if (parsed.details.model_dump(exclude={'evidence', 'data_quality'})
+                                != AnalysisDetails().model_dump(exclude={'evidence', 'data_quality'})
+                                and not parsed.details.evidence):
+                            raise ValueError('detail evidence is required for factual detail sections')
+                        if not analysis.incident_detected and (parsed.details.outcome.collision_occurred
+                                                             or parsed.details.outcome.near_miss_occurred):
+                            raise ValueError('detail outcome cannot confirm an unconfirmed incident')
+                        attached = {asset.evidence_id: asset for asset in registry.assets
+                                    if asset.evidence_id in attached_ids or (asset.source == 'TELEMETRY' and telemetry)}
+                        for item in parsed.details.evidence:
+                            asset = attached.get(item.evidence_id)
+                            if (asset is None or item.source != asset.source
+                                    or not asset.time_start_s <= item.time_s <= asset.time_end_s
+                                    or context.candidate_window and not context.candidate_window[0] <= item.time_s <= context.candidate_window[2]):
+                                raise ValueError('detail evidence must match an attached asset, source and video timestamp')
                     usage = decoded.get("usage", {})
                     input_tokens, output_tokens = usage.get("prompt_tokens"), usage.get("completion_tokens")
                     if any(value is not None and (isinstance(value, bool) or not isinstance(value, int) or value < 0) for value in (input_tokens, output_tokens)):
@@ -264,7 +315,7 @@ class HTTPVLMProvider:
                     if attempt == 1 and input_tokens is not None and output_tokens is not None and config.input_usd_per_million is not None and config.output_usd_per_million is not None:
                         cost = (input_tokens * config.input_usd_per_million + output_tokens * config.output_usd_per_million) / 1_000_000
                     provenance = {"provider": config.kind, "model": config.model, "revision": config.revision, "prompt_version": config.prompt_version, "prompt_sha256": prompt_hash, "schema_version": "2.0", "config_hash": hashlib.sha256(json.dumps(asdict(config), sort_keys=True).encode()).hexdigest(), "input_hashes": [frame.sha256 for frame in context.frames], "pricing_source": config.pricing_source}
-                    return ProviderResult(analysis, provenance, {"input_tokens": input_tokens, "output_tokens": output_tokens, "attempts": attempt, "latency_s": time.monotonic() - start, "cost_usd": cost, "retry_cost": "NOT_MEASURED" if attempt > 1 else "NO_RETRY"})
+                    return ProviderResult(analysis, provenance, {"input_tokens": input_tokens, "output_tokens": output_tokens, "attempts": attempt, "latency_s": time.monotonic() - start, "cost_usd": cost, "retry_cost": "NOT_MEASURED" if attempt > 1 else "NO_RETRY"}, details)
                 except httpx.TransportError as exc:
                     journal(content.decode("utf-8", errors="replace") if content else None, attempt, error=type(exc).__name__)
                     if attempt == config.max_attempts:
