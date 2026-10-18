@@ -128,7 +128,7 @@ def create_local_provider(settings: Settings | None = None) -> LocalQwenProvider
     validate_local_endpoint(settings.qwen_endpoint)
     model = settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else "incidentlens-qwen-local"
     revision = model if settings.qwen_runtime == "ollama" else settings.qwen_model_file
-    config = ProviderConfig("self_hosted", settings.qwen_endpoint, model, revision, timeout_s=settings.qwen_timeout_s, max_attempts=1, max_frames=settings.qwen_batch_frames, prompt_version="qwen-local-1", prompt_path=settings.qwen_prompt_path, outputs_path=settings.qwen_outputs_path, requests_dir=settings.qwen_requests_dir, compact_context=settings.qwen_runtime == "ollama", reasoning_effort=settings.qwen_reasoning_effort)
+    config = ProviderConfig("self_hosted", settings.qwen_endpoint, model, revision, timeout_s=settings.qwen_timeout_s, max_attempts=1, max_frames=settings.qwen_batch_frames, prompt_version="qwen-local-1", prompt_path=settings.qwen_prompt_path, outputs_path=settings.qwen_outputs_path, requests_dir=settings.qwen_requests_dir, compact_context=settings.qwen_runtime == "ollama", reasoning_effort=settings.qwen_reasoning_effort, detailed_candidate_output=True)
     create_provider(config)  # Reuse existing config validation without creating a client.
     if settings.qwen_two_stage:
         from backend.services.two_stage_qwen import FrameThenDecisionProvider

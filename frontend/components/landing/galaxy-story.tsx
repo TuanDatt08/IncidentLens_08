@@ -38,8 +38,15 @@ const stages = [
 ] as const;
 
 function WorkflowIllustration({ stage }: { stage: number }) {
+  if (stage === 1) return <div className="lp-analysis-scene" role="img" aria-label="Minh họa quét khung hình, liên kết quan sát và tạo bản nháp; không phải phân tích trực tiếp">
+    <div className="lp-analysis-grid" />
+    <div className="lp-analysis-frame lp-analysis-frame-back"><RoadIllustration selected={0} /></div>
+    <div className="lp-analysis-frame lp-analysis-frame-front"><RoadIllustration selected={1} /><div className="lp-analysis-scan" /><span className="lp-analysis-frame-caption">FRAME 0068 <span>DEMO</span></span></div>
+    <div className="lp-analysis-target"><i /><span>QUAN SÁT / 01</span></div>
+    <div className="lp-analysis-readout"><span><i /> VISION PIPELINE</span><strong>Đọc khung hình.</strong><div><b /><b /><b /><b /><b /><b /><b /><b /></div><small>VIDEO → OBSERVATION → DRAFT</small></div>
+    <span className="lp-analysis-coordinate">06.8 s / KHUNG HÌNH MINH HỌA</span>
+  </div>;
   if (stage === 0) return <div className="lp-workflow-input-art"><div className="lp-workflow-input-video"><RoadIllustration /><span>VIDEO.MP4</span></div><div className="lp-workflow-input-csv"><Gauge className="lp-icon" /><span>TELEMETRY.CSV<small>Tùy chọn</small></span><svg viewBox="0 0 160 40" aria-hidden="true"><path d="M0 28h20l12-8 18 4 13-12 12 23 15-14 20 4 17-8 13 7h20" fill="none" stroke="currentColor" strokeWidth="2" /></svg></div></div>;
-  if (stage === 1) return <svg viewBox="0 0 400 230" role="img" aria-label="Minh họa lõi phân tích tạo bản nháp báo cáo"><ellipse cx="200" cy="115" rx="135" ry="42" transform="rotate(-20 200 115)" fill="none" stroke="#8b5cf6" /><ellipse cx="200" cy="115" rx="118" ry="55" transform="rotate(27 200 115)" fill="none" stroke="#22d3ee" strokeOpacity=".7" /><circle cx="200" cy="115" r="58" fill="#231944" stroke="#b89bff" /><circle cx="200" cy="115" r="45" fill="#342267" stroke="#22d3ee" strokeOpacity=".4" /><path d="m187 96 24 19-24 19" fill="none" stroke="#dcceff" strokeWidth="3" /><circle cx="95" cy="155" r="4" fill="#22d3ee" /><circle cx="304" cy="161" r="4" fill="#e879f9" /><text x="200" y="211" textAnchor="middle" fill="#b4b6d7" fontSize="11" fontFamily="monospace">ANALYSIS → DRAFT</text></svg>;
   if (stage === 2) return <div className="lp-workflow-evidence-art"><div><RoadIllustration selected={1} /><span>FRAME / DEMO</span></div><div><FileText className="lp-icon" /><span>EV-01</span><small>Minh họa · cần kiểm tra</small></div><div><span>00:04.2</span><i /><span>00:06.8</span><i /><span>00:08.4</span></div></div>;
   return <div className="lp-workflow-report-art"><div><FileText className="lp-icon" /><span>REPORT / DEMO</span><small>BẢN NHÁP</small></div><i /><i /><i /><div><span><Check className="lp-icon" /> Kỹ sư kiểm tra</span><ArrowRight className="lp-icon" /><span>Review</span></div></div>;
 }
@@ -58,7 +65,7 @@ export function GalaxyWorkflow() {
       if (next !== undefined) { event.preventDefault(); setSelected(next); buttons.current[next]?.focus(); }
     }}><span>0{index + 1}</span><strong>{item.title}</strong><small>{item.tag}</small></button></li>)}</ol>
     <div className="lp-workflow-stage" data-stage={selected}>
-      <div className="lp-workflow-illustration" data-stage={selected}><WorkflowIllustration stage={selected} /></div>
+      <div className="lp-workflow-illustration" data-stage={selected}><div key={selected} className="lp-workflow-art-enter"><WorkflowIllustration stage={selected} /></div></div>
       <div className="lp-workflow-copy" aria-live="polite" aria-atomic="true"><p className="lp-workflow-stage-label"><span className="lp-dot" /> {stage.label}</p><h3>{stage.title}</h3><p>{stage.text}</p><div className="lp-workflow-stage-tags"><Check className="lp-icon" /><span>{stage.note}</span></div></div>
     </div>
   </div>;

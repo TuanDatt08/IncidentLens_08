@@ -25,6 +25,57 @@ def provider_response():
     return {"choices": [{"message": {"content": json.dumps(analysis)}}], "usage": {"prompt_tokens": 100, "completion_tokens": 20}}
 
 
+@pytest.mark.parametrize('invalid_time', [False, True])
+def test_local_final_candidate_returns_grounded_details_without_changing_v2_contract(tmp_path, invalid_time):
+    module, context, config = context_and_config(tmp_path, 'self_hosted')
+    context = replace(context, decision_scope='FINAL_CANDIDATE', candidate_window=(1., 2., 3.))
+    config = replace(config, detailed_candidate_output=True)
+    captured = []
+    response = provider_response()
+    payload = json.loads(response['choices'][0]['message']['content'])
+    payload['details'] = {'scene_context': {'road_condition': 'Đường khô.'},
+                          'evidence': [{'evidence_id': 'EVD-1', 'time_s': 5. if invalid_time else 2.,
+                                        'source': 'VIDEO', 'observation': 'Xe giảm tốc.', 'certainty': 'OBSERVED'}]}
+    response['choices'][0]['message']['content'] = json.dumps(payload)
+    def handle(request):
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, json=response)
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        provider = module.create_provider(config, client=client)
+        if invalid_time:
+            with pytest.raises(ValueError, match='detail evidence'):
+                provider.analyze(context)
+        else:
+            result = provider.analyze(context)
+            assert result.details['scene_context']['road_condition'] == 'Đường khô.'
+            assert result.details['outcome']['collision_occurred'] is None
+            assert 'details' not in result.analysis.model_dump()
+            assert 'details' in captured[0]['messages'][0]['content'][0]['text']
+            schema = captured[0]['response_format']['json_schema']['schema']
+            assert schema['$defs']['AnalysisDetails']['properties']['evidence']['minItems'] == 1
+
+
+@pytest.mark.parametrize('unsupported_outcome', [False, True])
+def test_detailed_candidate_rejects_missing_evidence_or_contradictory_outcome(tmp_path, unsupported_outcome):
+    module, context, config = context_and_config(tmp_path, 'self_hosted')
+    context = replace(context, decision_scope='FINAL_CANDIDATE', candidate_window=(1., 2., 3.))
+    config = replace(config, detailed_candidate_output=True)
+    response = provider_response()
+    payload = json.loads(response['choices'][0]['message']['content'])
+    payload.update(incident_detected=False, event_type='UNKNOWN', window=None, timeline=[], factors=[])
+    payload['details'] = {'scene_context': {'road_condition': 'Đường khô.'}}
+    error = 'detail evidence is required'
+    if unsupported_outcome:
+        payload['details'].update(outcome={'collision_occurred': True}, evidence=[{
+            'evidence_id': 'EVD-1', 'time_s': 2., 'source': 'VIDEO',
+            'observation': 'Xe giảm tốc.', 'certainty': 'OBSERVED'}])
+        error = 'detail outcome cannot confirm'
+    response['choices'][0]['message']['content'] = json.dumps(payload)
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json=response))) as client:
+        with pytest.raises(ValueError, match=error):
+            module.create_provider(config, client=client).analyze(context)
+
+
 def test_trigger_memory_is_transmitted_without_switching_sequence_to_final(tmp_path):
     module, context, config = context_and_config(tmp_path, 'self_hosted')
     memory = {'context_id': 'rec:job:cnd', 'observations': [{'summary': 'Earlier actor approaching', 'frame_times_s': [1.0]}]}

@@ -109,11 +109,11 @@ test('telemetry drop accepts CSV and rejects non-CSV with a screen-reader alert'
 
 test('incident filters expose their selected state and announce updated results', () => {
   const source = fs.readFileSync(path.join(frontend, 'components/incidents/incident-list.tsx'), 'utf8');
-  assert.match(source, /role="group" aria-label="Filter reports by review status on this page"/);
+  assert.match(source, /role="group" aria-label="Filter reports by review status across accessible incidents"/);
   assert.match(source, /aria-pressed=\{reviewFilter === value\}/);
   assert.match(source, /select aria-label="Processing status"/);
   assert.match(source, /role="status" aria-live="polite" aria-atomic="true"/);
-  assert.match(source, /\{filteredIncidents\.length\} matching incidents on this page\. \{listing\.total\} incidents total/);
+  assert.match(source, /\{listing\.total\} matching incidents\. Showing \{filteredIncidents\.length\} on this page\./);
 });
 
 function uploadFixture() {

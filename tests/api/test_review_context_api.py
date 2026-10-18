@@ -28,6 +28,40 @@ async def test_context_requires_verified_session(auth_client):
 
 
 @pytest.mark.asyncio
+async def test_legacy_telemetry_context_has_complete_sections_without_invented_claims(db_client, monkeypatch):
+    from backend.services import review_context
+    draft = {'schema_version': '2.0', 'incident_detected': False, 'summary': 'Candidate chưa hoàn tất.',
+             'timeline': [], 'factors': [], 'unknowns': ['Thiếu bằng chứng.']}
+    monkeypatch.setattr(review_context, 'get_incident', lambda _: {'telemetry_uri': None})
+    monkeypatch.setattr(review_context, 'get_model_metadata', lambda _: {
+        'draft_v2': draft, 'detection_state': 'REVIEW_REQUIRED_INCOMPLETE_CANDIDATE'})
+    body = (await db_client.get('/api/v1/incidents/INC-test/review-context')).json()
+    analysis = body['primary_analysis']
+    assert analysis['analysis_status'] == 'INCONCLUSIVE'
+    assert analysis['scene_context']['road_condition'] == 'UNKNOWN'
+    assert analysis['outcome']['collision_occurred'] is None
+    assert analysis['event_details']['what_happened'] == draft['summary']
+    assert analysis['data_quality']['video_coverage'] == 'PARTIAL'
+    assert analysis['timeline'] == []
+    assert body['model_output'] == draft
+
+
+@pytest.mark.asyncio
+async def test_saved_telemetry_details_preserve_candidate_identity_and_video_clock(db_client, monkeypatch):
+    from backend.services import review_context
+    details = {'incident_id': 'CND-1', 'analysis_status': 'INCONCLUSIVE',
+               'summary': 'Chưa rõ nguyên nhân phanh.', 'unknowns': ['Batch chưa hoàn tất.'],
+               'timeline': [{'time_s': 58.0, 'observation': 'Phanh.', 'evidence_ids': ['LOG-1']}],
+               'scene_context': {'road_condition': 'Đường khô.'}}
+    monkeypatch.setattr(review_context, 'get_incident', lambda _: {'telemetry_uri': None})
+    monkeypatch.setattr(review_context, 'get_model_metadata', lambda _: {
+        'draft_v2': {'summary': 'Summary'}, 'structured_analyses': [details], 'video_offset_s': 58.0})
+    body = (await db_client.get('/api/v1/incidents/INC-test/review-context')).json()
+    assert body['analyses'] == [details]
+    assert body['primary_analysis']['timeline'][0]['time_s'] == 58.0
+
+
+@pytest.mark.asyncio
 async def test_v3_context_preserves_independent_analyses_and_video_clock(db_client, monkeypatch):
     from backend.services import review_context
     uncertain = {'schema_version': 'incident_analysis_v3', 'analysis_status': 'INCONCLUSIVE',

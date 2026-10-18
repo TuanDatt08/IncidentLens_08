@@ -4,6 +4,7 @@ import "./landing.css";
 import "./galaxy.css";
 import "./landing-orbit.css";
 import "./landing-polish.css";
+import "./landing-refinement.css";
 
 export const metadata: Metadata = {
   title: "IncidentLens — Từ dữ liệu đến bằng chứng",

@@ -16,7 +16,12 @@ for (const role of ["engineer", "reviewer", "admin"] as const) {
       if (url.pathname.endsWith("/auth/me")) return route.fulfill({ json: {
         csrf_token: "ui-fixture", user: { id: role, email: `${role}@example.com`, display_name: role, roles: [role], is_active: true, must_change_password: false },
       } });
-      if (url.pathname === "/api/v1/incidents") return route.fulfill({ json: { items, total: 5, limit: 20, offset: 0 } });
+      if (url.pathname === "/api/v1/incidents") {
+        const selected = url.searchParams.get("review_status");
+        const matching = selected ? items.filter((_, index) => states[index] === selected) : items;
+        return route.fulfill({ json: { items: matching, total: matching.length, limit: 20, offset: 0,
+          summary: { total: 5, processing: { COMPLETED: 4, PROCESSING: 1 }, reviews: { DRAFT: 1, IN_REVIEW: 1, APPROVED: 1, REJECTED: 1 } } } });
+      }
       const match = url.pathname.match(/\/incidents\/INC-UI-(\d)\/report$/);
       if (match) return route.fulfill({ json: { ...mockStore.getDraft("RAV-18-0042"), incident_id: `INC-UI-${match[1]}`, review_status: states[Number(match[1])], version: 2 } });
       return route.fulfill({ status: 404, json: { error: { code: "NOT_FOUND", message: "Fixture unavailable" } } });
@@ -50,7 +55,7 @@ for (const role of ["engineer", "reviewer", "admin"] as const) {
       expect(geometry.scroll, JSON.stringify(geometry)).toBeLessThanOrEqual(geometry.width + 1);
     }
     await page.emulateMedia({ reducedMotion: "reduce" });
-    expect(await page.locator(".workspace-shell").evaluate((el) => getComputedStyle(el).transitionDuration)).toBe("0s");
+    expect(await page.locator(".workspace-shell").evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration))).toBeLessThanOrEqual(0.00001);
     const row = page.locator("tbody tr").first();
     await expect(row.locator("a")).toHaveCount(1);
     await row.scrollIntoViewIfNeeded();

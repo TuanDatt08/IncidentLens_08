@@ -29,6 +29,10 @@ float noise(vec2 p) {
   return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.)),f.x),f.y);
 }
 float cloud(vec2 p) { return noise(p)*.58+noise(p*2.03)*.28+noise(p*4.01)*.14; }
+// Continuous 3D coordinates avoid the longitude seam of spherical UV maps.
+float surfaceNoise(vec3 p) {
+  return (cloud(p.xy)+cloud(p.yz+11.)+cloud(p.zx+23.))/3.;
+}
 void main() {
   vec2 p=(gl_FragCoord.xy-u_resolution*vec2(.52,.50))/min(u_resolution.x,u_resolution.y);
   float t=u_time;
@@ -98,22 +102,31 @@ void main() {
     sphere+=violet*terminator*.10;
     sphere+=atmosphere*rim*.90+vec3(.67,.92,1.)*spec*.32;
         // Silver lunar maria and crater rims at night; glowing convection by day.
-    vec2 lunarUV=vec2(atan(surface.x,surface.z),asin(clamp(surface.y,-1.,1.)))*2.;
-    float grain=cloud(lunarUV*14.);
-    float maria=smoothstep(.3,.7,cloud(lunarUV*2.2+7.));
-    vec3 moon=mix(vec3(.48,.50,.54),vec3(.72,.73,.75),maria);
-    moon*=.94+grain*.12;
-    vec2 craterUV=lunarUV*4.;
-    vec2 craterCell=floor(craterUV), craterLocal=fract(craterUV);
-    float craterSeed=hash(craterCell);
-    vec2 center=vec2(.3+hash(craterCell+7.)*.4,.3+hash(craterCell+19.)*.4);
-    float craterRadius=.055+craterSeed*.10;
-    float craterDistance=length(craterLocal-center);
-    float craterMask=step(.68,craterSeed);
-    moon-=vec3(.065)*(1.-smoothstep(craterRadius*.6,craterRadius,craterDistance))*craterMask;
-    moon+=vec3(.055)*exp(-abs(craterDistance-craterRadius)*90.)*craterMask;
-    moon*=.38+diffuse*.75;
-    moon+=vec3(.63,.70,.83)*rim*.055;    float convection=cloud(uv*7.+currents+vec2(t*.018,0.));
+    float grain=surfaceNoise(surface*42.);
+    float maria=smoothstep(.39,.61,surfaceNoise(surface*4.));
+    float highlands=surfaceNoise(surface*12.);
+    vec3 moon=mix(vec3(.29,.31,.34),vec3(.77,.77,.74),maria);
+    moon*=.83+highlands*.34;
+    moon*=.88+grain*.24;
+    // Craters are distances on the sphere, with no tiled cells or hard joins.
+    for(int c=0;c<9;c++) {
+      float fc=float(c);
+      vec3 center=normalize(vec3(sin(fc*2.4+.6),cos(fc*1.7+1.),sin(fc*3.1+2.)));
+      float d=length(surface-center);
+      float radius=.065+mod(fc,3.)*.025;
+      moon-=vec3(.08)*(1.-smoothstep(radius*.65,radius,d));
+      moon+=vec3(.055)*exp(-abs(d-radius)*150.);
+    }
+    moon*=.26+smoothstep(-.25,.95,dot(normal,light))*.83;
+    moon+=vec3(.63,.70,.83)*rim*.045;
+    // Blend three surface projections; a single projection stretches at its tangent.
+    vec3 solarPoint=surface*16.8;
+    vec3 weights=pow(abs(surface),vec3(4.));
+    weights/=max(weights.x+weights.y+weights.z,.001);
+    vec2 solarDrift=vec2(t*.018,0.);
+    float convection=cloud(solarPoint.yz+currents+solarDrift)*weights.x
+      +cloud(solarPoint.zx+currents+solarDrift)*weights.y
+      +cloud(solarPoint.xy+currents+solarDrift)*weights.z;
     vec3 sun=mix(vec3(.94,.38,.045),vec3(1.,.85,.42),convection);
     sun*=.77+z*.25;
     sun+=vec3(.15,.07,.0)*filaments;
@@ -121,13 +134,19 @@ void main() {
     col=mix(col,sphere,1.-smoothstep(sr-.002,sr,r));
   }
   col+=foreground;
-  float edge=1.-smoothstep(.43,.69,r);
+  float edge=1.-smoothstep(.32,.47,r);
   col*=edge;
   // Premultiplied translucent light overlays the persistent fallback artwork.
   float alpha=clamp(max(max(col.r,col.g),col.b)*1.5,0.,.92);
   // Opaque surface coverage prevents the SVG texture showing through the dark
   // hemisphere; only the atmospheric outskirts blend with the baseline scene.
   alpha=max(alpha,(1.-smoothstep(sr-.002,sr,r))*.98);
+  // Fade opacity as well as radiance before reaching any canvas boundary.
+  // Radiance-only fading leaves a dark premultiplied rectangle on the night sky.
+  vec2 screenUV=gl_FragCoord.xy/u_resolution;
+  float borderDistance=min(min(screenUV.x,1.-screenUV.x),min(screenUV.y,1.-screenUV.y));
+  float boundaryFade=smoothstep(.025,.16,borderDistance);
+  alpha*=edge*boundaryFade;
   gl_FragColor=vec4(col*alpha,alpha);
 }
 `;

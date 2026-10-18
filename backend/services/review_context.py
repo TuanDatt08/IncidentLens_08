@@ -7,6 +7,7 @@ import math
 from backend.config import get_settings
 from backend.errors import ApiError
 from backend.services.access import Principal, require_permission
+from backend.services.analysis_details import structured_telemetry_analysis
 from backend.services.incidents import get_incident
 from backend.services.log_normalization import normalize_log
 from backend.services.media import _resolve_asset
@@ -42,6 +43,12 @@ def get_review_context(incident_id, *, principal: Principal):
     analyses = [item for item in draft.get('stage_b', []) if isinstance(item, dict)]
     if draft.get('schema_version') == 'incident_analysis_v3':
         analyses = [draft]
+    if not analyses and not metadata.get('draft_v3'):
+        analyses = metadata.get('structured_analyses') or []
+        if not analyses and draft:
+            analyses = [structured_telemetry_analysis(draft,
+                telemetry_available=bool(incident.get('telemetry_uri')),
+                unresolved=str(metadata.get('detection_state', '')).startswith('REVIEW_REQUIRED'))]
     primary_analysis = next((item for item in analyses if item.get('analysis_status') == 'CONFIRMED'), analyses[0] if analyses else None)
     summary = primary_analysis.get('summary') if primary_analysis else draft.get('summary')
     warnings = list(dict.fromkeys([*(draft.get('unknowns') or metadata.get('unknowns', [])),

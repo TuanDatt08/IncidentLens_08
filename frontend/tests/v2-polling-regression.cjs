@@ -9,6 +9,7 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const frontend = path.resolve(__dirname, '..');
 function load(file, mocks = {}, globals = {}) {
+  mocks['@/components/ui/page-header'] ??= { PageHeader: 'PageHeader' };
   const exports = {};
   const code = ts.transpileModule(fs.readFileSync(path.join(frontend, file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX }, fileName: file }).outputText;
   vm.runInNewContext(code, { exports, require(name) { if (name in mocks) return mocks[name]; throw new Error('Unexpected dependency: ' + name); }, URL, Error, TypeError, AbortController, DOMException, ...globals }, { filename: file });
@@ -107,7 +108,7 @@ function workspaceFixture() {
 }
 
 function incidentListFixture() {
-  const h = hooks(), requests = [];
+  const h = hooks(), time = clock(), requests = [];
   const listIncidents = (limit, offset) => { const pending = deferred(); requests.push({ limit, offset, ...pending }); return pending.promise; };
   const { IncidentList } = load('components/incidents/incident-list.tsx', {
     react: h.react, 'react/jsx-runtime': h.runtime, 'next/link': { default: 'Link' },
@@ -116,7 +117,7 @@ function incidentListFixture() {
     '@/services/incident-review.service': { loadIncidentReviews: async () => {} },
     '@/lib/format': { formatDate: () => 'date' }, '@/services/incident.service': { listIncidents },
     '@/components/ui/status-badge': { StatusBadge: 'StatusBadge' }, '@/components/ui/button': { Button: 'Button' },
-  });
+  }, { setTimeout: time.setTimeout, clearTimeout: time.clearTimeout });
   return { h, requests, render: () => h.render(IncidentList, {}) };
 }
 

@@ -38,3 +38,65 @@
 .auth-observatory[data-compact='true'] .auth-main{display:flex;justify-content:center}
 @media(max-width:900px){.auth-observatory .auth-main{gap:36px;padding-inline:28px}.auth-observatory .auth-brandbar{padding-inline:28px}.auth-observatory .auth-panel{padding:28px}}
 @media(max-width:700px){.auth-observatory .auth-main{display:flex;flex-direction:column;padding:24px 20px 40px;gap:32px}.auth-observatory .auth-brandbar{padding:16px 20px}.auth-observatory .auth-introduction{width:100%;max-width:460px}.auth-observatory .auth-introduction h2{font-size:32px}.auth-observatory .auth-kicker{margin-bottom:16px}.auth-observatory .auth-introduction-copy{margin-top:16px;font-size:13px}.auth-observatory .auth-workflow{display:none}.auth-observatory .auth-panel{padding:28px 24px}.auth-observatory .auth-home-link{font-size:12px}}
+/* Ambient cosmos stays below the readable login surface and never intercepts input. */
+.auth-layout.auth-observatory {position:relative;isolation:isolate;overflow:clip;}
+.auth-observatory .auth-cosmos {position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;}
+.auth-observatory .auth-starfield,.auth-observatory .auth-debris-field {position:absolute;inset:0;}
+.auth-starfield > i {position:absolute;border-radius:50%;background:#e7edff;box-shadow:0 0 5px #bfd7ff70;animation:auth-star-pulse 7s ease-in-out infinite;}
+.auth-starfield > i:nth-child(3n) {background:#d7bdff;animation-name:auth-star-shimmer;}
+.auth-debris-field > span {position:absolute;animation:auth-debris-drift 25s ease-in-out infinite alternate;opacity:.88;scale:1.35;filter:drop-shadow(3px 8px 8px #0005) drop-shadow(0 0 6px #a69bd132);}
+.auth-debris-field > span > i {display:block;width:100%;height:100%;clip-path:polygon(27% 0,73% 8%,100% 38%,82% 80%,41% 100%,3% 64%,0 28%);background:linear-gradient(135deg,#b5a7ca,#5c5378 32%,#29283c 34%,#5f5878 65%,#242234 67%);box-shadow:inset 3px 3px 8px #d8d0ed33;}
+.auth-debris-field > span:nth-child(3n) > i {clip-path:polygon(45% 0,90% 25%,72% 83%,37% 100%,4% 51%);background:linear-gradient(120deg,#acd6de,#344d66 35%,#1d263c 36%,#75608d 72%,#222437 73%);}
+.auth-observatory .auth-panel {background:color-mix(in srgb,var(--workspace-surface) 96%,transparent);backdrop-filter:blur(16px);}
+html[data-theme='light'] .auth-observatory .auth-cosmos {display:none;}
+@keyframes auth-star-pulse {0%,100%{opacity:.08;}23%{opacity:.2;}46%{opacity:.85;}64%{opacity:.16;}83%{opacity:.4;}}
+@keyframes auth-star-shimmer {0%,100%{opacity:.16;}31%{opacity:.1;}39%{opacity:.7;}48%{opacity:.2;}78%{opacity:.5;}}
+@keyframes auth-debris-drift {0%{transform:translate3d(-22px,28px,0) rotate(-18deg);}47%{transform:translate3d(32px,-16px,0) rotate(20deg);}100%{transform:translate3d(-8px,-52px,0) rotate(55deg);}}
+@media(max-width:650px){.auth-debris-field > span {opacity:.62;scale:1;}}
+@media(prefers-reduced-motion:reduce){.auth-starfield > i,.auth-debris-field > span{animation:none;}.auth-starfield > i{opacity:.35;}}
+/* Daylight atmosphere: soft spectral light and floating mineral fragments. */
+html[data-theme='light'] .auth-layout.auth-observatory {background:radial-gradient(ellipse at 8% 18%,#e4dff580,transparent 52%),radial-gradient(ellipse at 92% 80%,#d4edf280,transparent 50%),#f5f6fb;}
+html[data-theme='light'] .auth-observatory .auth-cosmos {display:block;}
+html[data-theme='light'] .auth-observatory .auth-cosmos::before {content:'';position:absolute;inset:-20%;background:linear-gradient(118deg,transparent 24%,#c8b9ed20 35%,#ffffff80 42%,transparent 51%),linear-gradient(130deg,transparent 53%,#b9e4ed30 64%,transparent 73%);transform:rotate(-8deg);animation:auth-daylight-drift 27s ease-in-out infinite alternate;}
+html[data-theme='light'] .auth-observatory .auth-cosmos::after {content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 18% 62%,#fff9ed66,transparent 43%);pointer-events:none;}
+html[data-theme='light'] .auth-starfield > i {background:#8877b4;box-shadow:0 0 5px #a995d444;opacity:.25;}
+html[data-theme='light'] .auth-starfield > i:nth-child(3n) {background:#609aa9;}
+html[data-theme='light'] .auth-starfield > i:nth-child(n+19) {display:none;}
+html[data-theme='light'] .auth-debris-field > span {opacity:.66;filter:drop-shadow(5px 10px 7px #65598324);}
+html[data-theme='light'] .auth-debris-field > span > i {background:linear-gradient(135deg,#ffffff,#c8bce2 31%,#9b8bb8 33%,#e4dded 64%,#afa2c9 66%);box-shadow:inset 3px 3px 8px #ffffff99;}
+html[data-theme='light'] .auth-debris-field > span:nth-child(3n) > i {background:linear-gradient(120deg,#f8ffff,#abd3db 34%,#7fa9bd 36%,#dfedf1 71%,#9cb3cb 73%);}
+html[data-theme='light'] .auth-observatory .auth-panel {background:#ffffffed;border-color:#d9d5e9;box-shadow:0 24px 65px #51407512,inset 0 1px #ffffff;}
+@keyframes auth-daylight-drift {from{transform:translate3d(-2%,1%,0) rotate(-8deg);}to{transform:translate3d(5%,-3%,0) rotate(-3deg);}}
+@media(prefers-reduced-motion:reduce){html[data-theme='light'] .auth-observatory .auth-cosmos::before{animation:none;}}
+/* Morning sky replaces the space treatment in the light theme. */
+html[data-theme='light'] .auth-layout.auth-observatory {background:linear-gradient(180deg,#dceef9 0%,#eaf3fb 48%,#faf6ef 100%);}
+html[data-theme='light'] .auth-observatory .auth-starfield,
+html[data-theme='light'] .auth-observatory .auth-debris-field {display:none;}
+html[data-theme='light'] .auth-observatory .auth-cosmos::before {inset:-10% -25%;background:radial-gradient(ellipse 180px 55px at 12% 24%,#ffffffed 15%,#ffffffa6 48%,transparent 73%),radial-gradient(ellipse 260px 76px at 26% 28%,#ffffffed 12%,#ffffff99 50%,transparent 73%),radial-gradient(ellipse 230px 62px at 66% 64%,#ffffffd9 15%,#ffffff80 51%,transparent 75%),radial-gradient(ellipse 310px 85px at 82% 59%,#ffffffed 15%,#ffffff99 48%,transparent 75%),radial-gradient(ellipse 200px 55px at 47% 12%,#ffffffa6 10%,transparent 74%);filter:blur(9px);animation:auth-morning-clouds 65s ease-in-out infinite alternate;transform:none;}
+html[data-theme='light'] .auth-observatory .auth-cosmos::after {inset:-15%;background:radial-gradient(circle at 85% 15%,#fffdf2f2 0%,#fff3c780 9%,#fff5d52e 23%,transparent 42%),conic-gradient(from 150deg at 85% 15%,transparent 0deg,#fff9df40 10deg,transparent 18deg,transparent 27deg,#fff9df30 35deg,transparent 43deg,transparent 55deg,#ffffff30 64deg,transparent 76deg);animation:auth-morning-light 18s ease-in-out infinite alternate;}
+html[data-theme='light'] .auth-observatory .auth-panel {background:#ffffffed;border-color:#ffffffcc;box-shadow:0 24px 65px #436a8c14,inset 0 1px #ffffff;}
+@keyframes auth-morning-clouds {from{transform:translate3d(-3%,0,0);}to{transform:translate3d(6%,2%,0);}}
+@keyframes auth-morning-light {from{opacity:.65;}to{opacity:1;}}
+@media(prefers-reduced-motion:reduce){html[data-theme='light'] .auth-observatory .auth-cosmos::before,html[data-theme='light'] .auth-observatory .auth-cosmos::after{animation:none;}}
+/* Separate cloud geometry from the stationary sky and solar light layers. */
+.auth-cloud-layer {display:none;}
+html[data-theme='light'] .auth-observatory .auth-cosmos::before {display:none;}
+html[data-theme='light'] .auth-cloud-layer {display:block;position:absolute;inset:0;overflow:hidden;perspective:1000px;}
+.auth-cloud {position:absolute;left:0;height:100px;animation:auth-cloud-east 100s linear infinite;filter:drop-shadow(0 14px 14px #63809c16);opacity:.85;}
+.auth-cloud > i {position:absolute;bottom:0;border-radius:50%;background:radial-gradient(ellipse at 38% 22%,#fff 0%,#ffffff 32%,#f3f7fb 58%,#d5e2ed 86%,#c8d8e650 100%);box-shadow:inset 0 6px 13px #ffffffd9,inset -7px -12px 18px #9ab5cc26;}
+.auth-cloud > i:nth-child(1) {left:0;width:48%;height:58%;}
+.auth-cloud > i:nth-child(2) {left:16%;bottom:7%;width:42%;height:92%;}
+.auth-cloud > i:nth-child(3) {left:40%;bottom:3%;width:38%;height:75%;}
+.auth-cloud > i:nth-child(4) {right:0;width:37%;height:49%;}
+.auth-cloud > i:nth-child(5) {left:12%;bottom:-9%;width:77%;height:48%;background:radial-gradient(ellipse at 50% 15%,#ffffff,#eaf1f7 67%,#d8e5efaa);filter:blur(3px);}
+.auth-cloud:nth-child(2n) {height:76px;opacity:.65;filter:blur(1px) drop-shadow(0 10px 14px #63809c12);}
+.auth-cloud:nth-child(5) {height:58px;opacity:.5;filter:blur(2px);}
+@keyframes auth-cloud-east {from{transform:translate3d(-420px,0,0);}to{transform:translate3d(calc(100vw + 420px),0,0);}}
+@media(max-width:650px){.auth-cloud{scale:.7;transform-origin:left center;}}
+@media(prefers-reduced-motion:reduce){.auth-cloud{animation:none;left:6%;}.auth-cloud:nth-child(2n){left:55%;}.auth-cloud:nth-child(3){left:30%;}}
+/* Translucent header surface; content retains full opacity. */
+html[data-theme='dark'] .auth-observatory .auth-brandbar {background:rgb(5 6 17 / .75);backdrop-filter:blur(14px);}
+html[data-theme='light'] .auth-observatory .auth-brandbar {background:rgb(245 249 253 / .75);backdrop-filter:blur(14px);}
+html[data-theme='dark'] .auth-layout.auth-observatory {background:transparent;}
+html[data-theme='dark'] .auth-observatory .auth-brandbar {background:rgb(5 6 17 / .25);backdrop-filter:blur(8px);}
+html[data-theme='light'] .auth-observatory .auth-brandbar {background:rgb(245 249 253 / .25);backdrop-filter:blur(8px);}

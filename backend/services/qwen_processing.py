@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from backend.config import Settings, get_settings
 from backend.models.analysis_v2 import AIIncidentAnalysisV2
 from backend.models.contracts import AnalysisResult, EvidenceV1
+from backend.services.analysis_details import structured_telemetry_analysis
 from backend.services.candidate_detection import Candidate, DetectionConfig, detect_candidates
 from backend.services.evidence_extraction import (
     EvidenceAsset,
@@ -95,6 +96,7 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
     model_summaries = []
     consistency_checks = []
     candidate_decisions = []
+    structured_analyses = []
     unresolved_candidates = []
     summary_records = []
     positive_by_candidate = {}
@@ -188,6 +190,7 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
         batches = trigger_batches(inference_frames, batch_size) if settings.qwen_temporal_context else [(inference_frames[start:start + batch_size], ()) for start in range(0, len(inference_frames), batch_size)]
         observations = []
         candidate_results = []
+        candidate_details = []
         if settings.qwen_temporal_context:
             overview = overview_frames(inference_frames, batch_size, candidate.critical_s)
             batches.append((overview, ('OVERVIEW',)*len(overview)))
@@ -213,6 +216,7 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
                 unresolved_candidates.append(candidate.candidate_id)
                 if final:
                     candidate_results = []
+                    candidate_details = []
                 continue
             if result.analysis.window and not candidate.start_s <= result.analysis.window.start_s < result.analysis.window.end_s <= candidate.end_s:
                 raise InsufficientEvidence("Local report window is outside candidate.")
@@ -227,6 +231,7 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
             service.write_json(ledger_path, {'context_id': context_id, 'observations': observations})
             if not settings.qwen_temporal_context or final:
                 candidate_results.append(result.analysis)
+                candidate_details.append(result.details)
         candidate_positive = [item for item in candidate_results if item.incident_detected]
         conflict = negative_telemetry_conflict(rows, candidate.start_s, candidate.end_s, bool(candidate_positive)) if candidate_results else None
         if conflict:
@@ -236,6 +241,18 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
             unknowns.append('MODEL_TEMPORAL_CONFLICT: preliminary sequence and final candidate verdict disagree; engineer review required.')
             unresolved_candidates.append(candidate.candidate_id)
         candidate_decisions.append({'candidate_id': candidate.candidate_id, 'analyses': [item.model_dump(mode='json') for item in candidate_results], 'consistency_check': conflict})
+        for item, detail in zip(candidate_results, candidate_details):
+            view = structured_telemetry_analysis(item.model_dump(mode='json'), details=detail,
+                candidate_id=candidate.candidate_id, telemetry_available=bool(rows),
+                unresolved=bool(conflict) or candidate.candidate_id in unresolved_candidates)
+            view['data_quality']['time_sync_reliable'] = alignment.quality == 'VERIFIED' if alignment else None
+            structured_analyses.append(view)
+        if not candidate_results:
+            structured_analyses.append(structured_telemetry_analysis({
+                'incident_detected': False, 'time_basis': 'video_seconds', 'review_status': 'DRAFT',
+                'summary': 'Chưa hoàn tất kết luận candidate; cần kiểm tra bằng chứng.',
+                'timeline': [], 'unknowns': ['Kết luận cuối không hợp lệ; không tự xác nhận các nhận định sơ bộ.'],
+            }, candidate_id=candidate.candidate_id, telemetry_available=bool(rows), unresolved=True))
         model_summaries.extend(item.summary for item in candidate_results)
         results.extend(candidate_positive)
         positive_by_candidate[candidate.candidate_id] = candidate_positive
@@ -268,7 +285,7 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
         summary = video_summary['summary']
     if unresolved_candidates:
         summary = 'Chưa thể kết luận toàn candidate: kết quả tổng hợp thiếu hoặc mâu thuẫn. Cần kỹ sư review.\n' + summary
-    service.write_json(directory / "local-analysis.json", {"coverage": asdict(detection.coverage), "visual_coverage": {"complete": False, "source_duration_s": duration, "candidate_windows": [[candidate.start_s, candidate.end_s] for candidate in candidates], "extracted_frame_count": extracted_frame_count, "model_frame_times_s": sorted(set(submitted_times)), "model_frame_count": len(set(submitted_times)), "validated_model_frame_times_s": sorted(set(inspected_times)), "validated_model_frame_count": len(set(inspected_times))}, "alignment": asdict(alignment) if alignment else {"quality": "UNKNOWN"}, "unknowns": list(dict.fromkeys(unknowns)), "calls": calls, "results": records, "candidate_decisions": candidate_decisions, "video_summary": video_summary})
+    service.write_json(directory / "local-analysis.json", {"coverage": asdict(detection.coverage), "visual_coverage": {"complete": False, "source_duration_s": duration, "candidate_windows": [[candidate.start_s, candidate.end_s] for candidate in candidates], "extracted_frame_count": extracted_frame_count, "model_frame_times_s": sorted(set(submitted_times)), "model_frame_count": len(set(submitted_times)), "validated_model_frame_times_s": sorted(set(inspected_times)), "validated_model_frame_count": len(set(inspected_times))}, "alignment": asdict(alignment) if alignment else {"quality": "UNKNOWN"}, "unknowns": list(dict.fromkeys(unknowns)), "calls": calls, "results": records, "candidate_decisions": candidate_decisions, "structured_analyses": structured_analyses, "video_summary": video_summary})
     if on_progress:
         on_progress(2, calls, calls)
     if calls and not inspected_times:
@@ -283,10 +300,10 @@ def process_local_incident(incident: dict, *, storage_root: str | Path, provider
                 return ProcessedResult(AnalysisResult(incident_detected=False, model_metadata={'detection_state': 'NOT_ANALYZED_NO_FLAGS', 'requires_engineer_review': True, 'unknowns': ['No qualifying telemetry flags; video was not analyzed.']}), [], None)
             raise InsufficientEvidence("No candidate was analyzed; inspect local-analysis.json for missing coverage.")
         # V1 requires an empty no-detection report; retain unknowns in the private manifest.
-        return ProcessedResult(AnalysisResult(incident_detected=False, model_metadata={"provider": settings.qwen_runtime, "model": settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else settings.qwen_model_file, "manifest": (directory.relative_to(root) / "local-analysis.json").as_posix(), "detection_state": "REVIEW_REQUIRED_TELEMETRY_CONFLICT" if consistency_checks else "REVIEW_REQUIRED_INCOMPLETE_CANDIDATE" if unresolved_candidates else "NO_DETECTION_IN_SAMPLED_EVIDENCE", "consistency_checks": consistency_checks, "requires_engineer_review": True, "video_summary": video_summary, "draft_v2": model_draft.model_dump(mode="json"), "unknowns": list(dict.fromkeys(unknowns))}), [], None)
+        return ProcessedResult(AnalysisResult(incident_detected=False, model_metadata={"provider": settings.qwen_runtime, "model": settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else settings.qwen_model_file, "manifest": (directory.relative_to(root) / "local-analysis.json").as_posix(), "detection_state": "REVIEW_REQUIRED_TELEMETRY_CONFLICT" if consistency_checks else "REVIEW_REQUIRED_INCOMPLETE_CANDIDATE" if unresolved_candidates else "NO_DETECTION_IN_SAMPLED_EVIDENCE", "consistency_checks": consistency_checks, "requires_engineer_review": True, "video_summary": video_summary, "draft_v2": model_draft.model_dump(mode="json"), "structured_analyses": structured_analyses, "unknowns": list(dict.fromkeys(unknowns))}), [], None)
     offset = results[0].window.critical_s
     timeline = [{**item.model_dump(mode="json"), "time_s": item.time_s - offset} for result in results for item in result.timeline]
-    analysis = AnalysisResult(incident_detected=True, incident_type=results[0].event_type, incident_window={"start": min(result.window.start_s for result in results) - offset, "critical": 0.0, "end": max(result.window.end_s for result in results) - offset}, summary=summary, timeline=sorted(timeline, key=lambda item: item["time_s"]), key_factors=[item.model_dump(mode="json") for result in results for item in result.factors], unknowns=list(dict.fromkeys(unknowns)), model_metadata={"provider": settings.qwen_runtime, "model": settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else settings.qwen_model_file, "manifest": (directory.relative_to(root) / "local-analysis.json").as_posix(), "time_basis": "incident_relative", "video_offset_s": offset, "detection_state": "REVIEW_REQUIRED_TELEMETRY_CONFLICT" if consistency_checks else "REVIEW_REQUIRED_INCOMPLETE_CANDIDATE" if unresolved_candidates else "INCIDENT_DETECTED", "consistency_checks": consistency_checks, "unknowns": list(dict.fromkeys(unknowns)), "requires_engineer_review": True, "draft_v2": model_draft.model_dump(mode="json")})
+    analysis = AnalysisResult(incident_detected=True, incident_type=results[0].event_type, incident_window={"start": min(result.window.start_s for result in results) - offset, "critical": 0.0, "end": max(result.window.end_s for result in results) - offset}, summary=summary, timeline=sorted(timeline, key=lambda item: item["time_s"]), key_factors=[item.model_dump(mode="json") for result in results for item in result.factors], unknowns=list(dict.fromkeys(unknowns)), model_metadata={"provider": settings.qwen_runtime, "model": settings.qwen_ollama_model if settings.qwen_runtime == "ollama" else settings.qwen_model_file, "manifest": (directory.relative_to(root) / "local-analysis.json").as_posix(), "time_basis": "incident_relative", "video_offset_s": offset, "detection_state": "REVIEW_REQUIRED_TELEMETRY_CONFLICT" if consistency_checks else "REVIEW_REQUIRED_INCOMPLETE_CANDIDATE" if unresolved_candidates else "INCIDENT_DETECTED", "consistency_checks": consistency_checks, "unknowns": list(dict.fromkeys(unknowns)), "requires_engineer_review": True, "draft_v2": model_draft.model_dump(mode="json"), "structured_analyses": structured_analyses})
     evidence = [EvidenceV1(evidence_id=asset.evidence_id, kind="telemetry" if asset.source == "TELEMETRY" else "frame" if asset.frame_order is not None else "video", uri=asset.path.relative_to(root).as_posix(), sha256=asset.sha256, time_range_s=(asset.time_start_s - offset, asset.time_end_s - offset), bytes=asset.path.stat().st_size, media_type=asset.media_type) for asset in evidence_assets]
     if video_summary:
         analysis.model_metadata['video_summary'] = video_summary
