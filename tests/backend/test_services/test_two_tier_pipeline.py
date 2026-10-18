@@ -136,6 +136,8 @@ def test_pipeline_reports_a_fall_confirmed_by_both_tiers(tmp_path, monkeypatch):
             return {'a_found': 'nothing attached', 'b_boxes': []}
         if 'b_bbox' in props:
             return {'a_actor': 'motorcycle', 'b_bbox': [300, 200, 700, 900]}
+        if 'a_summary' in props:
+            return {'a_summary': 'Xe máy ngã bên lề đường.'}
         if 'crops around' in text:
             return {'a_description': 'the motorcycle tips over', 'b_choice': 'C'}
         return {'a_description': 'rider falls', 'b_choice': 'C'} if 't = 2.70s' in text else {'a_description': 'normal', 'b_choice': 'A'}
@@ -153,4 +155,5 @@ def test_pipeline_reports_a_fall_confirmed_by_both_tiers(tmp_path, monkeypatch):
     assert view['analysis_status'] == 'CONFIRMED' and view['event_details']['participants'] == ['motorcycle']
     assert view['outcome']['near_miss_occurred'] is False and view['timeline'][0]['time_s'] == 2.7   # video seconds, not rebased
     assert result.evidence and all((tmp_path / e.uri).is_file() for e in result.evidence)
-    assert sum('t = ' in q and 'crops' not in q for q in asked) == 4                 # 10 frames -> 4 windows, no strict re-check for C
+    assert sum('t = ' in q and 'crops' not in q and 'Vietnamese' not in q for q in asked) == 4   # 10 frames -> 4 windows, no strict re-check for C
+    assert analysis.summary.endswith('Toàn clip (Qwen): Xe máy ngã bên lề đường.')

@@ -320,13 +320,30 @@ class TwoTier:
         answer = self.ask(question([float(Path(p).stem[1:]) for p in window['frames']], strict=True), paths, CHOICE)
         window['strict'], window['strict_description'] = answer.get('b_choice', '?'), answer.get('a_description', '')
 
-    def tier2(self, t0: float, t1: float, hint: str, tag: str) -> dict:
+    def overview(self) -> str:
+        """What the whole clip shows, for every result (incident or not), like a cloud model's summary. Runs last,
+        so it is told what the checks found and sees the key event, and cannot contradict the verdict."""
+        events = [e for e in self.memory['events'] if e['kind'] and e['confidence'] == 'high']
+        times = {round((i + 0.5) * self.duration / 8, 2) for i in range(8)}
+        times |= {round(e['start_s'] + i * (e['end_s'] - e['start_s']) / 3, 2) for e in events[:1] for i in range(4)}
+        times = sorted(times)
+        frames = [self.service.extract_frame(self.source, t, self.work / 'overview' / f't{t:07.2f}.jpg', video_filter='scale=640:-2') for t in times]
+        facts = [f'{e["kind"].replace("_", " ").lower()} with a {e["tier2"]["actor"]} at {e["start_s"]:.1f}-{e["end_s"]:.1f}s' for e in events]
+        facts += [f'the camera car brakes hard at {t["peak_s"]:.1f}s' for t in self.memory.get('braking_triggers', [])]
+        answer = self.ask(f'These are {len(frames)} frames from a forward dashcam clip, in time order (t = {", ".join(f"{t:.1f}s" for t in times)}). '
+                          'The camera car is the vehicle recording the video (its hood may show at the bottom); call it "xe ghi hình". '
+                          + (f'Other checks found: {"; ".join(facts)}. ' if facts else 'Other checks found no incident. ')
+                          + 'Describe in Vietnamese, at most 60 words: the scene, what the camera car does, the notable road users and '
+                          'what they do. Only state what is visible.', frames, obj(a_summary=TEXT), max_tokens=300)
+        return answer.get('a_summary', answer.get('unparsed', '')).strip()
+
+    def tier2(self, t0: float, t1: float, hint: str, tag: str, dense: bool = False) -> dict:
         fps = min(4.0, 5 / max(0.5, t1 - t0))
         times = [round(t0 + i / fps, 2) for i in range(int((t1 - t0) * fps) + 1)]
         frames = [(t, self.band(t, self.work / tag / f't{t:07.2f}.jpg')) for t in times]
         bw, bh = self.width, self.memory['hood_y'] - int(0.30 * self.height)
         found = []
-        for _, path in frames:
+        for _, path in ([] if dense else frames):
             answer = self.ask('Find the road user (vehicle, motorcycle, bicycle or pedestrian) closest to the camera car\'s path ahead. '
                               'Gray boxes are masks; ignore them. Give its type and its bounding box in pixel coordinates of this image; '
                               'type none and [0,0,0,0] if there is none.', [path], obj(a_actor={'enum': ACTORS}, b_bbox=BOX), max_tokens=80)
@@ -335,7 +352,8 @@ class TwoTier:
                 found.append((answer['a_actor'], to_pixels(self.settings.qwen_ollama_model, box, bw, bh)))
         if not found:
             # Night or a fast crossing: grounding can miss the road user tier 1 described (B39C6, dark SUV at 22 s).
-            # Not finding a box is not evidence of safety, so judge the dense uncropped frames instead.
+            # Not finding a box is not evidence of safety, so judge the dense uncropped frames instead. Also the
+            # second opinion when braking disagrees with the crop (a tight crop loses where the road user is).
             answer = self.ask(question(times), [p for _, p in frames], CHOICE)
             return {'actor': next(iter(named_actors(hint)), None), 'choice': answer.get('b_choice', '?'), 'grounded': False,
                     'description': answer.get('a_description', answer.get('unparsed', '')), 'crops': [[t, p.relative_to(self.root).as_posix()] for t, p in frames]}
@@ -375,7 +393,12 @@ class TwoTier:
                     self.strict(window)
             span = c_windows or run
             self.status('qwen', f'Two-tier tầng 2: crop đối tượng {span[0]["start_s"]:.1f}–{span[-1]["end_s"]:.1f} s.')
-            second = self.tier2(span[0]['start_s'], span[-1]['end_s'], ' '.join(w['description'] for w in span), f'event_{len(self.memory["events"]):02d}')
+            args = (span[0]['start_s'], span[-1]['end_s'], ' '.join(w['description'] for w in span), f'event_{len(self.memory["events"]):02d}')
+            second = self.tier2(*args)
+            if braking and second['choice'] not in ('B', 'C') and second.get('grounded', True):
+                # Tier 1 and hard braking agree, the crop does not (CARLA v10 030603: "pedestrian runs along the
+                # sidewalk" while crossing in front of the braking car). Ask again with the whole road in view.
+                second = {**self.tier2(*args, dense=True), 'crop_answer': second}
             decision = classify(run, second['choice'], bool(braking))
             covered += braking
             self.memory['events'].append({'start_s': run[0]['start_s'], 'end_s': run[-1]['end_s'], 'windows': len(run), 'braking': braking,
@@ -391,6 +414,7 @@ class TwoTier:
             self.memory['events'].append({'start_s': round(t0, 2), 'end_s': round(t1, 2), 'windows': 0, 'braking': [trigger], 'tier1': 'telemetry',
                                           'tier2': second, 'kind': kind, 'confidence': 'high' if kind else 'rejected'})
             self.save()
+        self.memory['overview'] = self.overview()
         self.memory['elapsed_s'] = round(time.monotonic() - started, 1)
         self.save()
         return self.result()
@@ -425,7 +449,10 @@ class TwoTier:
         state = 'CONFIRMED' if high else 'REVIEW_REQUIRED_TWO_TIER_CANDIDATE' if review else 'NO_INCIDENT_IN_ANALYZED_COVERAGE'
         checks = [{'window_s': [e['start_s'], e['end_s']], 'code': f'TWO_TIER_{e["kind"]}', 'confidence': e['confidence'], 'requires_engineer_review': True,
                    'message': f'{e["kind"]} ({e["confidence"]}): {e["tier2"]["description"]}'} for e in events]
+        overview = self.memory.get('overview')
         review_summary = (f'{len(review)} sự kiện cần kỹ sư xem lại: ' + '; '.join(f'{e["kind"]} {e["start_s"]:.1f}–{e["end_s"]:.1f} s ({e["tier2"]["actor"]})' for e in review)) if review else None
+        review_summary = '\n'.join(filter(None, [review_summary or ('Không phát hiện sự cố.' if overview else None),
+                                                  f'Toàn clip (Qwen): {overview}' if overview else None])) or None
         metadata = {'provider': 'ollama', 'model': self.settings.qwen_ollama_model, 'pipeline': 'two_tier_v1', 'detection_state': state,
                     'requires_engineer_review': True, 'events': events, 'braking_triggers': self.memory.get('braking_triggers', []),
                     'telemetry_alignment': self.memory.get('telemetry_alignment'), 'consistency_checks': checks,
@@ -467,6 +494,7 @@ class TwoTier:
         sources = f'tầng 1, tầng 2 và {brake}' if braking and main['tier1'] != 'telemetry' else f'{brake} và tầng 2' if braking else 'tầng 1 và tầng 2'
         summary = (f'{label} ({main["tier2"]["actor"]}) trong khoảng {main["start_s"]:.1f}–{main["end_s"]:.1f} s của video; '
                    f'{sources} cùng xác nhận. Qwen mô tả: "{main["tier2"]["description"]}"')
+        summary += f'\nToàn clip (Qwen): {overview}' if overview else ''
         metadata['draft_v3']['summary'] = summary
         analysis = AnalysisResult(incident_detected=True, incident_type=incident_type(main['kind'], main['tier2']['actor']),
                                   incident_window={'start': min(main['start_s'], offset) - offset, 'critical': 0.0, 'end': max(main['end_s'], offset) - offset},
