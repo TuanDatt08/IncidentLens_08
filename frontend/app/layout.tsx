@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
+import { NightSky } from "@/components/layout/night-sky";
+
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { DeferredFont } from "@/components/layout/deferred-font";
 import "./globals.css";
 import "./interaction-theme.css";
+import "./night-sky.css";
+import "./daylight-clouds.css";
+import { DaylightClouds } from "@/components/layout/daylight-clouds";
 import { ThemeProvider, themeInitScript } from "@/components/layout/workspace-theme";
 import { RouteTransition } from "@/components/layout/route-transition";
 
@@ -16,8 +21,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: themeInitScript }} /></head>
       <body>
-        <DeferredFont />
-        <ThemeProvider><AuthProvider><RouteTransition>{children}</RouteTransition></AuthProvider></ThemeProvider>
+        <DeferredFont /><NightSky /><div className="global-day-sky" aria-hidden="true"><DaylightClouds thin /></div>
+        <div className="site-content"><ThemeProvider><AuthProvider><RouteTransition>{children}</RouteTransition></AuthProvider></ThemeProvider></div>
       </body>
     </html>
   );

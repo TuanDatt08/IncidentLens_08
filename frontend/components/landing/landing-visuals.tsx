@@ -1,6 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import GalaxyCanvas from "./galaxy-canvas";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Film, FileText, Gauge } from "@/components/icons";
 
@@ -17,12 +17,7 @@ export function RoadIllustration({ selected = 0 }: { selected?: number }) {
     <svg className="lp-dashcam-overlay" viewBox="0 0 600 338" fill="none" aria-hidden="true"><path d="M262 159v-9h14m76 0h13v9m0 64v10h-13m-76 0h-14v-10" stroke="#78edff" strokeWidth="1.5" /><path d="M255 145h117v94H255Z" stroke="#78edff" strokeDasharray="3 5" opacity=".35" /><path d="M20 20h18m-18 0v18m560-18h-18m18 0v18M20 318h18m-18 0v-18m560 18h-18m18 0v-18" stroke="#d6e7f5" opacity=".5" /></svg>
   </div>;
 }
-function UnavailableCanvas({ onUnavailable }: { onUnavailable?: () => void }) {
-  useEffect(() => { onUnavailable?.(); }, [onUnavailable]);
-  return null;
-}
 
-const GalaxyCanvas = dynamic(() => import("./galaxy-canvas").catch(() => ({ default: UnavailableCanvas })), { ssr: false, loading: () => null });
 
 function GalaxyFallback() {
   const id = useId().replace(/:/g, "");
@@ -41,7 +36,7 @@ export function HeroScene() {
   const scene = useRef<HTMLDivElement>(null);
   const frame = useRef<number>();
   const pointerEnabled = useRef(false);
-  const [loadCanvas, setLoadCanvas] = useState(false);
+  const [loadCanvas, setLoadCanvas] = useState(true);
   const [canvasState, setCanvasState] = useState("static");
   const ready = useCallback(() => setCanvasState("ready"), []);
   const unavailable = useCallback(() => setCanvasState("fallback"), []);
@@ -60,7 +55,7 @@ export function HeroScene() {
     const paint = () => {
       const mobile = width < 450;
       panels.forEach((panel, index) => {
-        const angle = elapsed / 32000 * Math.PI * 2 + [-2.45, -.35, 1.72][index];
+        const angle = elapsed / 48000 * Math.PI * 2 + [-2.45, -.35, 1.72][index];
         const depth = Math.sin(angle);
         const scale = .87 + (depth + 1) * .085;
         const radiusX = width * (mobile ? .235 : .32);
@@ -76,10 +71,11 @@ export function HeroScene() {
         panel.style.zIndex = depth > 0 ? "4" : "0";
       });
       satellites.forEach((satellite, index) => {
-        const angle = elapsed / (21000 + index * 3600) * Math.PI * 2 + index * 1.17;
-        const inclination = index % 2 ? -.32 : .40;
-        const a = Math.cos(angle) * width * (mobile ? .32 : .39);
-        const b = Math.sin(angle) * height * (.12 + (index % 3) * .035);
+        // One shared period and evenly spaced phases keep satellites apart.
+        const angle = elapsed / 48000 * Math.PI * 2 + Math.PI / 6 + index * Math.PI / 3;
+        const inclination = 0;
+        const a = Math.cos(angle) * width * .44;
+        const b = Math.sin(angle) * height * .43;
         const depth = Math.sin(angle);
         satellite.style.setProperty("--sat-x", `${(a * Math.cos(inclination) - b * Math.sin(inclination)).toFixed(2)}px`);
         satellite.style.setProperty("--sat-y", `${(a * Math.sin(inclination) + b * Math.cos(inclination)).toFixed(2)}px`);
@@ -134,7 +130,7 @@ export function HeroScene() {
         setLoadCanvas(false); setCanvasState("static");
       }
       if (timeout) clearTimeout(timeout);
-      if (visible && !document.hidden && motion.matches && !lowPower) timeout = setTimeout(() => setLoadCanvas(true), 200);
+      if (visible && !document.hidden && motion.matches && !lowPower) setLoadCanvas(true);
     };
     const observer = typeof IntersectionObserver !== "undefined" ? new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; sync(); }, { rootMargin: "40px", threshold: .02 }) : undefined;
     if (observer) observer.observe(element); else { visible = true; sync(); }

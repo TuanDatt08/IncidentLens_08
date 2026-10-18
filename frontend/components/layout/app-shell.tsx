@@ -15,7 +15,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   const { user, can, signOut } = useAuth();
 
   const [error, setError] = useState("");
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/";
   const accountMenu = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const closeOutside = (event: PointerEvent) => { if (!accountMenu.current?.contains(event.target as Node)) accountMenu.current?.removeAttribute("open"); };

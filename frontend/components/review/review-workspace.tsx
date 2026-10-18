@@ -130,8 +130,10 @@ function IncidentReview({ id }: { id: string }) {
           </div>
         </div>
         <div className="review-details min-w-0" hidden={view !== "report"}>
-          <div className="review-report min-w-0">
-            {draft && <ReportEditor id={id} draft={draft} onSaved={reportUpdated} onStateChange={setEditorState} />}
+          <div className="review-report report-document min-w-0">
+            <header className="report-document-heading"><span>INCIDENTLENS / INCIDENT REPORT</span><h2>Báo cáo phân tích sự cố</h2><p>Bản nháp, dữ liệu phân tích và bằng chứng đối chiếu trong cùng một báo cáo.</p><div><span>Incident / {id}</span>{draft && <span>Phiên bản {draft.version} · {draft.review_status}</span>}</div></header>
+            {draft && <ReportEditor id={id} draft={draft} onSaved={reportUpdated} onStateChange={setEditorState} />}            <section className="report-analysis-output" aria-label="Phân tích chi tiết"><header><span>02 / ANALYSIS</span><h2>Diễn biến & kết quả phân tích</h2><p>Phân biệt quan sát, suy luận và thông tin chưa được xác nhận.</p></header><AnalysisContext mode="analysis" id={id} currentTime={playback.currentTime} seekEnabled={previewReady && playback.ready} onSeek={(time) => videoPlayer.current?.seekTo(time, false)} /></section>
+            <section className="report-evidence-output" aria-label="Bằng chứng sự cố"><header><span>03 / EVIDENCE</span><h2>Hồ sơ bằng chứng</h2><p>Đối chiếu frame, clip và các mốc trong video gốc.</p></header>{evidence.data !== undefined && <EvidenceSection incidentId={id} evidence={evidence.data} onSeek={seekRelative} seekEnabled={seekEnabled} />}</section>
           </div>
         </div>
     <div className="review-history" hidden={view !== "history"}>
