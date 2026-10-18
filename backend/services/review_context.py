@@ -43,9 +43,9 @@ def get_review_context(incident_id, *, principal: Principal):
     analyses = [item for item in draft.get('stage_b', []) if isinstance(item, dict)]
     if draft.get('schema_version') == 'incident_analysis_v3':
         analyses = [draft]
-    if not analyses and not metadata.get('draft_v3'):
+    if not analyses:
         analyses = metadata.get('structured_analyses') or []
-        if not analyses and draft:
+        if not analyses and draft and not metadata.get('draft_v3'):
             analyses = [structured_telemetry_analysis(draft,
                 telemetry_available=bool(incident.get('telemetry_uri')),
                 unresolved=str(metadata.get('detection_state', '')).startswith('REVIEW_REQUIRED'))]

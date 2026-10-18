@@ -22,6 +22,7 @@ from pathlib import Path
 import httpx
 
 from backend.models.contracts import AnalysisResult
+from backend.services.analysis_details import structured_telemetry_analysis
 from backend.services.log_normalization import normalize_log
 from backend.services.pipeline_status import update_status
 from backend.services.processing import InsufficientEvidence, ProcessedResult, _evidence
@@ -337,6 +338,23 @@ class TwoTier:
         return self.result()
 
     # --- report ----------------------------------------------------------------------------------
+    def structured(self, event, unknowns):
+        """One review-panel section per event (upstream structured analysis), in video seconds."""
+        second, near = event['tier2'], event['kind'] == 'NEAR_MISS'
+        windows = [w for w in self.memory['windows'] if event['start_s'] <= w['start_s'] <= event['end_s'] and w['choice'] in ('B', 'C')]
+        timeline = [{'time_s': w['start_s'], 'phase': 'OBSERVATION', 'description': f'Tầng 1 ({w["choice"]}): {w["description"]}'} for w in windows]
+        timeline += [{'time_s': t['peak_s'], 'phase': 'REACTION', 'description': 'Telemetry: ' + ', '.join(t['reasons'])} for t in event.get('braking') or []]
+        details = {'event_details': {'what_happened': second['description'] or 'UNKNOWN', 'participants': [second['actor']] if second['actor'] else []},
+                   'outcome': {'collision_occurred': False if near else None, 'near_miss_occurred': near}}
+        view = structured_telemetry_analysis(
+            {'incident_detected': event['confidence'] == 'high', 'summary': f'{event["kind"]} ({second["actor"]}): {second["description"]}',
+             'timeline': sorted(timeline, key=lambda t: t['time_s']), 'unknowns': unknowns},
+            details=details, candidate_id=f'{event["kind"]} {event["start_s"]:.1f}–{event["end_s"]:.1f} s',
+            telemetry_available=bool(self.incident.get('telemetry_uri')), unresolved=event['confidence'] != 'high')
+        if self.incident.get('telemetry_uri'):
+            view['data_quality']['time_sync_reliable'] = self.memory.get('telemetry_alignment') == 'VERIFIED'
+        return view
+
     def result(self) -> ProcessedResult:
         events = [e for e in self.memory['events'] if e['kind']]
         high = sorted((e for e in events if e['confidence'] == 'high'), key=lambda e: (e['kind'] != 'FALL_OR_COLLISION', e['start_s']))
@@ -354,6 +372,7 @@ class TwoTier:
                     'requires_engineer_review': True, 'events': events, 'braking_triggers': self.memory.get('braking_triggers', []),
                     'telemetry_alignment': self.memory.get('telemetry_alignment'), 'consistency_checks': checks,
                     'memory_uri': self.memory_path.relative_to(self.root).as_posix(), 'unknowns': unknowns,
+                    'structured_analyses': [self.structured(e, unknowns) for e in events],
                     'draft_v3': {'schema_version': 'two_tier_v1', 'summary': review_summary, 'unknowns': unknowns}}
         self.status('database', f'Two-tier: {state}, {len(high)} sự kiện tin cậy cao, {len(review)} cần xem lại.')
         if not high:

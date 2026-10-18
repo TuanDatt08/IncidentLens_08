@@ -106,6 +106,7 @@ def test_review_only_near_miss_keeps_the_report_empty(tmp_path, monkeypatch):
     assert analysis.model_metadata['detection_state'] == 'REVIEW_REQUIRED_TWO_TIER_CANDIDATE'
     assert analysis.model_metadata['draft_v3']['summary'].startswith('1 sự kiện cần kỹ sư xem lại')
     assert [e['confidence'] for e in analysis.model_metadata['events']] == ['review']
+    assert [v['analysis_status'] for v in analysis.model_metadata['structured_analyses']] == ['INCONCLUSIVE']
 
 
 def test_pipeline_reports_a_fall_confirmed_by_both_tiers(tmp_path, monkeypatch):
@@ -132,5 +133,8 @@ def test_pipeline_reports_a_fall_confirmed_by_both_tiers(tmp_path, monkeypatch):
     assert result.collision_offset_in_video_s == pytest.approx(3.3)                 # C window 2.7 s + one 0.6 s step
     assert (analysis.incident_window.start, analysis.incident_window.end) == pytest.approx((-0.6, 1.2))
     assert analysis.model_metadata['detection_state'] == 'CONFIRMED'
+    view = analysis.model_metadata['structured_analyses'][0]
+    assert view['analysis_status'] == 'CONFIRMED' and view['event_details']['participants'] == ['motorcycle']
+    assert view['outcome']['near_miss_occurred'] is False and view['timeline'][0]['time_s'] == 2.7   # video seconds, not rebased
     assert result.evidence and all((tmp_path / e.uri).is_file() for e in result.evidence)
     assert sum('t = ' in q and 'crops' not in q for q in asked) == 4                 # 10 frames -> 4 windows, no strict re-check for C
