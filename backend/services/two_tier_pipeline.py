@@ -22,9 +22,12 @@ from pathlib import Path
 import httpx
 
 from backend.models.contracts import AnalysisResult
+from backend.services.log_normalization import normalize_log
 from backend.services.pipeline_status import update_status
 from backend.services.processing import InsufficientEvidence, ProcessedResult, _evidence
 from backend.services.qwen_local import ensure_ollama_runtime, validate_local_endpoint
+from backend.services.synchronization import TimeAnchor, align
+from backend.services.trigger_detection import TriggerConfig, find_log_triggers
 from backend.services.video import VideoService
 
 STEP_S, WINDOW, STRIDE = 0.6, 4, 2
@@ -98,15 +101,21 @@ def runs(windows: list[dict], key: str = 'choice') -> list[list[dict]]:
     return found
 
 
-def classify(run: list[dict], tier2_choice: str) -> dict | None:
-    """Rule engine on one run of flagged tier-1 windows (see module docstring)."""
+def classify(run: list[dict], tier2_choice: str, braking: bool = False) -> dict | None:
+    """Rule engine on one run of flagged tier-1 windows (see module docstring). braking = a synchronized
+    hard-braking/collision telemetry trigger overlaps the run: independent evidence that confirms a near miss."""
     c_windows = [w for w in run if w['choice'] == 'C']
     if c_windows and tier2_choice == 'C':
         return {'kind': 'FALL_OR_COLLISION', 'confidence': 'high'}
-    if len(run) < 2 or tier2_choice not in ('B', 'C'):
+    if (len(run) < 2 and not braking) or tier2_choice not in ('B', 'C'):
         return None
     strict_runs = runs([{**w, 'strict': w['choice'] if w['choice'] == 'C' else w.get('strict')} for w in run], 'strict')
-    return {'kind': 'NEAR_MISS', 'confidence': 'high' if any(len(r) >= 2 for r in strict_runs) else 'review'}
+    return {'kind': 'NEAR_MISS', 'confidence': 'high' if braking or any(len(r) >= 2 for r in strict_runs) else 'review'}
+
+
+def overlapping(triggers: list[dict], start: float, end: float) -> list[dict]:
+    # Drivers brake up to ~1.5 s after the hazard appears and the window may close before the peak.
+    return [t for t in triggers if start - 1.0 <= t['peak_s'] <= end + 1.5]
 
 
 def incident_type(kind: str, actor: str | None) -> str:
@@ -118,7 +127,7 @@ def incident_type(kind: str, actor: str | None) -> str:
 class TwoTier:
     def __init__(self, incident, *, root, settings, job_id, on_progress):
         self.settings, self.job_id, self.on_progress = settings, job_id, on_progress
-        self.root = root
+        self.root, self.incident = root, incident
         self.output = root / incident['incident_id'] / 'output'
         self.work = self.output / 'two_tier'
         self.source = (root / incident['video_uri']).resolve()
@@ -126,6 +135,9 @@ class TwoTier:
             raise ValueError('video outside storage')
         meta = incident['video_metadata']
         self.duration, self.width, self.height = float(meta['duration']), int(meta['width']), int(meta['height'])
+        # 0.6 s between frames; short clips (a 2 s upload gave 3 frames, no window) get a finer step so at least
+        # WINDOW + 2 frames (two overlapping windows) cover the clip.
+        self.step = round(min(STEP_S, max(0.1, (self.duration - 0.6) / (WINDOW + 1))), 3)
         self.service = VideoService(settings.ffprobe_bin, settings.ffmpeg_bin, max_output_bytes=2 * 1024**3)
         self.memory = {'pipeline': 'two_tier_v1', 'model': settings.qwen_ollama_model, 'endpoint': settings.qwen_endpoint, 'calls': 0, 'windows': [], 'events': []}
         self.memory_path = self.output / f'{job_id}.two-tier.json'
@@ -206,6 +218,31 @@ class TwoTier:
         return [[max(0, min(b[0] for b in small) - 30), max(0, min(b[1] for b in small) - 30),
                  min(self.width, max(b[2] for b in small) + 30), min(self.height, max(b[3] for b in small) + 30)]]
 
+    def braking_triggers(self) -> list[dict]:
+        """Synchronized hard-braking / collision triggers (priority >= 4) from the uploaded CSV, in video seconds.
+        Same normalization, alignment and trigger rules as the log pipeline; unsynchronized CSV is ignored."""
+        uri = self.incident.get('telemetry_uri')
+        if not uri:
+            return []
+        path = (self.root / uri).resolve()
+        if self.root not in path.parents:
+            raise ValueError('telemetry outside storage')
+        log = normalize_log(path)
+        video = self.incident['video_metadata']
+        anchors = [TimeAnchor(**point) for point in video.get('anchors', [])]
+        offset = video.get('log_offset_s', self.settings.qwen_v1_log_offset_s)
+        if log.config.timestamp_column != 't_video_s' and not anchors and offset is not None:
+            anchors = [TimeAnchor(-offset, 0., 'configured_v1_log_offset'), TimeAnchor(self.duration - offset, self.duration, 'configured_v1_log_offset')]
+        mapping = align(video, log, anchors)
+        self.memory['telemetry_alignment'] = mapping.quality
+        if mapping.quality != 'VERIFIED':
+            return []
+        found = find_log_triggers(log, config=TriggerConfig(deceleration=self.settings.qwen_trigger_deceleration, braking_confirmation_s=self.settings.qwen_braking_confirmation_s),
+                                  alignment=mapping, video_metadata=video)
+        return [{'start_s': e['video_start_s'], 'peak_s': e['video_peak_s'], 'end_s': e['video_end_s'], 'priority': e['peak_priority'], 'reasons': e['reasons'],
+                 'min_acceleration': min((f['value'] for f in e['flags'] if f['signal'] == 'acceleration'), default=None)}
+                for e in found['triggers'] if e['peak_priority'] >= 4 and e['video_peak_s'] is not None and 0 <= e['video_peak_s'] <= self.duration]
+
     def band(self, at: float, destination: Path) -> Path:
         top = int(0.30 * self.height)
         masks = [f'drawbox=x={x1}:y={y1}:w={x2 - x1}:h={y2 - y1}:color=gray:t=fill' for x1, y1, x2, y2 in self.memory['ornament_boxes']]
@@ -213,7 +250,7 @@ class TwoTier:
 
     # --- tiers ---------------------------------------------------------------------------------
     def tier1(self):
-        times = [round(0.3 + STEP_S * i, 2) for i in range(int((self.duration - 0.6) / STEP_S) + 1)]
+        times = [round(0.3 + self.step * i, 2) for i in range(int((self.duration - 0.6) / self.step + 1e-6) + 1)]
         frames = [(t, self.band(t, self.work / 'scan' / f't{t:07.2f}.jpg')) for t in times]
         groups = [frames[i:i + WINDOW] for i in range(0, len(frames) - WINDOW + 1, STRIDE)]
         for n, group in enumerate(groups):
@@ -262,13 +299,17 @@ class TwoTier:
         self.status('backend', 'Two-tier: cắt dải đường, tìm mép capo và vật gắn trên kính.')
         self.memory['hood_y'] = self.hood_line()
         self.memory['ornament_boxes'] = self.ornament_boxes()
+        self.memory['braking_triggers'] = triggers = self.braking_triggers()
         self.save()
-        self.status('qwen', 'Two-tier tầng 1: quét cửa sổ 4 frame trên toàn video.', model=self.settings.qwen_ollama_model, hood_y=self.memory['hood_y'], ornament_boxes=self.memory['ornament_boxes'])
+        self.status('qwen', 'Two-tier tầng 1: quét cửa sổ 4 frame trên toàn video.', model=self.settings.qwen_ollama_model, hood_y=self.memory['hood_y'],
+                    ornament_boxes=self.memory['ornament_boxes'], braking_triggers=len(triggers), telemetry_alignment=self.memory.get('telemetry_alignment'))
         started = time.monotonic()
         self.tier1()
+        covered = []
         for run in runs(self.memory['windows']):
             c_windows = [w for w in run if w['choice'] == 'C']
-            if len(run) < 2 and not c_windows:
+            braking = overlapping(triggers, run[0]['start_s'], run[-1]['end_s'])
+            if len(run) < 2 and not c_windows and not braking:
                 continue
             for window in run:
                 if window['choice'] == 'B' and 'strict' not in window:
@@ -276,9 +317,20 @@ class TwoTier:
             span = c_windows or run
             self.status('qwen', f'Two-tier tầng 2: crop đối tượng {span[0]["start_s"]:.1f}–{span[-1]["end_s"]:.1f} s.')
             second = self.tier2(span[0]['start_s'], span[-1]['end_s'], ' '.join(w['description'] for w in span), f'event_{len(self.memory["events"]):02d}')
-            decision = classify(run, second['choice'])
-            self.memory['events'].append({'start_s': run[0]['start_s'], 'end_s': run[-1]['end_s'], 'windows': len(run),
+            decision = classify(run, second['choice'], bool(braking))
+            covered += braking
+            self.memory['events'].append({'start_s': run[0]['start_s'], 'end_s': run[-1]['end_s'], 'windows': len(run), 'braking': braking,
                                           'tier1': 'C' if c_windows else 'B', 'tier2': second, **(decision or {'kind': None, 'confidence': 'rejected'})})
+            self.save()
+        for trigger in (t for t in triggers if t not in covered):
+            # Tier 1 flagged nothing around a hard brake: look at the 3 s before it with tier 2 anyway.
+            t0, t1 = max(0.0, trigger['peak_s'] - 3.0), min(self.duration - 0.2, trigger['peak_s'] + 1.0)
+            hint = ' '.join(w['description'] for w in self.memory['windows'] if t0 - 1.8 <= w['start_s'] <= t1)
+            self.status('qwen', f'Two-tier: telemetry phanh gấp ở {trigger["peak_s"]:.1f} s, kiểm tra tầng 2 {t0:.1f}–{t1:.1f} s.')
+            second = self.tier2(t0, t1, hint, f'event_{len(self.memory["events"]):02d}')
+            kind = {'C': 'FALL_OR_COLLISION', 'B': 'NEAR_MISS'}.get(second['choice'])
+            self.memory['events'].append({'start_s': round(t0, 2), 'end_s': round(t1, 2), 'windows': 0, 'braking': [trigger], 'tier1': 'telemetry',
+                                          'tier2': second, 'kind': kind, 'confidence': 'high' if kind else 'rejected'})
             self.save()
         self.memory['elapsed_s'] = round(time.monotonic() - started, 1)
         self.save()
@@ -289,19 +341,29 @@ class TwoTier:
         events = [e for e in self.memory['events'] if e['kind']]
         high = sorted((e for e in events if e['confidence'] == 'high'), key=lambda e: (e['kind'] != 'FALL_OR_COLLISION', e['start_s']))
         review = [e for e in events if e['confidence'] == 'review']
-        unknowns = [f'Chỉ phân tích frame mỗi {STEP_S} s trên dải đường; diễn biến giữa các frame chưa được quan sát.',
+        unknowns = [f'Chỉ phân tích frame mỗi {self.step:g} s trên dải đường; diễn biến giữa các frame chưa được quan sát.',
                     *(f'Cần xem lại: {e["kind"]} {e["start_s"]:.1f}–{e["end_s"]:.1f} s ({e["tier2"]["actor"]}): {e["tier2"]["description"]}' for e in review)]
-        state = 'CONFIRMED' if high else 'INCONCLUSIVE' if review else 'NO_INCIDENT_IN_ANALYZED_COVERAGE'
+        if self.incident.get('telemetry_uri') and self.memory.get('telemetry_alignment') != 'VERIFIED':
+            unknowns.append('CSV chưa đồng bộ được với video; kết luận chỉ dựa trên hình ảnh.')
+        # review_context shows REVIEW_REQUIRED_* as "Cần kỹ sư review" and reads summary/unknowns from draft_v3.
+        state = 'CONFIRMED' if high else 'REVIEW_REQUIRED_TWO_TIER_CANDIDATE' if review else 'NO_INCIDENT_IN_ANALYZED_COVERAGE'
+        checks = [{'window_s': [e['start_s'], e['end_s']], 'code': f'TWO_TIER_{e["kind"]}', 'confidence': e['confidence'], 'requires_engineer_review': True,
+                   'message': f'{e["kind"]} ({e["confidence"]}): {e["tier2"]["description"]}'} for e in events]
+        review_summary = (f'{len(review)} sự kiện cần kỹ sư xem lại: ' + '; '.join(f'{e["kind"]} {e["start_s"]:.1f}–{e["end_s"]:.1f} s ({e["tier2"]["actor"]})' for e in review)) if review else None
         metadata = {'provider': 'ollama', 'model': self.settings.qwen_ollama_model, 'pipeline': 'two_tier_v1', 'detection_state': state,
-                    'requires_engineer_review': True, 'events': events, 'memory_uri': self.memory_path.relative_to(self.root).as_posix(), 'unknowns': unknowns}
+                    'requires_engineer_review': True, 'events': events, 'braking_triggers': self.memory.get('braking_triggers', []),
+                    'telemetry_alignment': self.memory.get('telemetry_alignment'), 'consistency_checks': checks,
+                    'memory_uri': self.memory_path.relative_to(self.root).as_posix(), 'unknowns': unknowns,
+                    'draft_v3': {'schema_version': 'two_tier_v1', 'summary': review_summary, 'unknowns': unknowns}}
         self.status('database', f'Two-tier: {state}, {len(high)} sự kiện tin cậy cao, {len(review)} cần xem lại.')
         if not high:
             # A no-incident report must stay empty (reports.py); review candidates live in model_metadata only.
             return ProcessedResult(AnalysisResult(incident_detected=False, model_metadata=metadata), [], None)
         main = high[0]
         windows = [w for w in self.memory['windows'] if main['start_s'] <= w['start_s'] <= main['end_s'] and w['choice'] in ('B', 'C')]
-        key = next((w for w in windows if w['choice'] == 'C'), None) or next((w for w in windows if w.get('strict') == 'B'), windows[0])
-        offset = key['start_s'] + STEP_S
+        key = next((w for w in windows if w['choice'] == 'C'), None) or next((w for w in windows if w.get('strict') == 'B'), windows[0] if windows else None)
+        # Without a tier-1 window (telemetry-triggered check) the hard-braking peak marks the critical moment.
+        offset = key['start_s'] + self.step if key else main['braking'][0]['peak_s']
         evidence, timeline = {}, []
         for index, window in enumerate(windows):
             ids = []
@@ -311,18 +373,25 @@ class TwoTier:
                     evidence[uri] = _evidence(self.root, self.root / uri, 'frame', at - offset, at - offset, 'image/jpeg')
                 ids.append(evidence[uri].evidence_id)
             # The tier-2 entry below is the single CRITICAL moment; windows read as onset / build-up / after.
-            phase = 'ONSET' if index == 0 else 'AFTER' if window['start_s'] > key['start_s'] else 'BEFORE'
+            phase = 'ONSET' if index == 0 else 'AFTER' if window['start_s'] > offset - self.step else 'BEFORE'
             timeline.append({'time_s': round(window['start_s'] - offset, 3), 'phase': phase, 'description': window['description'], 'evidence_ids': ids, 'certainty': 'OBSERVED'})
         crop_ids = []
         for at, uri in main['tier2']['crops']:
             evidence[uri] = _evidence(self.root, self.root / uri, 'frame', at - offset, at - offset, 'image/jpeg')
             crop_ids.append(evidence[uri].evidence_id)
         timeline.append({'time_s': 0.0, 'phase': 'CRITICAL', 'description': 'Tầng 2 (crop đối tượng): ' + main['tier2']['description'], 'evidence_ids': crop_ids, 'certainty': 'OBSERVED'})
+        braking = main.get('braking') or []
+        for trigger in braking:
+            acc = f', gia tốc thấp nhất {trigger["min_acceleration"]:.1f} m/s²' if trigger.get('min_acceleration') is not None else ''
+            timeline.append({'time_s': round(trigger['peak_s'] - offset, 3), 'phase': 'REACTION', 'description': f'Telemetry: {", ".join(trigger["reasons"])}{acc}.',
+                             'evidence_ids': [], 'certainty': 'OBSERVED'})
         label = {'FALL_OR_COLLISION': 'Ngã hoặc va chạm', 'NEAR_MISS': 'Suýt va chạm'}[main['kind']]
+        sources = 'tầng 1, tầng 2 và telemetry phanh gấp' if braking and main['tier1'] != 'telemetry' else 'telemetry phanh gấp và tầng 2' if braking else 'tầng 1 và tầng 2'
         summary = (f'{label} ({main["tier2"]["actor"]}) trong khoảng {main["start_s"]:.1f}–{main["end_s"]:.1f} s của video; '
-                   f'tầng 1 và tầng 2 cùng xác nhận. Qwen mô tả: "{main["tier2"]["description"]}"')
+                   f'{sources} cùng xác nhận. Qwen mô tả: "{main["tier2"]["description"]}"')
+        metadata['draft_v3']['summary'] = summary
         analysis = AnalysisResult(incident_detected=True, incident_type=incident_type(main['kind'], main['tier2']['actor']),
-                                  incident_window={'start': main['start_s'] - offset, 'critical': 0.0, 'end': main['end_s'] - offset},
+                                  incident_window={'start': min(main['start_s'], offset) - offset, 'critical': 0.0, 'end': max(main['end_s'], offset) - offset},
                                   summary=summary, timeline=sorted(timeline, key=lambda t: t['time_s']), unknowns=unknowns,
                                   model_metadata={**metadata, 'video_offset_s': offset})
         return ProcessedResult(analysis, list(evidence.values()), offset)

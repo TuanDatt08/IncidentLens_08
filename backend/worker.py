@@ -80,9 +80,12 @@ def run_once(*, vlm: VLMAdapter | None = None, job_id: str | None = None) -> boo
                 has_log = bool(incident.get('telemetry_uri'))
                 if output is not None:
                     from backend.services.pipeline_status import update_status
-                    two_tier = settings.qwen_video_pipeline == 'two_tier'
-                    update_status(output, claim.job_id, 'backend', 'MP4 + CSV: tìm trigger từ log, trích clip/frame và gọi provider.' if has_log else 'Chỉ MP4: quét cửa sổ hai tầng.' if two_tier else 'Chỉ MP4: phát hiện và phân tích bằng Stage A/B.', pipeline='log_triggers' if has_log else 'video_two_tier' if two_tier else 'video_stages', worker_host=socket.gethostname())
-                if settings.qwen_runtime == 'ollama' and not has_log and settings.qwen_video_pipeline == 'two_tier':
+                    two_tier = settings.qwen_runtime == 'ollama' and settings.qwen_video_pipeline == 'two_tier'
+                    message = ('Quét cửa sổ hai tầng; telemetry phanh gấp dùng làm bằng chứng thứ ba.' if has_log else 'Chỉ MP4: quét cửa sổ hai tầng.') if two_tier else \
+                        'MP4 + CSV: tìm trigger từ log, trích clip/frame và gọi provider.' if has_log else 'Chỉ MP4: phát hiện và phân tích bằng Stage A/B.'
+                    update_status(output, claim.job_id, 'backend', message, pipeline='video_two_tier' if two_tier else 'log_triggers' if has_log else 'video_stages', worker_host=socket.gethostname())
+                if settings.qwen_runtime == 'ollama' and settings.qwen_video_pipeline == 'two_tier':
+                    # Two-tier also takes MP4 + CSV: the CSV only adds synchronized hard-braking evidence.
                     from backend.services.two_tier_pipeline import process_two_tier_incident
                     result = process_two_tier_incident(incident, storage_root=settings.incident_storage_dir, settings=settings, on_progress=lease.update, job_id=claim.job_id)
                 elif settings.qwen_runtime == 'ollama' and not has_log:

@@ -11,6 +11,7 @@ import urllib.request
 from pathlib import Path
 
 DATA = Path("/data")
+MODEL = os.environ.get("QWEN_OLLAMA_MODEL", "qwen3.5:9b")
 
 
 def frontend_environment():
@@ -51,11 +52,11 @@ def http_ready(url):
 
 
 def model_available():
-    request = urllib.request.Request("http://127.0.0.1:11434/api/show", data=b'{"model":"qwen2.5vl:7b"}', headers={"Content-Type": "application/json"})
+    request = urllib.request.Request("http://127.0.0.1:11434/api/show", data=json.dumps({"model": MODEL}).encode(), headers={"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(request, timeout=10) as response:
             if "vision" not in json.load(response).get("capabilities", []):
-                raise RuntimeError("qwen2.5vl:7b must support vision")
+                raise RuntimeError(f"{MODEL} must support vision")
         return True
     except urllib.error.HTTPError as exc:
         if exc.code == 404:
@@ -91,7 +92,8 @@ def main():
             "V2_IDENTITY_SECRET": secret.read_text().strip(),
             "APP_ENV": "development", "DATABASE_URL": "sqlite:////data/incidentlens.db",
             "INCIDENT_STORAGE_DIR": "/data/incidents", "RUNTIME_LOG_DIR": "/data/logs/runtime",
-            "QWEN_RUNTIME": "ollama", "QWEN_OLLAMA_MODEL": "qwen2.5vl:7b",
+            "QWEN_RUNTIME": "ollama", "QWEN_OLLAMA_MODEL": MODEL,
+            "QWEN_REASONING_EFFORT": "none", "QWEN_VIDEO_PIPELINE": "two_tier",
             "QWEN_ENDPOINT": "http://127.0.0.1:11434/v1/chat/completions",
             "QWEN_PROMPT_PATH": "/app/backend/data/promt.txt",
             "QWEN_LOG_PROMPT_PATH": "/app/backend/prompts/ollama_incident.txt",
@@ -107,9 +109,9 @@ def main():
             wait_ready(lambda: http_ready("http://127.0.0.1:11434/api/tags"), processes, 60)
             if not model_available():
                 if os.getenv("OLLAMA_AUTO_PULL", "true").lower() != "true":
-                    raise RuntimeError("Missing qwen2.5vl:7b; enable OLLAMA_AUTO_PULL or import the model volume")
-                print("Downloading qwen2.5vl:7b; see /data/logs/runtime/model-pull.*.log", flush=True)
-                pull = start("model-pull", ["ollama", "pull", "qwen2.5vl:7b"])
+                    raise RuntimeError(f"Missing {MODEL}; enable OLLAMA_AUTO_PULL or import the model volume")
+                print(f"Downloading {MODEL}; see /data/logs/runtime/model-pull.*.log", flush=True)
+                pull = start("model-pull", ["ollama", "pull", MODEL])
                 if pull.wait(timeout=1800) != 0:
                     raise RuntimeError("Model download failed; inspect model-pull.stderr.log")
                 del processes["model-pull"]
@@ -126,7 +128,7 @@ def main():
         wait_ready(lambda: http_ready("http://127.0.0.1:8088/api/v1/health"), processes, 30)
         (DATA / "run/pids.json").write_text(json.dumps({name: process.pid for name, process in processes.items()}))
         database = "PostgreSQL cloud" if get_settings().database_cloud else "SQLite"
-        print(f"IncidentLens ready: Ollama qwen2.5vl:7b, API, frontend, worker, {database}", flush=True)
+        print(f"IncidentLens ready: Ollama {MODEL}, API, frontend, worker, {database}", flush=True)
         while True:
             for name, process in processes.items():
                 if process.poll() is not None:

@@ -14,7 +14,9 @@ services:
       CORS_ORIGINS: "https://${P076_DOMAIN:?Set domain}"
       QWEN_REMOTE_OLLAMA: "true"
       QWEN_RUNTIME: ollama
-      QWEN_OLLAMA_MODEL: qwen2.5vl:7b
+      QWEN_OLLAMA_MODEL: "${QWEN_OLLAMA_MODEL:-qwen3.5:9b}"
+      QWEN_REASONING_EFFORT: "${QWEN_REASONING_EFFORT:-none}"
+      QWEN_VIDEO_PIPELINE: "${QWEN_VIDEO_PIPELINE:-two_tier}"
       QWEN_ENDPOINT: http://127.0.0.1:11434/v1/chat/completions
       QWEN_ARTIFACT_SUBDIR: output
       QWEN_BATCH_FRAMES: "${QWEN_BATCH_FRAMES:-1}"

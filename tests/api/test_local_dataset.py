@@ -24,6 +24,7 @@ async def test_dataset_archives_reference_labels_without_sending_them_to_model(d
     (source / "README.md").write_text("Reference source information")
     monkeypatch.setenv("QWEN_RUNTIME", "ollama")
     monkeypatch.setenv("QWEN_ARTIFACT_SUBDIR", "output")
+    monkeypatch.setenv("QWEN_VIDEO_PIPELINE", "stages")  # this test covers the log-trigger pipeline
     monkeypatch.setenv("QWEN_PROMPT_PATH", "./backend/prompts/ollama_incident.txt")
     get_settings.cache_clear()
     get_settings().qwen_candidate_min_acceleration = None

@@ -50,6 +50,37 @@ def synthetic_incident(tmp_path):
     return incident, settings
 
 
+def test_hard_braking_in_the_csv_triggers_and_confirms_a_tier2_near_miss(tmp_path, monkeypatch):
+    incident, settings = synthetic_incident(tmp_path)
+    rows = ['t_video_s,speed_kmh,brake,accel_x']
+    for i in range(int(6 * 24)):
+        t = i / 24
+        braking = 4.4 <= t <= 4.8                                  # hard brake peaking around 4.5 s video
+        rows.append(f'{t:.3f},{30 - (t - 4.4) * 40 if braking else 30:.2f},{0.9 if braking else 0},{-9.0 if braking else 0.02}')
+    (tmp_path / 'INC-T' / 'source' / 'telemetry.csv').write_text('\n'.join(rows))
+    incident['telemetry_uri'] = 'INC-T/source/telemetry.csv'
+
+    def fake_ask(self, text, images, schema, max_tokens=200):
+        props = schema['properties']
+        if 'b_boxes' in props:
+            return {'a_found': 'nothing attached', 'b_boxes': []}
+        if 'b_bbox' in props:
+            return {'a_actor': 'pedestrian', 'b_bbox': [300, 200, 700, 900]}
+        if 'crops around' in text:                                # only the telemetry-forced tier 2 sees the hazard
+            return {'a_description': 'a pedestrian runs into the lane ahead', 'b_choice': 'B'}
+        return {'a_description': 'normal', 'b_choice': 'A'}       # tier 1 misses it
+
+    monkeypatch.setattr(tt.TwoTier, 'ask', fake_ask)
+    monkeypatch.setattr(tt, 'ensure_ollama_runtime', lambda s: None)
+    result = tt.process_two_tier_incident(incident, storage_root=tmp_path, settings=settings, job_id='JOB-B')
+
+    analysis = result.analysis
+    assert analysis.incident_detected and analysis.incident_type == 'PEDESTRIAN_CONFLICT'
+    assert analysis.model_metadata['telemetry_alignment'] == 'VERIFIED' and analysis.model_metadata['braking_triggers']
+    assert 4.3 <= result.collision_offset_in_video_s <= 4.9                          # critical moment = braking peak
+    assert 'telemetry' in analysis.summary and any(t['phase'] == 'REACTION' for t in analysis.timeline)
+
+
 def test_review_only_near_miss_keeps_the_report_empty(tmp_path, monkeypatch):
     incident, settings = synthetic_incident(tmp_path)
 
@@ -72,7 +103,8 @@ def test_review_only_near_miss_keeps_the_report_empty(tmp_path, monkeypatch):
     analysis = result.analysis
     assert not analysis.incident_detected and result.evidence == [] and result.collision_offset_in_video_s is None
     assert analysis.incident_type is None and analysis.summary is None and analysis.unknowns == [] and analysis.timeline == []
-    assert analysis.model_metadata['detection_state'] == 'INCONCLUSIVE'
+    assert analysis.model_metadata['detection_state'] == 'REVIEW_REQUIRED_TWO_TIER_CANDIDATE'
+    assert analysis.model_metadata['draft_v3']['summary'].startswith('1 sự kiện cần kỹ sư xem lại')
     assert [e['confidence'] for e in analysis.model_metadata['events']] == ['review']
 
 

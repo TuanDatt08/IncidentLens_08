@@ -14,7 +14,9 @@ services:
       RUNTIME_LOG_DIR: /data/logs/runtime
       QWEN_RUNTIME: ollama
       QWEN_ENDPOINT: http://127.0.0.1:11434/v1/chat/completions
-      QWEN_OLLAMA_MODEL: qwen2.5vl:7b
+      QWEN_OLLAMA_MODEL: "${QWEN_OLLAMA_MODEL:-qwen3.5:9b}"
+      QWEN_REASONING_EFFORT: "${QWEN_REASONING_EFFORT:-none}"
+      QWEN_VIDEO_PIPELINE: "${QWEN_VIDEO_PIPELINE:-two_tier}"
       QWEN_ARTIFACT_SUBDIR: output
       QWEN_PROMPT_PATH: /app/backend/data/promt.txt
       QWEN_LOG_PROMPT_PATH: /app/backend/prompts/ollama_incident.txt

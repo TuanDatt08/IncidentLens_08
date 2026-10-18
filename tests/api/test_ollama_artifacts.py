@@ -19,6 +19,7 @@ async def test_ollama_worker_exports_sql_draft_uncertainty_and_scoped_paths(db_c
 
     monkeypatch.setenv("QWEN_RUNTIME", "ollama")
     monkeypatch.setenv("QWEN_ARTIFACT_SUBDIR", "output")
+    monkeypatch.setenv("QWEN_VIDEO_PIPELINE", "stages")  # this test covers the log-trigger pipeline
     monkeypatch.setenv("QWEN_V1_LOG_OFFSET_S", "0")
     monkeypatch.setenv("QWEN_INFERENCE_FRAME_LIMIT", "8")
     monkeypatch.setenv("QWEN_BATCH_FRAMES", "4")
