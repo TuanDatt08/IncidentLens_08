@@ -1,0 +1,250 @@
+{
+  "009_30->009_50": {
+    "truth": "upright",
+    "votes": "1/6",
+    "flag_fall": false,
+    "samples": [
+      {
+        "text": "In image 2, the motorcycle is leaned to the left and the rider is holding the handlebars more tightly.",
+        "says_fallen": false
+      },
+      {
+        "text": "In image 2, the motorcycle is leaning more to the left compared to image 1, indicating a turn or curve.",
+        "says_fallen": false
+      },
+      {
+        "text": "The rider's left foot is now on the ground, and the motorcycle is leaning slightly to the left.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle is now inclined, the rider's left arm is extended, and the right foot is lifted higher. ",
+        "says_fallen": true
+      },
+      {
+        "text": "Motorcycle leans left, rider leans forward; car moves from behind.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle leans more, and the rider appears to be leaning forward, suggesting a change in speed or direction.",
+        "says_fallen": false
+      }
+    ]
+  },
+  "009_30->009_70": {
+    "truth": "upright",
+    "votes": "1/6",
+    "flag_fall": false,
+    "samples": [
+      {
+        "text": "In image 2, the motorcycle is leaned to the left and the rider is not in the upright riding position.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle is now upright; rider leans slightly forward, preparing to accelerate.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle is leaning slightly forward, rider leans forward, and background appears blurred, suggesting motion.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle is now sideways, leaning to the right with the rider still on it.",
+        "says_fallen": true
+      },
+      {
+        "text": "In Image 2, the motorcycle is in a different position, suggesting it has moved slightly. The rider's posture appears adjusted.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle leans slightly to the left, and the rider's posture adjusts to maintain balance.",
+        "says_fallen": false
+      }
+    ]
+  },
+  "009_50->009_70": {
+    "truth": "upright",
+    "votes": "2/6",
+    "flag_fall": false,
+    "samples": [
+      {
+        "text": "The motorcycle in image 2 is leaning significantly to the left compared to image 1, indicating a sudden turn or loss of balance.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle is now on its side, rider leans towards the fallen bike.",
+        "says_fallen": true
+      },
+      {
+        "text": "The motorcycle is now leaning sharply to the right in image 2, indicating a sudden turn or loss of balance.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle is now at an angle, suggesting it is falling or has fallen.",
+        "says_fallen": true
+      },
+      {
+        "text": "In Image 2, the motorcycle is tilting to the left, indicating a loss of balance or control, while the rider appears to be leaning forward, suggesting an attempt to regain stability.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle tips forward in image 2, with the rider leaning slightly forward.",
+        "says_fallen": false
+      }
+    ]
+  },
+  "009_50->009_90": {
+    "truth": "swerve",
+    "votes": "0/6",
+    "flag_fall": false,
+    "samples": [
+      {
+        "text": "In image 2, the motorcycle is slightly tilted, and the rider appears to be leaning back, possibly reacting to an external force.",
+        "says_fallen": false
+      },
+      {
+        "text": "In image 2, the motorcycle is tilted to the left, the rider is closer to the ground, and their arm is raised.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle leans more to the right, rider's posture changes to lean forward.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle is now inclined, indicating a turn or swerve, and the rider's arms are raised for balance.",
+        "says_fallen": false
+      },
+      {
+        "text": "In Image 2, the motorcycle is angled, and the rider is leaning back, suggesting a turn or a fall.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle in image 2 is leaning, and the rider is adjusting their position, possibly to regain balance.",
+        "says_fallen": false
+      }
+    ]
+  },
+  "009_50->010_00": {
+    "truth": "falling",
+    "votes": "0/6",
+    "flag_fall": false,
+    "samples": [
+      {
+        "text": "In image 2, the motorcycle is angled, and the rider is leaning back slightly, suggesting a change in direction or speed.",
+        "says_fallen": false
+      },
+      {
+        "text": "In image 2, the motorcycle is tilted, and the rider leans forward, preparing to stop.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle leans slightly to the right, rider leans back, and car is no longer in the frame.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle is now facing sideways in image 2.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle is in motion, rider leans forward, approaches a parked vehicle.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle in image 2 is leaning, and the rider appears to be in a defensive posture, suggesting a sudden maneuver or adjustment.",
+        "says_fallen": false
+      }
+    ]
+  },
+  "009_50->010_10": {
+    "truth": "falling",
+    "votes": "0/6",
+    "flag_fall": false,
+    "samples": [
+      {
+        "text": "In image 2, the motorcycle is angled to the left, and the rider appears to be leaning to the right, indicating a turn.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle is now in motion; rider leans back for balance.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle in Image 2 is leaning to the left, indicating a turn, while in Image 1 it is upright and straight.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle is now slightly tilted; the rider appears to be leaning forward.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle is moving, rider is leaning forward, car is no longer visible.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle in image 2 is leaning, and the rider is adjusting their position to balance.",
+        "says_fallen": false
+      }
+    ]
+  },
+  "009_50->010_20": {
+    "truth": "falling",
+    "votes": "0/6",
+    "flag_fall": false,
+    "samples": [
+      {
+        "text": "In image 2, the motorcycle is sideways, and the rider is off the seat, indicating a crash.",
+        "says_fallen": false
+      },
+      {
+        "text": "In image 2, the motorcycle is tilted, and the rider appears to be attempting to balance.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle leans to the side, rider leans forward, and car is no longer visible.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle is now in a leaned position, with the rider leaning back, and the background includes a car.",
+        "says_fallen": false
+      },
+      {
+        "text": "In Image 2, the motorcycle is leaned to the left, and the rider is reaching forward, while in Image 1, the motorcycle is upright and being ridden normally.",
+        "says_fallen": false
+      },
+      {
+        "text": "The motorcycle in image 2 is leaning, and the rider is positioned differently, suggesting a turn or maneuver.",
+        "says_fallen": false
+      }
+    ]
+  },
+  "009_50->010_50": {
+    "truth": "fallen",
+    "votes": "2/6",
+    "flag_fall": false,
+    "samples": [
+      {
+        "text": "The motorcycle in image 2 is leaning more to the right and the rider is slightly more bent forward, indicating a turn or adjustment.",
+        "says_fallen": false
+      },
+      {
+        "text": "In image 2, the motorcycle is tilted, and the rider appears to be on the ground, suggesting a fall from the motorcycle.",
+        "says_fallen": true
+      },
+      {
+        "text": "Motorcycle leans to the side, rider leans back, and a car is behind in image 2.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle is now falling, and rider is off-balance.",
+        "says_fallen": true
+      },
+      {
+        "text": "Motorcycle leans sharply to the right, rider leans into turn, suggesting a turn or swerve.",
+        "says_fallen": false
+      },
+      {
+        "text": "Motorcycle tips over, rider falls off, leans against tree.",
+        "says_fallen": false
+      }
+    ]
+  }
+}

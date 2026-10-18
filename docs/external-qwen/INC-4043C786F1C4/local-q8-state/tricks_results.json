@@ -1,0 +1,113 @@
+{
+  "D_yes_no_tight": {
+    "009_30": {
+      "answer": {
+        "motorcycle_leaning_strongly": true,
+        "motorcycle_lying_on_its_side": false,
+        "motorcycle_visible": true,
+        "rider_body_or_foot_touching_ground": true,
+        "rider_seated_upright_and_balanced": false
+      },
+      "wall_s": 60.2
+    },
+    "009_50": {
+      "answer": {
+        "motorcycle_leaning_strongly": true,
+        "motorcycle_lying_on_its_side": false,
+        "motorcycle_visible": true,
+        "rider_body_or_foot_touching_ground": true,
+        "rider_seated_upright_and_balanced": false
+      },
+      "wall_s": 21.8
+    },
+    "009_70": {
+      "answer": {
+        "motorcycle_leaning_strongly": false,
+        "motorcycle_lying_on_its_side": false,
+        "motorcycle_visible": true,
+        "rider_body_or_foot_touching_ground": true,
+        "rider_seated_upright_and_balanced": false
+      },
+      "wall_s": 21.6
+    },
+    "009_90": {
+      "answer": {
+        "motorcycle_leaning_strongly": false,
+        "motorcycle_lying_on_its_side": false,
+        "motorcycle_visible": true,
+        "rider_body_or_foot_touching_ground": true,
+        "rider_seated_upright_and_balanced": true
+      },
+      "wall_s": 24.5
+    },
+    "010_00": {
+      "answer": {
+        "motorcycle_leaning_strongly": true,
+        "motorcycle_lying_on_its_side": false,
+        "motorcycle_visible": true,
+        "rider_body_or_foot_touching_ground": true,
+        "rider_seated_upright_and_balanced": false
+      },
+      "wall_s": 25.9
+    },
+    "010_20": {
+      "answer": {
+        "motorcycle_leaning_strongly": true,
+        "motorcycle_lying_on_its_side": false,
+        "motorcycle_visible": true,
+        "rider_body_or_foot_touching_ground": true,
+        "rider_seated_upright_and_balanced": false
+      },
+      "wall_s": 21.9
+    },
+    "010_50": {
+      "answer": {
+        "motorcycle_leaning_strongly": true,
+        "motorcycle_lying_on_its_side": false,
+        "motorcycle_visible": true,
+        "rider_body_or_foot_touching_ground": true,
+        "rider_seated_upright_and_balanced": false
+      },
+      "wall_s": 21.9
+    }
+  },
+  "F_describe_then_classify": {
+    "009_70": {
+      "answer": {
+        "description": "The motorcycle is angled slightly to the left, with the front wheel on the ground and the rear wheel lifted off. The rider is leaning forward, hands on the handlebars, and both feet are on the ground, one on the footrest and the other on the ground.",
+        "choice": "B"
+      },
+      "wall_s": 25.3
+    },
+    "010_20": {
+      "answer": {
+        "description": "The motorcycle is angled slightly to the left, with both wheels on the ground. The rider is seated, leaning slightly forward. The rider's legs are extended, with feet on the ground.",
+        "choice": "B"
+      },
+      "wall_s": 18.9
+    },
+    "010_50": {
+      "answer": {
+        "description": "The motorcycle is angled slightly to the left, with both wheels on the ground. The rider is seated, leaning slightly forward. The rider's legs are extended, with feet on the ground.",
+        "choice": "B"
+      },
+      "wall_s": 19.2
+    }
+  },
+  "G_labeled_reference": {
+    "009_30->009_70": {
+      "answer": {
+        "evidence": "The motorcycle in Image 2 is leaning to the right, indicating a turn or a change in direction. The rider's posture suggests they are actively steering the motorcycle, which is different from the upright position in Image 1 where the motorcycle appears to be stationary or moving straight ahead without a turn. The rear wheel is also closer to the ground, which is consistent with the motorcycle being in motion and leaning during a turn. The front wheel is still upright, but the angle of the motorcycle as a whole is tilted to the right, indicating a turn in progress or a recent turn. The rider's body is angled in the direction of the turn, which is typical for maintaining balance and control during a turn on a motorcycle. The background and the position of the car behind the motorcycle remain unchanged, suggesting that the motorcycle is the moving object in this scene. The gray boxes in the image are likely used for image processing or analysis and do not affect the state of the motorcycle itself. The motorcycle in Image 2 is in a dynamic state, leaning and in motion, as opposed to the stationary or straight-ahead position in Image 1.",
+        "state_in_image_2": "leaning_more"
+      },
+      "wall_s": 76.3
+    },
+    "009_50->010_20": {
+      "answer": {
+        "evidence": "The motorcycle in Image 2 is now on its side, indicating it has fallen over. The rider is still on the motorcycle, but the vehicle is no longer upright as it was in Image 1.",
+        "state_in_image_2": "same_upright_ridden"
+      },
+      "wall_s": 30.7
+    }
+  }
+}

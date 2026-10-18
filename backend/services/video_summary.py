@@ -131,7 +131,8 @@ def summarize_video(records, *, evidence, coverage, settings, output, job_id, cl
             schema['properties']['overall_status']['enum'] = ['INCONCLUSIVE', 'NO_INCIDENT_IN_OBSERVED_COVERAGE']
         payload = {'model': settings.qwen_ollama_model, 'temperature': 0, 'max_tokens': 4096,
                    'response_format': {'type': 'json_schema', 'json_schema': {'name': 'video_summary', 'strict': True, 'schema': schema}},
-                   'messages': [{'role': 'system', 'content': prompt}, {'role': 'user', 'content': content}]}
+                   'messages': [{'role': 'system', 'content': prompt}, {'role': 'user', 'content': content}],
+                   **({'reasoning_effort': settings.qwen_reasoning_effort} if settings.qwen_reasoning_effort else {})}
         (directory / f'{request_id}.request.json').write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
         raw = None
         error = None

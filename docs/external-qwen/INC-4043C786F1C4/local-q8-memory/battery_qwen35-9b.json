@@ -1,0 +1,88 @@
+{
+  "per_frame": {
+    "009_30": {
+      "a_description": "The motorcycle is upright on two wheels with a rider seated normally, hands on handlebars, legs positioned for control. The bike appears stable and in motion along a paved road.",
+      "b_state": "upright_riding",
+      "wall_s": 45.7
+    },
+    "009_50": {
+      "a_description": "The motorcycle is tilted sharply to the right, with the rider leaning into a turn or evasive maneuver. The front wheel is turned left, suggesting active steering during dynamic motion.",
+      "b_state": "leaning_or_turning",
+      "wall_s": 11.0
+    },
+    "009_70": {
+      "a_description": "The motorcycle is tilted sharply to the right, with the rider leaning into a turn or evasive maneuver. The front wheel is turned left, suggesting active steering during motion.",
+      "b_state": "leaning_or_turning",
+      "wall_s": 11.0
+    },
+    "009_90": {
+      "a_description": "The motorcycle is tilted sharply to the right, with the rider leaning into a turn or skid, arms raised for balance.",
+      "b_state": "falling_or_fallen",
+      "wall_s": 9.4
+    },
+    "010_00": {
+      "a_description": "The motorcycle is tilted sharply to the right, with the rider leaning into the turn while gripping the handlebars; the bike appears mid-motion on a cracked road.",
+      "b_state": "leaning_or_turning",
+      "wall_s": 10.5
+    },
+    "010_10": {
+      "a_description": "The motorcycle is tilted sharply to the right, with its rear wheel lifted off the ground as it leans into a turn or collision. The rider is seated upright but leaning slightly forward, gripping the handlebars tightly while navigating a narrow path beside vegetation.",
+      "b_state": "falling_or_fallen",
+      "wall_s": 12.4
+    },
+    "010_20": {
+      "a_description": "The motorcycle is tilted sharply to the right, with its front wheel off the road and into vegetation. The rider leans forward, gripping handlebars, appearing mid-motion during a turn or loss of control.",
+      "b_state": "falling_or_fallen",
+      "wall_s": 11.4
+    },
+    "010_50": {
+      "a_description": "The motorcycle is tilted sharply to the right, with the rider leaning back against it in a relaxed or possibly unconscious posture.",
+      "b_state": "falling_or_fallen",
+      "wall_s": 8.7
+    }
+  },
+  "pair_labeled": {
+    "009_30->009_50": {
+      "a_difference": "The motorcycle is tilted to the left side.",
+      "b_state": "falling_or_fallen",
+      "wall_s": 7.9
+    },
+    "009_50->009_70": {
+      "a_difference": "The motorcycle is tilted to its left side.",
+      "b_state": "falling_or_fallen",
+      "wall_s": 7.1
+    },
+    "009_50->009_90": {
+      "a_difference": "The motorcycle is tilted to the right side.",
+      "b_state": "falling_or_fallen",
+      "wall_s": 7.1
+    },
+    "009_50->010_00": {
+      "a_difference": "The motorcycle is tilted to its right side.",
+      "b_state": "falling_or_fallen",
+      "wall_s": 7.2
+    },
+    "009_50->010_20": {
+      "a_difference": "The motorcycle has veered off the road into vegetation.",
+      "b_state": "leaning_or_turning",
+      "wall_s": 7.2
+    },
+    "009_50->010_50": {
+      "a_difference": "The motorcycle has tipped over to its side.",
+      "b_state": "upright_riding",
+      "wall_s": 6.8
+    }
+  },
+  "sequence_mc": {
+    "control": {
+      "a_change": "The motorcycle rider leans into a turn while maintaining balance; the bike tilts slightly but remains upright and controlled throughout the sequence.",
+      "b_choice": "A",
+      "wall_s": 13.3
+    },
+    "event": {
+      "a_change": "The motorcycle veers off the road toward vegetation on the right. The rider leans sharply, attempting to correct, but the bike tilts significantly and begins to fall sideways.",
+      "b_choice": "C",
+      "wall_s": 14.9
+    }
+  }
+}

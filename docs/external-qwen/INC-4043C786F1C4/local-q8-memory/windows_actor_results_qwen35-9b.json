@@ -1,0 +1,77 @@
+{
+  "moto/win_event": {
+    "actor": "motorcycle",
+    "choice": "C",
+    "description": "A motorcyclist riding along the roadside loses control and swerves sharply into vegetation, causing the motorcycle to tip over."
+  },
+  "moto/win_normal02": {
+    "actor": "car",
+    "choice": "A",
+    "description": "A dark SUV approaches on an elevated road, while a white car drives away below. Both vehicles maintain their lanes without sudden movements or collisions."
+  },
+  "moto/win_normal05": {
+    "actor": "car",
+    "choice": "A",
+    "description": "A white SUV drives away on a narrow road, passing a stone wall and trees. It continues straight without sudden movements or hazards."
+  },
+  "carla_v16/win_event": {
+    "actor": "pedestrian",
+    "choice": "A",
+    "description": "A person in a green top and pink skirt walks across the road from right to left, moving away from the bus stop area."
+  },
+  "carla_v16/win_normal12": {
+    "actor": "car",
+    "choice": "A",
+    "description": "The dark SUV in the center lane maintains its position and direction of travel across all frames, staying within its lane without any sudden movements or deviations."
+  },
+  "carla_v16/win_normal28": {
+    "actor": "car",
+    "choice": "A",
+    "description": "The dark sedan ahead maintains its lane and speed, while a blue car in the opposite lane remains steady. No sudden movements, swerves, or collisions occur."
+  },
+  "carla_v16/win_normal42": {
+    "actor": "car",
+    "choice": "A",
+    "description": "A black car drives straight ahead in the center lane. Other vehicles remain stationary on the left and right sides of the road."
+  },
+  "carla_v17/win_event": {
+    "actor": "car",
+    "choice": "A",
+    "description": "A black SUV drives toward and past the camera car on the left side of the road. A white bus remains stationary ahead in the right lane."
+  },
+  "carla_v17/win_normal12": {
+    "actor": "car",
+    "choice": "A",
+    "description": "A dark blue SUV crosses the intersection from left to right in front of the camera car, moving away into the distance."
+  },
+  "carla_v17/win_normal28": {
+    "actor": "car",
+    "choice": "A",
+    "description": "The silver convertible remains stationary in the center lane throughout all frames. A red vehicle is visible further ahead and appears to be moving forward slowly, maintaining its position relative to the road."
+  },
+  "carla_v17/win_normal42": {
+    "actor": "car",
+    "choice": "A",
+    "description": "The silver car remains stationary in the center lane throughout all frames. No other road users enter its path, cross it, or exhibit any sudden movements."
+  },
+  "carla_v18/win_event": {
+    "actor": "pedestrian",
+    "choice": "B",
+    "description": "A pedestrian runs from the sidewalk into the road, crossing directly in front of the camera car."
+  },
+  "carla_v18/win_normal12": {
+    "actor": "car",
+    "choice": "A",
+    "description": "A red SUV and black convertible are parked on the right side of the road. The camera car moves forward, passing them without incident."
+  },
+  "carla_v18/win_normal28": {
+    "actor": "pedestrian",
+    "choice": "A",
+    "description": "The green car maintains its lane while pedestrians walk along the sidewalk and cross at a designated area."
+  },
+  "carla_v18/win_normal42": {
+    "actor": "pedestrian",
+    "choice": "A",
+    "description": "A person in red pants walks across the sidewalk from left to right. A second person in a green top walks away from the camera along the same path."
+  }
+}

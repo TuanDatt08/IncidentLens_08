@@ -1,0 +1,342 @@
+{
+  "J_two_boxes_C": {
+    "009_30": {
+      "answer": {
+        "a_motorcycle_bbox": [
+          81,
+          268,
+          253,
+          449
+        ],
+        "b_rider_bbox": [
+          122,
+          212,
+          220,
+          428
+        ],
+        "crop_px": {
+          "motorcycle": [
+            51,
+            162,
+            159,
+            271
+          ],
+          "rider": [
+            77,
+            128,
+            138,
+            259
+          ]
+        },
+        "geometry": {
+          "rider_h_over_w": 2.15,
+          "head_above_bike_top_over_bike_h": 0.31
+        }
+      },
+      "wall_s": 32.3
+    },
+    "009_50": {
+      "answer": {
+        "a_motorcycle_bbox": [
+          93,
+          288,
+          262,
+          466
+        ],
+        "b_rider_bbox": [
+          93,
+          190,
+          262,
+          466
+        ],
+        "crop_px": {
+          "motorcycle": [
+            58,
+            174,
+            164,
+            282
+          ],
+          "rider": [
+            58,
+            115,
+            164,
+            282
+          ]
+        },
+        "geometry": {
+          "rider_h_over_w": 1.58,
+          "head_above_bike_top_over_bike_h": 0.55
+        }
+      },
+      "wall_s": 21.2
+    },
+    "009_70": {
+      "answer": {
+        "a_motorcycle_bbox": [
+          142,
+          294,
+          378,
+          508
+        ],
+        "b_rider_bbox": [
+          142,
+          177,
+          366,
+          458
+        ],
+        "crop_px": {
+          "motorcycle": [
+            89,
+            178,
+            237,
+            307
+          ],
+          "rider": [
+            89,
+            107,
+            230,
+            277
+          ]
+        },
+        "geometry": {
+          "rider_h_over_w": 1.21,
+          "head_above_bike_top_over_bike_h": 0.55
+        }
+      },
+      "wall_s": 21.5
+    },
+    "009_90": {
+      "answer": {
+        "a_motorcycle_bbox": [
+          223,
+          272,
+          562,
+          552
+        ],
+        "b_rider_bbox": [
+          342,
+          159,
+          495,
+          472
+        ],
+        "crop_px": {
+          "motorcycle": [
+            140,
+            164,
+            352,
+            334
+          ],
+          "rider": [
+            214,
+            96,
+            310,
+            285
+          ]
+        },
+        "geometry": {
+          "rider_h_over_w": 1.97,
+          "head_above_bike_top_over_bike_h": 0.4
+        }
+      },
+      "wall_s": 21.8
+    },
+    "010_00": {
+      "answer": {
+        "a_motorcycle_bbox": [
+          275,
+          252,
+          678,
+          600
+        ],
+        "b_rider_bbox": [
+          385,
+          162,
+          532,
+          512
+        ],
+        "crop_px": {
+          "motorcycle": [
+            172,
+            152,
+            425,
+            363
+          ],
+          "rider": [
+            241,
+            98,
+            334,
+            309
+          ]
+        },
+        "geometry": {
+          "rider_h_over_w": 2.27,
+          "head_above_bike_top_over_bike_h": 0.26
+        }
+      },
+      "wall_s": 21.6
+    },
+    "010_10": {
+      "answer": {
+        "a_motorcycle_bbox": [
+          342,
+          318,
+          752,
+          600
+        ],
+        "b_rider_bbox": [
+          434,
+          169,
+          600,
+          528
+        ],
+        "crop_px": {
+          "motorcycle": [
+            214,
+            192,
+            472,
+            363
+          ],
+          "rider": [
+            272,
+            102,
+            376,
+            319
+          ]
+        },
+        "geometry": {
+          "rider_h_over_w": 2.09,
+          "head_above_bike_top_over_bike_h": 0.53
+        }
+      },
+      "wall_s": 21.3
+    },
+    "010_20": {
+      "answer": {
+        "a_motorcycle_bbox": [
+          414,
+          320,
+          890,
+          622
+        ],
+        "b_rider_bbox": [
+          500,
+          169,
+          680,
+          568
+        ],
+        "crop_px": {
+          "motorcycle": [
+            260,
+            193,
+            558,
+            376
+          ],
+          "rider": [
+            314,
+            102,
+            426,
+            343
+          ]
+        },
+        "geometry": {
+          "rider_h_over_w": 2.15,
+          "head_above_bike_top_over_bike_h": 0.5
+        }
+      },
+      "wall_s": 21.9
+    },
+    "010_50": {
+      "answer": {
+        "a_motorcycle_bbox": [
+          650,
+          392,
+          993,
+          672
+        ],
+        "b_rider_bbox": [
+          763,
+          268,
+          913,
+          500
+        ],
+        "crop_px": {
+          "motorcycle": [
+            408,
+            237,
+            623,
+            406
+          ],
+          "rider": [
+            479,
+            162,
+            573,
+            302
+          ]
+        },
+        "geometry": {
+          "rider_h_over_w": 1.49,
+          "head_above_bike_top_over_bike_h": 0.44
+        }
+      },
+      "wall_s": 21.5
+    }
+  },
+  "G3_free_text": {
+    "009_30->009_50": {
+      "answer": {
+        "difference": "The motorcycle is now leaning to the left, and the rider's posture has changed, indicating a turn or maneuver.",
+        "fall_keyword": false
+      },
+      "wall_s": 22.8
+    },
+    "009_30->009_70": {
+      "answer": {
+        "difference": "Motorcycle is leaning to the right, rider is leaning forward, and the rear wheel is lifted off the ground.",
+        "fall_keyword": false
+      },
+      "wall_s": 14.8
+    },
+    "009_50->009_90": {
+      "answer": {
+        "difference": "Motorcycle leans to the right, rider leans forward, and the rear wheel is lifted off the ground.",
+        "fall_keyword": false
+      },
+      "wall_s": 19.8
+    },
+    "009_50->010_00": {
+      "answer": {
+        "difference": "The motorcycle is now tilted, and the rider is off the seat, indicating a fall.",
+        "fall_keyword": true
+      },
+      "wall_s": 13.2
+    },
+    "009_50->010_20": {
+      "answer": {
+        "difference": "Motorcycle is tilted, rider leans back, and appears to be in motion.",
+        "fall_keyword": false
+      },
+      "wall_s": 13.4
+    },
+    "009_50->010_50": {
+      "answer": {
+        "difference": "Motorcycle is now on its side, rider is off the bike.",
+        "fall_keyword": true
+      },
+      "wall_s": 12.2
+    },
+    "009_30->010_50": {
+      "answer": {
+        "difference": "Motorcycle is tilted, rider leans back, and car is no longer visible.",
+        "fall_keyword": false
+      },
+      "wall_s": 12.9
+    },
+    "009_70->010_20": {
+      "answer": {
+        "difference": "Motorcycle leans left, rider leans right, and appears to be in motion.",
+        "fall_keyword": false
+      },
+      "wall_s": 18.9
+    }
+  }
+}

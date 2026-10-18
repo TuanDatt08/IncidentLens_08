@@ -32,3 +32,6 @@ tests/
 **/.next
 **/.env*
 **/tsconfig.tsbuildinfo
+
+# Local model weights (multi-GB)
+*.gguf

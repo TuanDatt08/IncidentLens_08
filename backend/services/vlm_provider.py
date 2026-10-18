@@ -140,6 +140,10 @@ class ProviderConfig:
     outputs_path: str | None = None
     requests_dir: str | None = None
     compact_context: bool = False
+    reasoning_effort: str | None = None
+
+    def extra_body(self) -> dict:
+        return {"reasoning_effort": self.reasoning_effort} if self.reasoning_effort else {}
 
 
 @dataclass(frozen=True)
@@ -205,7 +209,7 @@ class HTTPVLMProvider:
         prompt = instructions + "\n" + json.dumps({"duration_s": context.duration_s, "candidate_window": context.candidate_window, "candidate_observations": () if context.trigger_memory is not None else context.candidate_observations, "trigger_memory": context.trigger_memory, "decision_scope": context.decision_scope or ("FINAL_CANDIDATE" if context.candidate_observations else "SUPPLIED_SEQUENCE"), "flags": compact_records(context.flags) if config.compact_context else context.flags, "telemetry": compact_records(telemetry) if config.compact_context else telemetry, "telemetry_findings": telemetry_findings, "telemetry_units": {"time_s": "video_seconds", "speed": "m/s", "acceleration": "m/s²", "jerk": "m/s³", "brake": "0..1"}, "telemetry_sampling": "bracketing rows at supplied frames and flags" if config.prompt_path else "all supplied rows", "evidence": refs_payload, "output_schema": AIIncidentAnalysisV2.model_json_schema()}, ensure_ascii=False, separators=(",", ":"))
         prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         output_schema = detection_output_schema() if config.compact_context or config.kind == "self_hosted" else AIIncidentAnalysisV2.model_json_schema()
-        payload = {"model": config.model, "temperature": 0, "max_tokens": config.max_output_tokens, "response_format": {"type": "json_schema", "json_schema": {"name": "incident_analysis_v2", "strict": True, "schema": output_schema}}, "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, *images]}]}
+        payload = {"model": config.model, "temperature": 0, "max_tokens": config.max_output_tokens, "response_format": {"type": "json_schema", "json_schema": {"name": "incident_analysis_v2", "strict": True, "schema": output_schema}}, "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, *images]}], **config.extra_body()}
         request_id = uuid4().hex
         if config.requests_dir:
             directory = Path(config.requests_dir)

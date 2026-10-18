@@ -1,0 +1,646 @@
+{
+  "ground": {
+    "008_30": {
+      "answer": {
+        "a_motorcycle_visible": true,
+        "b_bbox_2d": [
+          427,
+          210,
+          473,
+          281
+        ]
+      },
+      "full_frame_box": [
+        759,
+        551,
+        797,
+        609
+      ],
+      "wall_s": 27.5
+    },
+    "009_30": {
+      "answer": {
+        "a_motorcycle_visible": true,
+        "b_bbox_2d": [
+          434,
+          228,
+          525,
+          357
+        ]
+      },
+      "full_frame_box": [
+        765,
+        566,
+        841,
+        671
+      ],
+      "wall_s": 17.5
+    },
+    "009_50": {
+      "answer": {
+        "a_motorcycle_visible": true,
+        "b_bbox_2d": [
+          427,
+          208,
+          554,
+          370
+        ]
+      },
+      "full_frame_box": [
+        759,
+        550,
+        866,
+        682
+      ],
+      "wall_s": 17.9
+    },
+    "009_70": {
+      "answer": {
+        "a_motorcycle_visible": true,
+        "b_bbox_2d": [
+          462,
+          248,
+          639,
+          400
+        ]
+      },
+      "full_frame_box": [
+        788,
+        582,
+        937,
+        707
+      ],
+      "wall_s": 18.1
+    },
+    "009_90": {
+      "answer": {
+        "a_motorcycle_visible": true,
+        "b_bbox_2d": [
+          524,
+          195,
+          776,
+          436
+        ]
+      },
+      "full_frame_box": [
+        840,
+        539,
+        1052,
+        736
+      ],
+      "wall_s": 18.0
+    },
+    "010_00": {
+      "answer": {
+        "a_motorcycle_visible": true,
+        "b_bbox_2d": [
+          565,
+          218,
+          868,
+          450
+        ]
+      },
+      "full_frame_box": [
+        875,
+        558,
+        1129,
+        747
+      ],
+      "wall_s": 17.8
+    },
+    "010_10": {
+      "answer": {
+        "a_motorcycle_visible": true,
+        "b_bbox_2d": [
+          606,
+          258,
+          930,
+          468
+        ]
+      },
+      "full_frame_box": [
+        909,
+        591,
+        1182,
+        762
+      ],
+      "wall_s": 20.0
+    },
+    "010_20": {
+      "answer": {
+        "a_motorcycle_visible": true,
+        "b_bbox_2d": [
+          665,
+          262,
+          1025,
+          485
+        ]
+      },
+      "full_frame_box": [
+        959,
+        594,
+        1261,
+        776
+      ],
+      "wall_s": 18.2
+    },
+    "010_50": {
+      "answer": {
+        "a_motorcycle_visible": true,
+        "b_bbox_2d": [
+          831,
+          225,
+          1107,
+          500
+        ]
+      },
+      "full_frame_box": [
+        1098,
+        564,
+        1330,
+        788
+      ],
+      "wall_s": 18.1
+    },
+    "010_90": {
+      "answer": {
+        "a_motorcycle_visible": false,
+        "b_bbox_2d": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "full_frame_box": null,
+      "wall_s": 16.3
+    },
+    "011_50": {
+      "answer": {
+        "a_motorcycle_visible": false,
+        "b_bbox_2d": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "full_frame_box": null,
+      "wall_s": 16.0
+    },
+    "012_50": {
+      "answer": {
+        "a_motorcycle_visible": false,
+        "b_bbox_2d": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "full_frame_box": null,
+      "wall_s": 15.8
+    },
+    "013_50": {
+      "answer": {
+        "a_motorcycle_visible": false,
+        "b_bbox_2d": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "full_frame_box": null,
+      "wall_s": 15.8
+    }
+  },
+  "compare": {
+    "consecutive 008_30->009_30": {
+      "samples": [
+        {
+          "text": "Motorcycle accelerates, rider leans forward for better traction.",
+          "fall_keyword": false,
+          "wall_s": 41.4
+        },
+        {
+          "text": "Motorcycle and rider moved forward, rider adjusted position, car stopped behind.",
+          "fall_keyword": false,
+          "wall_s": 8.3
+        },
+        {
+          "text": "Motorcycle and rider moved closer to white car, rider changed position, motorcycle stopped.",
+          "fall_keyword": false,
+          "wall_s": 7.3
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "consecutive 009_30->009_50": {
+      "samples": [
+        {
+          "text": "The rider appears more relaxed and the motorcycle seems to have moved slightly forward. ",
+          "fall_keyword": false,
+          "wall_s": 22.5
+        },
+        {
+          "text": "The rider's arms are now extended forward, and the motorcycle is slightly closer to the camera in image 2.",
+          "fall_keyword": false,
+          "wall_s": 10.6
+        },
+        {
+          "text": "The motorcycle and rider moved slightly forward, the rider's right hand is now on the handlebar.",
+          "fall_keyword": false,
+          "wall_s": 8.9
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "consecutive 009_50->009_70": {
+      "samples": [
+        {
+          "text": "Rider shifted left foot to ground, raised left hand.",
+          "fall_keyword": false,
+          "wall_s": 20.7
+        },
+        {
+          "text": "Rider's hands move from handlebars to brake, bike's front wheel lifts off the ground.",
+          "fall_keyword": false,
+          "wall_s": 8.5
+        },
+        {
+          "text": "Rider's left hand moves slightly; motorcycle shifts position slightly forward.",
+          "fall_keyword": false,
+          "wall_s": 7.3
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "consecutive 009_70->009_90": {
+      "samples": [
+        {
+          "text": "Rider adjusted handlebars slightly, motorcycle advanced a few inches.",
+          "fall_keyword": false,
+          "wall_s": 20.9
+        },
+        {
+          "text": "Rider adjusts left hand, motorcycle slightly moves forward.",
+          "fall_keyword": false,
+          "wall_s": 6.2
+        },
+        {
+          "text": "Rider's left hand moves to the handlebars; motorcycle's front wheel slightly turns.",
+          "fall_keyword": false,
+          "wall_s": 8.0
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "consecutive 009_90->010_00": {
+      "samples": [
+        {
+          "text": "Rider adjusts handlebars, shifts slightly forward.",
+          "fall_keyword": false,
+          "wall_s": 19.3
+        },
+        {
+          "text": "Rider's mouth is open in image 2, indicating they are speaking or reacting to something. No other significant changes are observed between the two images.",
+          "fall_keyword": false,
+          "wall_s": 11.2
+        },
+        {
+          "text": "Rider's head moves slightly forward, hand gesture changes, and motorcycle remains stationary.",
+          "fall_keyword": false,
+          "wall_s": 7.6
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "consecutive 010_00->010_10": {
+      "samples": [
+        {
+          "text": "Rider appears to have slightly adjusted their posture and position on the motorcycle.",
+          "fall_keyword": false,
+          "wall_s": 20.6
+        },
+        {
+          "text": "Rider adjusts grip, motorcycle slightly tilts forward.",
+          "fall_keyword": false,
+          "wall_s": 6.4
+        },
+        {
+          "text": "Rider's left hand moves to handlebars; motorcycle slightly tilts forward.",
+          "fall_keyword": false,
+          "wall_s": 6.9
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "consecutive 010_10->010_20": {
+      "samples": [
+        {
+          "text": "Rider's arm extended, possibly adjusting handlebars, while motorcycle slightly leans to the right.",
+          "fall_keyword": false,
+          "wall_s": 20.3
+        },
+        {
+          "text": "Rider adjusts position, leans forward slightly, and turns head.",
+          "fall_keyword": false,
+          "wall_s": 5.9
+        },
+        {
+          "text": "Rider leans slightly forward, raising right hand in image 2.",
+          "fall_keyword": false,
+          "wall_s": 6.5
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "consecutive 010_20->010_50": {
+      "samples": [
+        {
+          "text": "Rider straightens back, motorcycle moves forward, slight shift in angle.",
+          "fall_keyword": false,
+          "wall_s": 25.2
+        },
+        {
+          "text": "Rider leans more forward, motorcycle tilts slightly to the right.",
+          "fall_keyword": false,
+          "wall_s": 6.9
+        },
+        {
+          "text": "Rider turns head, motorcycle shifts slightly forward, leaves tree shadow.",
+          "fall_keyword": false,
+          "wall_s": 6.7
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "vs_first 008_30->009_30": {
+      "samples": [
+        {
+          "text": "Motorcycle and rider stopped, rider dismounted, and motorcycle leaned to the side.",
+          "fall_keyword": false,
+          "wall_s": 6.6
+        }
+      ],
+      "fall_votes": "0/1",
+      "flag": false
+    },
+    "vs_first 008_30->009_50": {
+      "samples": [
+        {
+          "text": "Motorcycle veers left, rider leans forward, car moves closer.",
+          "fall_keyword": false,
+          "wall_s": 11.8
+        }
+      ],
+      "fall_votes": "0/1",
+      "flag": false
+    },
+    "vs_first 008_30->009_70": {
+      "samples": [
+        {
+          "text": "Motorcycle moves closer to camera, rider adjusts position, car remains stationary.",
+          "fall_keyword": false,
+          "wall_s": 11.9
+        }
+      ],
+      "fall_votes": "0/1",
+      "flag": false
+    },
+    "vs_first 008_30->009_90": {
+      "samples": [
+        {
+          "text": "Motorcycle moves forward, rider adjusts position, car remains stationary.",
+          "fall_keyword": false,
+          "wall_s": 13.6
+        }
+      ],
+      "fall_votes": "0/1",
+      "flag": false
+    },
+    "vs_first 008_30->010_00": {
+      "samples": [
+        {
+          "text": "Motorcycle and rider moved closer to the camera, with the rider now clearly visible.",
+          "fall_keyword": false,
+          "wall_s": 14.6
+        }
+      ],
+      "fall_votes": "0/1",
+      "flag": false
+    },
+    "vs_first 008_30->010_10": {
+      "samples": [
+        {
+          "text": "Motorcycle and rider moved forward, car behind them is no longer visible.",
+          "fall_keyword": false,
+          "wall_s": 15.1
+        }
+      ],
+      "fall_votes": "0/1",
+      "flag": false
+    },
+    "vs_first 008_30->010_20": {
+      "samples": [
+        {
+          "text": "Motorcycle veers left, rider leans back, car moves closer.",
+          "fall_keyword": false,
+          "wall_s": 14.8
+        }
+      ],
+      "fall_votes": "0/1",
+      "flag": false
+    },
+    "vs_first 008_30->010_50": {
+      "samples": [
+        {
+          "text": "Motorcycle veers left, rider leans forward, car moves closer. ",
+          "fall_keyword": false,
+          "wall_s": 10.4
+        }
+      ],
+      "fall_votes": "0/1",
+      "flag": false
+    }
+  },
+  "labeled_reference": {
+    "009_30->009_50": {
+      "samples": [
+        {
+          "text": "In Image 2, the motorcycle and rider are moving forward, the rider's head is lowered, and the motorcycle appears to be leaning slightly forward.",
+          "fall_keyword": false,
+          "wall_s": 22.8
+        },
+        {
+          "text": "Motorcycle leans backward, rider leans forward, rear wheel is off the ground.",
+          "fall_keyword": false,
+          "wall_s": 6.6
+        },
+        {
+          "text": "Motorcycle is slightly tilted back, rider leans forward, and a white car has appeared behind.",
+          "fall_keyword": false,
+          "wall_s": 6.8
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "009_30->009_70": {
+      "samples": [
+        {
+          "text": "Motorcycle appears to be in a more stationary position with rider leaning slightly forward in image 2.",
+          "fall_keyword": false,
+          "wall_s": 11.7
+        },
+        {
+          "text": "The motorcycle is now tilted to the left, suggesting a turn, and the rider's body posture has changed to lean into the turn.",
+          "fall_keyword": false,
+          "wall_s": 8.3
+        },
+        {
+          "text": "Motorcycle leans right, rider leans back, both appear to have fallen.",
+          "fall_keyword": true,
+          "wall_s": 6.4
+        }
+      ],
+      "fall_votes": "1/3",
+      "flag": false
+    },
+    "009_50->009_70": {
+      "samples": [
+        {
+          "text": "In Image 2, the motorcycle leans slightly to the right, indicating a turn or loss of balance, while the rider's posture appears more alert.",
+          "fall_keyword": false,
+          "wall_s": 17.3
+        },
+        {
+          "text": "The motorcycle is no longer upright; it is leaning to the side, and the rider appears to be shifting their weight. ",
+          "fall_keyword": false,
+          "wall_s": 8.7
+        },
+        {
+          "text": "Motorcycle is on its side, rider is falling off.",
+          "fall_keyword": true,
+          "wall_s": 5.1
+        }
+      ],
+      "fall_votes": "1/3",
+      "flag": false
+    },
+    "009_50->009_90": {
+      "samples": [
+        {
+          "text": "In image 2, the motorcycle is now on its side, with the rider falling off and the rear wheel lifted off the ground.",
+          "fall_keyword": true,
+          "wall_s": 13.4
+        },
+        {
+          "text": "Motorcycle tips forward, rider leans more, front wheel lifts off ground.",
+          "fall_keyword": false,
+          "wall_s": 5.8
+        },
+        {
+          "text": "Motorcycle tips over, rider falls off.",
+          "fall_keyword": true,
+          "wall_s": 6.4
+        }
+      ],
+      "fall_votes": "2/3",
+      "flag": true
+    },
+    "009_50->010_00": {
+      "samples": [
+        {
+          "text": "In image 2, the motorcycle is now tilted sideways, and the rider appears to be leaning to maintain balance.",
+          "fall_keyword": false,
+          "wall_s": 12.6
+        },
+        {
+          "text": "Motorcycle leans to the left, rider leans forward, and front wheel is lifted off the ground.",
+          "fall_keyword": false,
+          "wall_s": 6.9
+        },
+        {
+          "text": "Motorcycle leans right, rider leans back, approaching a parked car.",
+          "fall_keyword": false,
+          "wall_s": 6.2
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "009_50->010_10": {
+      "samples": [
+        {
+          "text": "The motorcycle is now leaning to the right, and the rider has their left hand extended.",
+          "fall_keyword": false,
+          "wall_s": 10.4
+        },
+        {
+          "text": "Motorcycle is no longer upright; rider is leaning back, possibly after a fall.",
+          "fall_keyword": true,
+          "wall_s": 7.5
+        },
+        {
+          "text": "Motorcycle leans right, rider leans forward, and the car is behind in Image 2.",
+          "fall_keyword": false,
+          "wall_s": 6.7
+        }
+      ],
+      "fall_votes": "1/3",
+      "flag": false
+    },
+    "009_50->010_20": {
+      "samples": [
+        {
+          "text": "In image 2, the motorcycle is leaning, and the rider is leaning forward, indicating a turn or maneuver.",
+          "fall_keyword": false,
+          "wall_s": 12.6
+        },
+        {
+          "text": "In image 2, the motorcycle is tilted to the side, and the rider is leaning forward, contrasting with the upright position in image 1.",
+          "fall_keyword": false,
+          "wall_s": 9.7
+        },
+        {
+          "text": "Motorcycle leans sideways, rider leans back, front wheel lifts off the ground.",
+          "fall_keyword": false,
+          "wall_s": 6.5
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    },
+    "009_50->010_50": {
+      "samples": [
+        {
+          "text": "Motorcycle is overturned, rider sits upright on seat.",
+          "fall_keyword": false,
+          "wall_s": 9.4
+        },
+        {
+          "text": "The motorcycle is sideways in image 2, while in image 1 it is upright.",
+          "fall_keyword": false,
+          "wall_s": 6.9
+        },
+        {
+          "text": "Motorcycle is overturned, rider is dismounted and appears to be standing.",
+          "fall_keyword": false,
+          "wall_s": 6.4
+        }
+      ],
+      "fall_votes": "0/3",
+      "flag": false
+    }
+  }
+}

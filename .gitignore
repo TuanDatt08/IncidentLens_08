@@ -71,3 +71,6 @@ out/
 .cursor/
 .gemini/
 scripts/
+
+# Local model weights (multi-GB)
+*.gguf

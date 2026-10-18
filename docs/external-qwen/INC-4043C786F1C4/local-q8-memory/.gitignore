@@ -1,0 +1,3 @@
+# Frames are regenerated from the videos by frames.py; keep only scripts and results.
+*.png
+*.jpg

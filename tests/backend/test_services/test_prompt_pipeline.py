@@ -13,6 +13,31 @@ def test_requested_prompt_contracts_and_required_fields():
         validate_stage({'schema_version': '2.0'}, contracts['A'][1], {}, 10)
 
 
+def test_stage_schemas_pin_evidence_ids_to_supplied_frames():
+    from backend.services.prompt_pipeline import pin_evidence_ids
+
+    contracts = prompt_contracts(Path('backend/data/promt.txt').read_text(encoding='utf-8'))
+    for stage in ('A', 'B'):
+        schema = contracts[stage][1].model_json_schema()
+        pin_evidence_ids(schema, ['FRAME-a-1.0', 'FRAME-b-2.0', 'FRAME-a-1.0'])
+        pinned = []
+
+        def find(node):
+            if isinstance(node, dict):
+                props = node.get('properties', {})
+                for slot in (props.get('evidence_id'), (props.get('evidence_ids') or {}).get('items')):
+                    for branch in ([slot, *slot.get('anyOf', [])] if slot else []):
+                        if branch.get('type') == 'string':
+                            pinned.append(branch.get('enum'))
+                for value in node.values():
+                    find(value)
+            elif isinstance(node, list):
+                for value in node:
+                    find(value)
+        find(schema)
+        assert pinned and all(enum == ['FRAME-a-1.0', 'FRAME-b-2.0'] for enum in pinned)
+
+
 def test_invented_evidence_and_out_of_bounds_times_rejected():
     contracts = prompt_contracts(Path('backend/data/promt.txt').read_text(encoding='utf-8'))
     data = {'schema_version': 'incident_detection_v3', 'time_basis': 'video_seconds', 'review_status': 'DRAFT', 'video_duration_s': 10.0, 'analyzed_intervals': [{'start_s': 0.0, 'end_s': 10.0}], 'overall_status': 'INCONCLUSIVE', 'incidents': [{'incident_id': 'I1', 'status': 'INCONCLUSIVE', 'event_type': 'OTHER', 'onset_s': None, 'critical_s': None, 'end_s': None, 'clip_window': {'start_s': None, 'end_s': None}, 'confidence': 0.1, 'event_summary': 'Chưa đủ bằng chứng', 'evidence': [{'evidence_id': 'FAKE', 'time_s': 1.0, 'source': 'VIDEO_FRAME', 'observation': 'Xe'}], 'unknowns': ['Chưa đủ frame']}], 'coverage_limitations': ['Mẫu thưa']}
