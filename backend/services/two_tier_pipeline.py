@@ -35,6 +35,9 @@ STEP_S, WINDOW, STRIDE = 0.6, 4, 2
 # Every real CARLA incident trigger (v9-v18, 26 logs) carries a pedal or collision reason; the only priority-4
 # triggers in normal-driving logs are spawn glitches (DECELERATION + VERTICAL_SHOCK, ~-47000 m/s2 at t=0.07 s).
 BRAKING = {'BRAKE_RISE', 'HARD_BRAKING', 'COLLISION_SENSOR'}
+# On-screen speed (no CSV): deceleration over 1 s, m/s2. Measured on web clips: 4B7BE near miss 4.9, B39C6 car cutting
+# across 4.0, B39C6 calm stop at a stop sign 1.8. ponytail: tuned on two clips; recalibrate when more overlays exist.
+DASH_STEP, DASH_DECEL = 0.5, 3.5
 TEXT = {'type': 'string'}
 BOX = {'type': 'array', 'items': {'type': 'integer'}, 'minItems': 4, 'maxItems': 4}
 ACTORS = ['none', 'pedestrian', 'motorcycle', 'bicycle', 'car', 'truck']
@@ -93,6 +96,23 @@ def named_actors(text: str) -> list[str]:
     return sorted(score, key=lambda actor: -score[actor])   # stable: ties keep ACTOR_WORDS order
 
 
+def speed_drops(speeds: list[float | None], step: float = DASH_STEP) -> list[dict]:
+    """Hard-braking spans in speeds (m/s) sampled every step seconds. A drop must keep falling through the middle
+    sample and stay down one sample later, so one misread digit cannot fake a brake."""
+    span, n, found, current = round(1 / step), len(speeds), [], []
+    for i in range(n - span):
+        a, b, c = speeds[i], speeds[i + span // 2], speeds[i + span]
+        after = speeds[i + span + 1] if i + span + 1 < n else c
+        if None not in (a, b, c) and a >= b >= c and (after is None or after <= c + 1.0) and a - c >= DASH_DECEL * span * step:
+            current.append((i, (a - c) / (span * step)))
+        elif current:
+            found.append(current)
+            current = []
+    found += [current] if current else []
+    return [{'start_s': g[0][0] * step, 'peak_s': (max(g, key=lambda x: x[1])[0] + span / 2) * step, 'end_s': (g[-1][0] + span) * step,
+             'priority': 4, 'reasons': ['DASHBOARD_SPEED_DROP'], 'source': 'dashboard', 'min_acceleration': -round(max(x[1] for x in g), 2)} for g in found]
+
+
 def runs(windows: list[dict], key: str = 'choice') -> list[list[dict]]:
     """Consecutive windows whose answer is B or C."""
     found, current = [], []
@@ -120,6 +140,10 @@ def classify(run: list[dict], tier2_choice: str, braking: bool = False) -> dict 
 def overlapping(triggers: list[dict], start: float, end: float) -> list[dict]:
     # Drivers brake up to ~1.5 s after the hazard appears and the window may close before the peak.
     return [t for t in triggers if start - 1.0 <= t['peak_s'] <= end + 1.5]
+
+
+def brake_label(trigger: dict) -> str:
+    return 'Tốc độ trên màn hình: ' if trigger.get('source') == 'dashboard' else 'Telemetry: '
 
 
 def incident_type(kind: str, actor: str | None) -> str:
@@ -248,6 +272,32 @@ class TwoTier:
                 for e in found['triggers'] if e['peak_priority'] >= 4 and BRAKING & set(e['reasons'])
                 and e['video_peak_s'] is not None and 0 <= e['video_peak_s'] <= self.duration]
 
+    def dashboard_braking(self) -> list[dict]:
+        """No CSV: read the speed shown under the road (Tesla-style UI bar) every 0.5 s and find hard braking."""
+        top = self.memory['hood_y']
+        if self.height - top < 16:
+            return []
+        strip = f'crop={self.width}:{self.height - top}:0:{top}'
+        probe = self.service.extract_frame(self.source, self.duration / 2, self.work / 'dash' / 'probe.jpg', video_filter=strip)
+        unit = self.ask("This strip is the bottom of a dashcam frame. If it shows the camera car's speed as a number, give its unit; "
+                        'otherwise none.', [probe], obj(a_unit={'enum': ['none', 'mph', 'km/h']}), max_tokens=20).get('a_unit')
+        self.memory['dashboard_unit'] = unit
+        to_ms = {'mph': 0.44704, 'km/h': 1 / 3.6}.get(unit)
+        if not to_ms:
+            return []
+        times = [round(i * DASH_STEP, 2) for i in range(int((self.duration - 0.2) / DASH_STEP) + 1)]
+        read = []
+        for start in range(0, len(times), 8):
+            chunk = times[start:start + 8]
+            paths = [self.service.extract_frame(self.source, t, self.work / 'dash' / f't{t:07.2f}.jpg', video_filter=strip) for t in chunk]
+            answer = self.ask(f'These {len(chunk)} strips are the bottom of consecutive dashcam frames. Read the speed number shown in each '
+                              'strip, in order; -1 if unreadable.', paths,
+                              obj(a_speeds={'type': 'array', 'items': {'type': 'integer'}, 'minItems': len(chunk), 'maxItems': len(chunk)}), max_tokens=80)
+            values = answer.get('a_speeds', [])
+            read += [values[i] if i < len(values) and 0 <= values[i] < 250 else None for i in range(len(chunk))]
+        self.memory['dashboard_speeds'] = read
+        return [t for t in speed_drops([None if v is None else v * to_ms for v in read]) if t['peak_s'] <= self.duration]
+
     def band(self, at: float, destination: Path) -> Path:
         top = int(0.30 * self.height)
         masks = [f'drawbox=x={x1}:y={y1}:w={x2 - x1}:h={y2 - y1}:color=gray:t=fill' for x1, y1, x2, y2 in self.memory['ornament_boxes']]
@@ -284,7 +334,11 @@ class TwoTier:
             if answer.get('a_actor', 'none') != 'none' and len(box) == 4 and box[2] > box[0] and box[3] > box[1]:
                 found.append((answer['a_actor'], to_pixels(self.settings.qwen_ollama_model, box, bw, bh)))
         if not found:
-            return {'actor': None, 'choice': 'D', 'description': 'no road user found', 'crops': []}
+            # Night or a fast crossing: grounding can miss the road user tier 1 described (B39C6, dark SUV at 22 s).
+            # Not finding a box is not evidence of safety, so judge the dense uncropped frames instead.
+            answer = self.ask(question(times), [p for _, p in frames], CHOICE)
+            return {'actor': next(iter(named_actors(hint)), None), 'choice': answer.get('b_choice', '?'), 'grounded': False,
+                    'description': answer.get('a_description', answer.get('unparsed', '')), 'crops': [[t, p.relative_to(self.root).as_posix()] for t, p in frames]}
         seen = [actor for actor, _ in found]
         actor = next((a for a in named_actors(hint) if a in seen), None) or max(set(seen), key=seen.count)
         boxes = [b for a, b in found if a == actor]
@@ -304,7 +358,7 @@ class TwoTier:
         self.status('backend', 'Two-tier: cắt dải đường, tìm mép capo và vật gắn trên kính.')
         self.memory['hood_y'] = self.hood_line()
         self.memory['ornament_boxes'] = self.ornament_boxes()
-        self.memory['braking_triggers'] = triggers = self.braking_triggers()
+        self.memory['braking_triggers'] = triggers = self.braking_triggers() if self.incident.get('telemetry_uri') else self.dashboard_braking()
         self.save()
         self.status('qwen', 'Two-tier tầng 1: quét cửa sổ 4 frame trên toàn video.', model=self.settings.qwen_ollama_model, hood_y=self.memory['hood_y'],
                     ornament_boxes=self.memory['ornament_boxes'], braking_triggers=len(triggers), telemetry_alignment=self.memory.get('telemetry_alignment'))
@@ -347,7 +401,7 @@ class TwoTier:
         second, near = event['tier2'], event['kind'] == 'NEAR_MISS'
         windows = [w for w in self.memory['windows'] if event['start_s'] <= w['start_s'] <= event['end_s'] and w['choice'] in ('B', 'C')]
         timeline = [{'time_s': w['start_s'], 'phase': 'OBSERVATION', 'description': f'Tầng 1 ({w["choice"]}): {w["description"]}'} for w in windows]
-        timeline += [{'time_s': t['peak_s'], 'phase': 'REACTION', 'description': 'Telemetry: ' + ', '.join(t['reasons'])} for t in event.get('braking') or []]
+        timeline += [{'time_s': t['peak_s'], 'phase': 'REACTION', 'description': brake_label(t) + ', '.join(t['reasons'])} for t in event.get('braking') or []]
         details = {'event_details': {'what_happened': second['description'] or 'UNKNOWN', 'participants': [second['actor']] if second['actor'] else []},
                    'outcome': {'collision_occurred': False if near else None, 'near_miss_occurred': near}}
         view = structured_telemetry_analysis(
@@ -406,10 +460,11 @@ class TwoTier:
         braking = main.get('braking') or []
         for trigger in braking:
             acc = f', gia tốc thấp nhất {trigger["min_acceleration"]:.1f} m/s²' if trigger.get('min_acceleration') is not None else ''
-            timeline.append({'time_s': round(trigger['peak_s'] - offset, 3), 'phase': 'REACTION', 'description': f'Telemetry: {", ".join(trigger["reasons"])}{acc}.',
+            timeline.append({'time_s': round(trigger['peak_s'] - offset, 3), 'phase': 'REACTION', 'description': f'{brake_label(trigger)}{", ".join(trigger["reasons"])}{acc}.',
                              'evidence_ids': [], 'certainty': 'OBSERVED'})
         label = {'FALL_OR_COLLISION': 'Ngã hoặc va chạm', 'NEAR_MISS': 'Suýt va chạm'}[main['kind']]
-        sources = 'tầng 1, tầng 2 và telemetry phanh gấp' if braking and main['tier1'] != 'telemetry' else 'telemetry phanh gấp và tầng 2' if braking else 'tầng 1 và tầng 2'
+        brake = 'tốc độ trên màn hình giảm gấp' if braking and braking[0].get('source') == 'dashboard' else 'telemetry phanh gấp'
+        sources = f'tầng 1, tầng 2 và {brake}' if braking and main['tier1'] != 'telemetry' else f'{brake} và tầng 2' if braking else 'tầng 1 và tầng 2'
         summary = (f'{label} ({main["tier2"]["actor"]}) trong khoảng {main["start_s"]:.1f}–{main["end_s"]:.1f} s của video; '
                    f'{sources} cùng xác nhận. Qwen mô tả: "{main["tier2"]["description"]}"')
         metadata['draft_v3']['summary'] = summary

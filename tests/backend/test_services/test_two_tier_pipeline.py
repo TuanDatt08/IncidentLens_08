@@ -30,6 +30,20 @@ def test_tier2_targets_the_road_user_doing_the_dangerous_thing():
     assert tt.named_actors(fall)[0] == 'motorcycle'
 
 
+def test_dashboard_speed_drops_find_hard_braking_only():
+    mph = lambda xs: [None if x is None else x * 0.44704 for x in xs]
+    # On-screen MPH every 0.5 s, read by eye from the web clips.
+    near_miss = mph([26, 26, 26, 26, 25, 24, 23, 22, 21, 18, 13, 7, 2, 1, 0, 0, 1])          # 4B7BE, car cuts across
+    stop_sign = mph([20, 19, 17, 16, 14, 13, 11, 9, 8, 6, 4, 2, 1, 0, 0, 0])                  # B39C6, calm stop
+    cut_across = mph([0, 0, 2, 5, 8, 11, 13, 10, 4, 1, 0, 0])                                  # B39C6 16.5 s+, SUV crosses
+    [brake] = tt.speed_drops(near_miss)
+    assert brake['start_s'] == 4.0 and brake['peak_s'] == 5.0 and brake['min_acceleration'] < -4.5
+    assert tt.speed_drops(stop_sign) == []
+    assert [t['peak_s'] for t in tt.speed_drops(cut_across)] == [3.5]
+    assert tt.speed_drops(mph([26, 26, 26, 2, 26, 26, 26])) == []                             # one misread digit
+    assert tt.speed_drops(mph([26, None, 10])) == []                                       # gap: unverifiable drop
+
+
 def test_grounding_coordinates_per_model():
     assert tt.to_pixels('qwen3.5:9b', [500, 0, 1000, 500], 720, 440) == [360, 0, 720, 220]
     assert tt.to_pixels('qwen2.5vl:7b', [0, 0, 1148, 728], 720, 440) == [0, 0, 720, 440]
@@ -80,7 +94,7 @@ def test_hard_braking_in_the_csv_triggers_and_confirms_a_tier2_near_miss(tmp_pat
     assert analysis.model_metadata['telemetry_alignment'] == 'VERIFIED'
     assert [round(t['peak_s']) for t in analysis.model_metadata['braking_triggers']] == [4]          # spawn glitch ignored
     assert 4.3 <= result.collision_offset_in_video_s <= 4.9                          # critical moment = braking peak
-    assert 'telemetry' in analysis.summary and any(t['phase'] == 'REACTION' for t in analysis.timeline)
+    assert 'telemetry phanh gấp' in analysis.summary and any(t['phase'] == 'REACTION' for t in analysis.timeline)
 
 
 def test_review_only_near_miss_keeps_the_report_empty(tmp_path, monkeypatch):
