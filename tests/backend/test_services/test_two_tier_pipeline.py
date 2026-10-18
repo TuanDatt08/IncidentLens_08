@@ -56,7 +56,8 @@ def test_hard_braking_in_the_csv_triggers_and_confirms_a_tier2_near_miss(tmp_pat
     for i in range(int(6 * 24)):
         t = i / 24
         braking = 4.4 <= t <= 4.8                                  # hard brake peaking around 4.5 s video
-        rows.append(f'{t:.3f},{30 - (t - 4.4) * 40 if braking else 30:.2f},{0.9 if braking else 0},{-9.0 if braking else 0.02}')
+        glitch = i == 1                                             # CARLA spawn glitch: absurd deceleration, no brake
+        rows.append(f'{t:.3f},{30 - (t - 4.4) * 40 if braking else 30:.2f},{0.9 if braking else 0},{-9.0 if braking else -40000 if glitch else 0.02}')
     (tmp_path / 'INC-T' / 'source' / 'telemetry.csv').write_text('\n'.join(rows))
     incident['telemetry_uri'] = 'INC-T/source/telemetry.csv'
 
@@ -76,7 +77,8 @@ def test_hard_braking_in_the_csv_triggers_and_confirms_a_tier2_near_miss(tmp_pat
 
     analysis = result.analysis
     assert analysis.incident_detected and analysis.incident_type == 'PEDESTRIAN_CONFLICT'
-    assert analysis.model_metadata['telemetry_alignment'] == 'VERIFIED' and analysis.model_metadata['braking_triggers']
+    assert analysis.model_metadata['telemetry_alignment'] == 'VERIFIED'
+    assert [round(t['peak_s']) for t in analysis.model_metadata['braking_triggers']] == [4]          # spawn glitch ignored
     assert 4.3 <= result.collision_offset_in_video_s <= 4.9                          # critical moment = braking peak
     assert 'telemetry' in analysis.summary and any(t['phase'] == 'REACTION' for t in analysis.timeline)
 

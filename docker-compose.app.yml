@@ -21,9 +21,10 @@ services:
       QWEN_BATCH_FRAMES: "${QWEN_BATCH_FRAMES:-16}"
       QWEN_SAMPLING_FPS: "${QWEN_SAMPLING_FPS:-4}"
       QWEN_TRIGGER_MIN_PRIORITY: "4"
-      # m/s². 22 (~2.2 g) never fires on real or CARLA emergency braking (CARLA v18 peaks at -12.2), so
-      # every MP4 + CSV upload ended NOT_ANALYZED_NO_FLAGS. 6 is the backend default.
+      # Segment count comes from MIN_PRIORITY 4 + 0.08 s braking confirmation (1 segment each on CARLA v16-v18).
+      # A deceleration threshold >= 12 m/s² drops v18 entirely (NOT_ANALYZED_NO_FLAGS); 6-10 keep it.
       QWEN_TRIGGER_DECELERATION: "${QWEN_TRIGGER_DECELERATION:-6}"
+      QWEN_BRAKING_CONFIRMATION_S: "${QWEN_BRAKING_CONFIRMATION_S:-0.08}"
       QWEN_FLAG_ONLY: "true"
       QWEN_TWO_STAGE: "true"
       QWEN_TIMEOUT_S: "${QWEN_TIMEOUT_S:-1800}"

@@ -32,6 +32,9 @@ from backend.services.trigger_detection import TriggerConfig, find_log_triggers
 from backend.services.video import VideoService
 
 STEP_S, WINDOW, STRIDE = 0.6, 4, 2
+# Every real CARLA incident trigger (v9-v18, 26 logs) carries a pedal or collision reason; the only priority-4
+# triggers in normal-driving logs are spawn glitches (DECELERATION + VERTICAL_SHOCK, ~-47000 m/s2 at t=0.07 s).
+BRAKING = {'BRAKE_RISE', 'HARD_BRAKING', 'COLLISION_SENSOR'}
 TEXT = {'type': 'string'}
 BOX = {'type': 'array', 'items': {'type': 'integer'}, 'minItems': 4, 'maxItems': 4}
 ACTORS = ['none', 'pedestrian', 'motorcycle', 'bicycle', 'car', 'truck']
@@ -242,7 +245,8 @@ class TwoTier:
                                   alignment=mapping, video_metadata=video)
         return [{'start_s': e['video_start_s'], 'peak_s': e['video_peak_s'], 'end_s': e['video_end_s'], 'priority': e['peak_priority'], 'reasons': e['reasons'],
                  'min_acceleration': min((f['value'] for f in e['flags'] if f['signal'] == 'acceleration'), default=None)}
-                for e in found['triggers'] if e['peak_priority'] >= 4 and e['video_peak_s'] is not None and 0 <= e['video_peak_s'] <= self.duration]
+                for e in found['triggers'] if e['peak_priority'] >= 4 and BRAKING & set(e['reasons'])
+                and e['video_peak_s'] is not None and 0 <= e['video_peak_s'] <= self.duration]
 
     def band(self, at: float, destination: Path) -> Path:
         top = int(0.30 * self.height)
